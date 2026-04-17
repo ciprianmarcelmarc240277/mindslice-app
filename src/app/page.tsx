@@ -50,6 +50,36 @@ type SavedMoment = {
   created_at: string;
 };
 
+type BlogPostDraft = {
+  id: string;
+  saved_moment_id: string | null;
+  title: string;
+  excerpt: string | null;
+  content: string;
+  sense_weight: number;
+  structure_weight: number;
+  attention_weight: number;
+  influence_mode: "whisper" | "echo" | "rupture" | "counterpoint" | "stain";
+  is_contaminant: boolean;
+  status: "draft" | "published";
+  cover_image_url: string | null;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type LiveInterference = {
+  sourceId: string;
+  title: string;
+  excerpt: string | null;
+  senseWeight: number;
+  structureWeight: number;
+  attentionWeight: number;
+  influenceMode: "whisper" | "echo" | "rupture" | "counterpoint" | "stain";
+  note: string;
+  publishedAt: string;
+};
+
 type AddressForm = "domnule" | "doamnă" | "domnișoară";
 
 type UserProfile = {
@@ -184,9 +214,25 @@ export default function Home() {
   const [engineMode, setEngineMode] = useState("mock local");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [savedMoments, setSavedMoments] = useState<SavedMoment[]>([]);
+  const [blogPosts, setBlogPosts] = useState<BlogPostDraft[]>([]);
+  const [activeDraftId, setActiveDraftId] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [accountMessage, setAccountMessage] = useState("Conectează-te pentru a salva momente.");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [draftingMomentId, setDraftingMomentId] = useState<string | null>(null);
+  const [draftTitleInput, setDraftTitleInput] = useState("");
+  const [draftExcerptInput, setDraftExcerptInput] = useState("");
+  const [draftContentInput, setDraftContentInput] = useState("");
+  const [senseWeightInput, setSenseWeightInput] = useState("0.4");
+  const [structureWeightInput, setStructureWeightInput] = useState("0.3");
+  const [attentionWeightInput, setAttentionWeightInput] = useState("0.3");
+  const [influenceModeInput, setInfluenceModeInput] = useState<
+    "whisper" | "echo" | "rupture" | "counterpoint" | "stain"
+  >("whisper");
+  const [isContaminantInput, setIsContaminantInput] = useState(true);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isPublishingDraft, setIsPublishingDraft] = useState(false);
+  const [interference, setInterference] = useState<LiveInterference | null>(null);
   const [isSavingAddressForm, setIsSavingAddressForm] = useState(false);
   const [isEditingAddressForm, setIsEditingAddressForm] = useState(false);
   const [displayNameInput, setDisplayNameInput] = useState("");
@@ -298,6 +344,7 @@ export default function Home() {
   useEffect(() => {
     if (!isSignedIn) {
       setSavedMoments([]);
+      setBlogPosts([]);
       setProfile(null);
       setAccountMessage("Conectează-te pentru a salva momente.");
       return;
@@ -311,6 +358,7 @@ export default function Home() {
         const payload = (await response.json()) as {
           profile?: UserProfile;
           savedMoments?: SavedMoment[];
+          blogPosts?: BlogPostDraft[];
           error?: string;
         };
 
@@ -340,6 +388,90 @@ export default function Home() {
       cancelled = true;
     };
   }, [isSignedIn]);
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      setBlogPosts([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadBlogPosts() {
+      try {
+        const response = await fetch("/api/blog-posts", { cache: "no-store" });
+        const payload = (await response.json()) as {
+          blogPosts?: BlogPostDraft[];
+          error?: string;
+        };
+
+        if (!response.ok) {
+          throw new Error(payload.error || "Nu am putut încărca drafturile de jurnal.");
+        }
+
+        if (!cancelled) {
+          const nextPosts = Array.isArray(payload.blogPosts) ? payload.blogPosts : [];
+          setBlogPosts(nextPosts);
+          setActiveDraftId((previous) => previous ?? nextPosts[0]?.id ?? null);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setAccountMessage(
+            error instanceof Error ? error.message : "Nu am putut încărca drafturile de jurnal.",
+          );
+        }
+      }
+    }
+
+    loadBlogPosts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadInterference() {
+      try {
+        const response = await fetch("/api/live-interference", { cache: "no-store" });
+        const payload = (await response.json()) as {
+          interference?: LiveInterference | null;
+        };
+
+        if (!cancelled) {
+          setInterference(payload.interference ?? null);
+        }
+      } catch {
+        if (!cancelled) {
+          setInterference(null);
+        }
+      }
+    }
+
+    loadInterference();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [blogPosts]);
+
+  useEffect(() => {
+    const activeDraft = blogPosts.find((entry) => entry.id === activeDraftId);
+    if (!activeDraft) {
+      return;
+    }
+
+    setDraftTitleInput(activeDraft.title);
+    setDraftExcerptInput(activeDraft.excerpt ?? "");
+    setDraftContentInput(activeDraft.content);
+    setSenseWeightInput(String(activeDraft.sense_weight ?? 0));
+    setStructureWeightInput(String(activeDraft.structure_weight ?? 0));
+    setAttentionWeightInput(String(activeDraft.attention_weight ?? 0));
+    setInfluenceModeInput(activeDraft.influence_mode);
+    setIsContaminantInput(activeDraft.is_contaminant);
+  }, [activeDraftId, blogPosts]);
 
   useEffect(() => {
     if (!isActive) {
@@ -394,6 +526,151 @@ export default function Home() {
         error instanceof Error ? error.message : "Nu am putut salva momentul.",
       );
       setSaveState("error");
+    }
+  };
+
+  const handleCreateDraftFromMoment = async (savedMomentId: string) => {
+    if (!isSignedIn) {
+      setAccountMessage("Autentifică-te ca să poți transforma momentul în draft.");
+      return;
+    }
+
+    setDraftingMomentId(savedMomentId);
+
+    try {
+      const response = await fetch("/api/blog-posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ savedMomentId }),
+      });
+
+      const payload = (await response.json()) as {
+        blogPost?: BlogPostDraft;
+        reused?: boolean;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.blogPost) {
+        throw new Error(payload.error || "Nu am putut crea draftul de jurnal.");
+      }
+
+      setBlogPosts((previous) => {
+        const next = previous.filter((entry) => entry.id !== payload.blogPost!.id);
+        return [payload.blogPost!, ...next];
+      });
+      setActiveDraftId(payload.blogPost.id);
+      setDraftTitleInput(payload.blogPost.title);
+      setDraftExcerptInput(payload.blogPost.excerpt ?? "");
+      setDraftContentInput(payload.blogPost.content);
+      setSenseWeightInput(String(payload.blogPost.sense_weight ?? 0));
+      setStructureWeightInput(String(payload.blogPost.structure_weight ?? 0));
+      setAttentionWeightInput(String(payload.blogPost.attention_weight ?? 0));
+      setInfluenceModeInput(payload.blogPost.influence_mode);
+      setIsContaminantInput(payload.blogPost.is_contaminant);
+
+      setAccountMessage(
+        payload.reused
+          ? "Draftul de jurnal exista deja si a fost readus in lista."
+          : "Momentul a fost transformat în draft de jurnal.",
+      );
+    } catch (error) {
+      setAccountMessage(
+        error instanceof Error ? error.message : "Nu am putut crea draftul de jurnal.",
+      );
+    } finally {
+      setDraftingMomentId(null);
+    }
+  };
+
+  const handleSelectDraft = (draft: BlogPostDraft) => {
+    setActiveDraftId(draft.id);
+    setDraftTitleInput(draft.title);
+    setDraftExcerptInput(draft.excerpt ?? "");
+    setDraftContentInput(draft.content);
+  };
+
+  const handleSaveDraft = async () => {
+    if (!activeDraftId) {
+      setAccountMessage("Selectează mai întâi un draft.");
+      return;
+    }
+
+    setIsSavingDraft(true);
+
+    try {
+      const response = await fetch(`/api/blog-posts/${activeDraftId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: draftTitleInput,
+          excerpt: draftExcerptInput,
+          content: draftContentInput,
+          senseWeight: Number(senseWeightInput),
+          structureWeight: Number(structureWeightInput),
+          attentionWeight: Number(attentionWeightInput),
+          influenceMode: influenceModeInput,
+          isContaminant: isContaminantInput,
+        }),
+      });
+
+      const payload = (await response.json()) as {
+        blogPost?: BlogPostDraft;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.blogPost) {
+        throw new Error(payload.error || "Nu am putut salva draftul.");
+      }
+
+      setBlogPosts((previous) =>
+        previous.map((entry) => (entry.id === payload.blogPost!.id ? payload.blogPost! : entry)),
+      );
+      setAccountMessage("Draftul de jurnal a fost salvat.");
+    } catch (error) {
+      setAccountMessage(
+        error instanceof Error ? error.message : "Nu am putut salva draftul.",
+      );
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  const handlePublishDraft = async () => {
+    if (!activeDraftId) {
+      setAccountMessage("Selectează mai întâi un draft.");
+      return;
+    }
+
+    setIsPublishingDraft(true);
+
+    try {
+      const response = await fetch(`/api/blog-posts/${activeDraftId}/publish`, {
+        method: "POST",
+      });
+
+      const payload = (await response.json()) as {
+        blogPost?: BlogPostDraft;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.blogPost) {
+        throw new Error(payload.error || "Nu am putut publica draftul.");
+      }
+
+      setBlogPosts((previous) =>
+        previous.map((entry) => (entry.id === payload.blogPost!.id ? payload.blogPost! : entry)),
+      );
+      setAccountMessage("Draftul a fost publicat și poate deveni sursă de contaminare.");
+    } catch (error) {
+      setAccountMessage(
+        error instanceof Error ? error.message : "Nu am putut publica draftul.",
+      );
+    } finally {
+      setIsPublishingDraft(false);
     }
   };
 
@@ -622,6 +899,41 @@ export default function Home() {
             <p>{current.thought}</p>
           </div>
         </div>
+
+        {interference ? (
+          <section className={styles.interferencePanel}>
+            <div className={styles.interferenceHeading}>
+              <p className={styles.eyebrow}>Interferență activă</p>
+              <h2>Jurnalul perturbă Artistul AI</h2>
+              <p>{interference.note}</p>
+            </div>
+            <div className={styles.interferenceGrid}>
+              <article>
+                <span>Contaminat de</span>
+                <strong>{interference.title}</strong>
+              </article>
+              <article>
+                <span>Mode</span>
+                <strong>{interference.influenceMode}</strong>
+              </article>
+              <article>
+                <span>Sense</span>
+                <strong>{interference.senseWeight.toFixed(2)}</strong>
+              </article>
+              <article>
+                <span>Structure</span>
+                <strong>{interference.structureWeight.toFixed(2)}</strong>
+              </article>
+              <article>
+                <span>Attention</span>
+                <strong>{interference.attentionWeight.toFixed(2)}</strong>
+              </article>
+            </div>
+            {interference.excerpt ? (
+              <p className={styles.interferenceExcerpt}>{interference.excerpt}</p>
+            ) : null}
+          </section>
+        ) : null}
 
         <section className={styles.blogSection}>
           <div className={styles.blogHeading}>
@@ -901,6 +1213,16 @@ export default function Home() {
                   </span>
                   <strong>{entry.direction}</strong>
                   <p>{entry.thought}</p>
+                  <button
+                    type="button"
+                    className={styles.savedAction}
+                    onClick={() => handleCreateDraftFromMoment(entry.id)}
+                    disabled={draftingMomentId === entry.id}
+                  >
+                    {draftingMomentId === entry.id
+                      ? "Se transformă..."
+                      : "Transformă în draft de jurnal"}
+                  </button>
                 </li>
               ))
             ) : (
@@ -909,6 +1231,180 @@ export default function Home() {
               </li>
             )}
           </ul>
+        </section>
+
+        <section className={styles.panelBlock}>
+          <h2>Drafturi jurnal</h2>
+          <ul className={styles.savedList}>
+            {blogPosts.length ? (
+              blogPosts.map((entry) => (
+                <li
+                  key={entry.id}
+                  className={entry.id === activeDraftId ? styles.activeDraftItem : undefined}
+                >
+                  <span className={styles.historyTime}>
+                    {new Date(entry.updated_at).toLocaleString("ro-RO", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                  <strong>{entry.title}</strong>
+                  <p>{entry.excerpt || "Draft de jurnal fără excerpt încă."}</p>
+                  <span className={styles.draftStatus}>{entry.status}</span>
+                  <button
+                    type="button"
+                    className={styles.savedAction}
+                    onClick={() => handleSelectDraft(entry)}
+                  >
+                    {entry.id === activeDraftId ? "Draft deschis" : "Deschide draftul"}
+                  </button>
+                </li>
+              ))
+            ) : (
+              <li>
+                <p>Niciun draft de jurnal încă.</p>
+              </li>
+            )}
+          </ul>
+        </section>
+
+        <section className={styles.panelBlock}>
+          <h2>Editor draft</h2>
+          {activeDraftId ? (
+            <div className={styles.draftEditor}>
+              <label className={styles.editorLabel} htmlFor="draft-title">
+                Titlu
+              </label>
+              <input
+                id="draft-title"
+                type="text"
+                value={draftTitleInput}
+                onChange={(event) => setDraftTitleInput(event.target.value)}
+                className={styles.accountInput}
+              />
+              <label className={styles.editorLabel} htmlFor="draft-excerpt">
+                Excerpt
+              </label>
+              <textarea
+                id="draft-excerpt"
+                value={draftExcerptInput}
+                onChange={(event) => setDraftExcerptInput(event.target.value)}
+                className={styles.editorExcerpt}
+              />
+              <label className={styles.editorLabel} htmlFor="draft-content">
+                Conținut
+              </label>
+              <textarea
+                id="draft-content"
+                value={draftContentInput}
+                onChange={(event) => setDraftContentInput(event.target.value)}
+                className={styles.editorContent}
+              />
+              <div className={styles.influenceEditorGrid}>
+                <div>
+                  <label className={styles.editorLabel} htmlFor="sense-weight">
+                    Sense
+                  </label>
+                  <input
+                    id="sense-weight"
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={senseWeightInput}
+                    onChange={(event) => setSenseWeightInput(event.target.value)}
+                    className={styles.accountInput}
+                  />
+                </div>
+                <div>
+                  <label className={styles.editorLabel} htmlFor="structure-weight">
+                    Structure
+                  </label>
+                  <input
+                    id="structure-weight"
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={structureWeightInput}
+                    onChange={(event) => setStructureWeightInput(event.target.value)}
+                    className={styles.accountInput}
+                  />
+                </div>
+                <div>
+                  <label className={styles.editorLabel} htmlFor="attention-weight">
+                    Attention
+                  </label>
+                  <input
+                    id="attention-weight"
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={attentionWeightInput}
+                    onChange={(event) => setAttentionWeightInput(event.target.value)}
+                    className={styles.accountInput}
+                  />
+                </div>
+              </div>
+              <label className={styles.editorLabel} htmlFor="influence-mode">
+                Influence mode
+              </label>
+              <select
+                id="influence-mode"
+                value={influenceModeInput}
+                onChange={(event) =>
+                  setInfluenceModeInput(
+                    event.target.value as
+                      | "whisper"
+                      | "echo"
+                      | "rupture"
+                      | "counterpoint"
+                      | "stain",
+                  )
+                }
+                className={styles.accountSelect}
+              >
+                <option value="whisper">whisper</option>
+                <option value="echo">echo</option>
+                <option value="rupture">rupture</option>
+                <option value="counterpoint">counterpoint</option>
+                <option value="stain">stain</option>
+              </select>
+              <label className={styles.checkboxRow}>
+                <input
+                  type="checkbox"
+                  checked={isContaminantInput}
+                  onChange={(event) => setIsContaminantInput(event.target.checked)}
+                />
+                <span>Postarea poate contamina Artistul AI live</span>
+              </label>
+              <div className={styles.accountActionRow}>
+                <button
+                  type="button"
+                  className={styles.accountButton}
+                  onClick={handleSaveDraft}
+                  disabled={isSavingDraft}
+                >
+                  {isSavingDraft ? "Se salvează..." : "Salvează draftul"}
+                </button>
+                <button
+                  type="button"
+                  className={styles.savedAction}
+                  onClick={handlePublishDraft}
+                  disabled={isPublishingDraft}
+                >
+                  {isPublishingDraft ? "Se publică..." : "Publică"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className={styles.accountMessage}>
+              Creează sau selectează un draft pentru a începe redactarea.
+            </p>
+          )}
         </section>
 
         <section className={styles.panelBlock}>

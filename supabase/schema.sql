@@ -60,10 +60,35 @@ create table if not exists public.blog_posts (
   excerpt text,
   content text not null,
   cover_image_url text,
+  sense_weight numeric not null default 0,
+  structure_weight numeric not null default 0,
+  attention_weight numeric not null default 0,
+  influence_mode text not null default 'whisper' check (influence_mode in ('whisper', 'echo', 'rupture', 'counterpoint', 'stain')),
+  is_contaminant boolean not null default true,
   status text not null default 'draft' check (status in ('draft', 'published')),
+  published_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.blog_posts
+  add column if not exists sense_weight numeric not null default 0;
+
+alter table public.blog_posts
+  add column if not exists structure_weight numeric not null default 0;
+
+alter table public.blog_posts
+  add column if not exists attention_weight numeric not null default 0;
+
+alter table public.blog_posts
+  add column if not exists influence_mode text not null default 'whisper'
+  check (influence_mode in ('whisper', 'echo', 'rupture', 'counterpoint', 'stain'));
+
+alter table public.blog_posts
+  add column if not exists is_contaminant boolean not null default true;
+
+alter table public.blog_posts
+  add column if not exists published_at timestamptz;
 
 create table if not exists public.user_settings (
   user_id text primary key references public.profiles(user_id) on delete cascade,
