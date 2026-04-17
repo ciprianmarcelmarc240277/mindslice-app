@@ -46,6 +46,43 @@
   border-radius: 28px 28px 20px 20px;
 }
 
+.modeTabs {
+  margin-top: 16px;
+  display: inline-flex;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 250, 243, 0.72);
+  backdrop-filter: blur(10px);
+}
+
+.modeTab {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.modeTab:hover {
+  transform: translateY(-1px);
+  color: var(--ink);
+}
+
+.modeTabActive {
+  background: var(--ink);
+  color: #f6f0e7;
+}
+
 .eyebrow,
 .statusLabel,
 .detailList span,
@@ -232,6 +269,29 @@
   color: var(--muted);
 }
 
+.blogCardPlaceholder {
+  width: 100%;
+  text-align: left;
+  appearance: none;
+  cursor: pointer;
+}
+
+.archiveIntro {
+  margin-top: 20px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow);
+  border-radius: 28px;
+  padding: 24px;
+}
+
+.archiveIntro h2 {
+  margin: 6px 0 10px;
+  font-family: var(--display-font);
+  font-size: clamp(1.8rem, 2.6vw, 3rem);
+}
+
 .accountSettings {
   margin-top: 14px;
   display: grid;
@@ -363,6 +423,92 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+.imageNavigator {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 18px;
+  display: grid;
+  gap: 10px;
+  z-index: 2;
+}
+
+.imageNavigatorTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 250, 243, 0.72);
+  border: 1px solid rgba(24, 20, 17, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.imageNavigatorTop strong {
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+
+.imageNavigatorControls {
+  display: flex;
+  gap: 10px;
+}
+
+.imageNavButton {
+  appearance: none;
+  border: 1px solid rgba(24, 20, 17, 0.12);
+  background: rgba(255, 250, 243, 0.72);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 10px 14px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+
+.thumbnailRail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 72px;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.thumbnailButton {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  overflow: hidden;
+  padding: 0;
+  background: rgba(255, 250, 243, 0.6);
+  cursor: pointer;
+  opacity: 0.7;
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease,
+    border-color 160ms ease;
+}
+
+.thumbnailButton:hover {
+  transform: translateY(-1px);
+  opacity: 1;
+}
+
+.thumbnailButtonActive {
+  opacity: 1;
+  border-color: rgba(181, 69, 47, 0.65);
+  box-shadow: 0 0 0 1px rgba(181, 69, 47, 0.22);
+}
+
+.thumbnailImage {
+  object-fit: cover;
 }
 
 .thoughtOverlay {
@@ -811,6 +957,12 @@
     padding-top: 18px;
   }
 
+  .modeTabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+
   .heroCopy,
   .panelBlock,
   .statusBar {
@@ -827,6 +979,20 @@
     right: 14px;
     bottom: 8px;
     padding: 14px;
+  }
+
+  .imageNavigator {
+    left: 14px;
+    right: 14px;
+    top: 14px;
+  }
+
+  .imageNavigatorTop {
+    display: grid;
+  }
+
+  .imageNavigatorControls {
+    flex-wrap: wrap;
   }
 
   .typewriterText {

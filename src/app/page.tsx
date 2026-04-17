@@ -91,6 +91,8 @@ type UserProfile = {
   address_form?: AddressForm | null;
 };
 
+type ViewMode = "live" | "journal" | "archive";
+
 function formatQuotedPseudonym(value: string) {
   return `„${value}”`;
 }
@@ -210,6 +212,8 @@ export default function Home() {
   const [stateLibrary, setStateLibrary] = useState<ThoughtState[]>(fallbackStateLibrary);
   const [referenceImageUrls, setReferenceImageUrls] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [imageIndex, setImageIndex] = useState(0);
+  const [viewMode, setViewMode] = useState<ViewMode>("live");
   const [isActive, setIsActive] = useState(true);
   const [engineMode, setEngineMode] = useState("mock local");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -250,15 +254,9 @@ export default function Home() {
   const libraryLength = stateLibrary.length;
   const current = stateLibrary[currentIndex];
   const currentImageUrl = referenceImageUrls.length
-    ? referenceImageUrls[currentIndex % referenceImageUrls.length]
+    ? referenceImageUrls[imageIndex % referenceImageUrls.length]
     : null;
-  const blogEntries = stateLibrary.slice(0, 6).map((entry, index) => ({
-    id: `${index}-${entry.direction}`,
-    title: entry.direction,
-    excerpt: entry.thought,
-    mood: entry.mood,
-    palette: entry.palette.slice(0, 3).join(", "),
-  }));
+  const publishedPosts = blogPosts.filter((entry) => entry.status === "published");
 
   useEffect(() => {
     let ignore = false;
@@ -312,6 +310,7 @@ export default function Home() {
 
         if (!cancelled) {
           setReferenceImageUrls(urls);
+          setImageIndex(0);
         }
       } catch {
         if (!cancelled) {
@@ -543,6 +542,36 @@ export default function Home() {
 
     return () => window.clearInterval(interval);
   }, [isActive, libraryLength]);
+
+  useEffect(() => {
+    if (!isActive || referenceImageUrls.length <= 1) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setImageIndex((previous) => (previous + 1) % referenceImageUrls.length);
+    }, 4200);
+
+    return () => window.clearInterval(interval);
+  }, [isActive, referenceImageUrls.length]);
+
+  const handlePreviousImage = () => {
+    if (!referenceImageUrls.length) {
+      return;
+    }
+
+    setImageIndex((previous) =>
+      previous === 0 ? referenceImageUrls.length - 1 : previous - 1,
+    );
+  };
+
+  const handleNextImage = () => {
+    if (!referenceImageUrls.length) {
+      return;
+    }
+
+    setImageIndex((previous) => (previous + 1) % referenceImageUrls.length);
+  };
 
   const handleSaveMoment = async () => {
     setPromptOutput(buildPrompt(true, current));
@@ -916,154 +945,351 @@ export default function Home() {
           </p>
         </div>
 
-        <div className={styles.statusBar}>
-          <div>
-            <span className={styles.statusLabel}>Stare curentă</span>
-            <strong className={styles.statusValue}>
-              {isActive ? "artistul gândește live" : "în așteptare"}
-            </strong>
-          </div>
-          <div>
-            <span className={styles.statusLabel}>Sursa thinking</span>
-            <strong className={styles.statusValue}>{engineMode}</strong>
-          </div>
-          <div>
-            <span className={styles.statusLabel}>Direcție</span>
-            <strong key={current.direction} className={styles.statusValue}>
-              {current.direction}
-            </strong>
-          </div>
-        </div>
-
-        <div className={styles.canvasCard}>
-          <div className={styles.visualStage}>
-            {currentImageUrl ? (
-              <Image
-                src={currentImageUrl}
-                alt={current.thought}
-                className={styles.referenceImage}
-                fill
-                sizes="(max-width: 900px) 100vw, 68vw"
-                unoptimized
-              />
-            ) : (
-              <div className={styles.visualFallback}>
-                <strong>{current.direction}</strong>
-                <span>Nicio imagine disponibilă încă.</span>
-              </div>
-            )}
-          </div>
-          <div className={styles.cornerSignature}>
-            <strong>O felie de gândire</strong>
-            <span>Marc, Ciprian-Marcel</span>
-          </div>
-          <div
-            className={`${styles.thoughtOverlay} ${
-              interference ? styles.thoughtOverlayInterference : ""
-            }`}
+        <div className={styles.modeTabs} role="tablist" aria-label="Moduri MindSlice">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={viewMode === "live"}
+            className={`${styles.modeTab} ${viewMode === "live" ? styles.modeTabActive : ""}`}
+            onClick={() => setViewMode("live")}
           >
-            <span className={styles.overlayLabel}>Acum mă gândesc la</span>
-            <p key={thoughtAnimationKey} className={styles.typewriterText}>
-              {animatedThought}
-              <span className={styles.typewriterCaret} aria-hidden="true" />
-            </p>
-          </div>
+            Live
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={viewMode === "journal"}
+            className={`${styles.modeTab} ${viewMode === "journal" ? styles.modeTabActive : ""}`}
+            onClick={() => setViewMode("journal")}
+          >
+            Journal
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={viewMode === "archive"}
+            className={`${styles.modeTab} ${viewMode === "archive" ? styles.modeTabActive : ""}`}
+            onClick={() => setViewMode("archive")}
+          >
+            Archive
+          </button>
         </div>
 
-        {interference ? (
-          <section className={styles.interferencePanel}>
-            <div className={styles.interferenceHeading}>
-              <p className={styles.eyebrow}>Interferență activă</p>
-              <h2>Jurnalul perturbă Artistul AI</h2>
-              <p>{interference.note}</p>
+        {viewMode === "live" ? (
+          <>
+            <div className={styles.statusBar}>
+              <div>
+                <span className={styles.statusLabel}>Stare curentă</span>
+                <strong className={styles.statusValue}>
+                  {isActive ? "artistul gândește live" : "în așteptare"}
+                </strong>
+              </div>
+              <div>
+                <span className={styles.statusLabel}>Sursa thinking</span>
+                <strong className={styles.statusValue}>{engineMode}</strong>
+              </div>
+              <div>
+                <span className={styles.statusLabel}>Direcție</span>
+                <strong key={current.direction} className={styles.statusValue}>
+                  {current.direction}
+                </strong>
+              </div>
             </div>
-            <div className={styles.interferenceGrid}>
-              <article>
-                <span>Contaminat de</span>
-                <strong>{interference.title}</strong>
-              </article>
-              <article>
-                <span>Mode</span>
-                <strong>{interference.influenceMode}</strong>
-              </article>
-              <article>
-                <span>Sense</span>
-                <strong>{interference.senseWeight.toFixed(2)}</strong>
-              </article>
-              <article>
-                <span>Structure</span>
-                <strong>{interference.structureWeight.toFixed(2)}</strong>
-              </article>
-              <article>
-                <span>Attention</span>
-                <strong>{interference.attentionWeight.toFixed(2)}</strong>
-              </article>
+
+            <div className={styles.canvasCard}>
+              <div className={styles.visualStage}>
+                {currentImageUrl ? (
+                  <Image
+                    src={currentImageUrl}
+                    alt={current.thought}
+                    className={styles.referenceImage}
+                    fill
+                    sizes="(max-width: 900px) 100vw, 68vw"
+                    unoptimized
+                  />
+                ) : (
+                  <div className={styles.visualFallback}>
+                    <strong>{current.direction}</strong>
+                    <span>Nicio imagine disponibilă încă.</span>
+                  </div>
+                )}
+              </div>
+              {referenceImageUrls.length ? (
+                <div className={styles.imageNavigator}>
+                  <div className={styles.imageNavigatorTop}>
+                    <span className={styles.overlayLabel}>Flux vizual</span>
+                    <strong>
+                      cadrul {imageIndex + 1} din {referenceImageUrls.length}
+                    </strong>
+                  </div>
+                  <div className={styles.imageNavigatorControls}>
+                    <button
+                      type="button"
+                      className={styles.imageNavButton}
+                      onClick={handlePreviousImage}
+                      aria-label="Imaginea anterioară"
+                    >
+                      Inapoi
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.imageNavButton}
+                      onClick={handleNextImage}
+                      aria-label="Imaginea următoare"
+                    >
+                      Inainte
+                    </button>
+                  </div>
+                  <div className={styles.thumbnailRail}>
+                    {referenceImageUrls.map((url, index) => (
+                      <button
+                        key={url}
+                        type="button"
+                        className={`${styles.thumbnailButton} ${
+                          index === imageIndex ? styles.thumbnailButtonActive : ""
+                        }`}
+                        onClick={() => setImageIndex(index)}
+                        aria-label={`Deschide cadrul ${index + 1}`}
+                      >
+                        <Image
+                          src={url}
+                          alt={`Cadru de referință ${index + 1}`}
+                          fill
+                          sizes="72px"
+                          className={styles.thumbnailImage}
+                          unoptimized
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              <div className={styles.cornerSignature}>
+                <strong>O felie de gândire</strong>
+                <span>Marc, Ciprian-Marcel</span>
+              </div>
+              <div
+                className={`${styles.thoughtOverlay} ${
+                  interference ? styles.thoughtOverlayInterference : ""
+                }`}
+              >
+                <span className={styles.overlayLabel}>Acum mă gândesc la</span>
+                <p key={thoughtAnimationKey} className={styles.typewriterText}>
+                  {animatedThought}
+                  <span className={styles.typewriterCaret} aria-hidden="true" />
+                </p>
+              </div>
             </div>
-            {interference.excerpt ? (
-              <p className={styles.interferenceExcerpt}>{interference.excerpt}</p>
+
+            {interference ? (
+              <section className={styles.interferencePanel}>
+                <div className={styles.interferenceHeading}>
+                  <p className={styles.eyebrow}>Interferență activă</p>
+                  <h2>Jurnalul perturbă Artistul AI</h2>
+                  <p>{interference.note}</p>
+                </div>
+                <div className={styles.interferenceGrid}>
+                  <article>
+                    <span>Contaminat de</span>
+                    <strong>{interference.title}</strong>
+                  </article>
+                  <article>
+                    <span>Mode</span>
+                    <strong>{interference.influenceMode}</strong>
+                  </article>
+                  <article>
+                    <span>Sense</span>
+                    <strong>{interference.senseWeight.toFixed(2)}</strong>
+                  </article>
+                  <article>
+                    <span>Structure</span>
+                    <strong>{interference.structureWeight.toFixed(2)}</strong>
+                  </article>
+                  <article>
+                    <span>Attention</span>
+                    <strong>{interference.attentionWeight.toFixed(2)}</strong>
+                  </article>
+                </div>
+                {interference.excerpt ? (
+                  <p className={styles.interferenceExcerpt}>{interference.excerpt}</p>
+                ) : null}
+              </section>
             ) : null}
-          </section>
+          </>
         ) : null}
 
-        <section className={styles.blogSection}>
-          <div className={styles.blogHeading}>
-            <p className={styles.eyebrow}>Blog</p>
-            <h2>Jurnalul gândirii</h2>
+        {viewMode === "journal" ? (
+          <>
+            <section className={styles.blogSection}>
+              <div className={styles.blogHeading}>
+                <p className={styles.eyebrow}>Blog</p>
+                <h2>Jurnalul gândirii</h2>
+                <p className={styles.blogIntro}>
+                  Fragmentele de mai jos transformă fiecare felie într-o intrare de
+                  blog: concept, atmosferă și direcție vizuală.
+                </p>
+              </div>
+              <div className={styles.blogGrid}>
+                {publishedPosts.length ? (
+                  publishedPosts.map((entry) => (
+                    <article key={entry.id} className={styles.blogCard}>
+                      <span className={styles.blogMeta}>
+                        {entry.published_at
+                          ? new Date(entry.published_at).toLocaleString("ro-RO", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : entry.status}
+                      </span>
+                      <h3>{entry.title}</h3>
+                      <p>{entry.excerpt || "Publicație fără excerpt încă."}</p>
+                      <strong>
+                        {entry.influence_mode} · sense {entry.sense_weight.toFixed(2)} · structure{" "}
+                        {entry.structure_weight.toFixed(2)} · attention{" "}
+                        {entry.attention_weight.toFixed(2)}
+                      </strong>
+                    </article>
+                  ))
+                ) : (
+                  <button
+                    type="button"
+                    className={`${styles.blogCard} ${styles.blogCardPlaceholder}`}
+                    onClick={() => setViewMode("archive")}
+                  >
+                    <span className={styles.blogMeta}>Fără articole publicate</span>
+                    <h3>Publică primul jurnal contaminant</h3>
+                    <p>
+                      Intră în Archive, transformă un moment salvat în draft și publică-l ca
+                      sursă de interferență.
+                    </p>
+                  </button>
+                )}
+              </div>
+            </section>
+
+            {interference ? (
+              <section className={styles.interferencePanel}>
+                <div className={styles.interferenceHeading}>
+                  <p className={styles.eyebrow}>Interferență activă</p>
+                  <h2>Ultima contaminare publicată</h2>
+                  <p>{interference.note}</p>
+                </div>
+                <div className={styles.interferenceGrid}>
+                  <article>
+                    <span>Text sursă</span>
+                    <strong>{interference.title}</strong>
+                  </article>
+                  <article>
+                    <span>Mode</span>
+                    <strong>{interference.influenceMode}</strong>
+                  </article>
+                  <article>
+                    <span>Sense</span>
+                    <strong>{interference.senseWeight.toFixed(2)}</strong>
+                  </article>
+                  <article>
+                    <span>Structure</span>
+                    <strong>{interference.structureWeight.toFixed(2)}</strong>
+                  </article>
+                  <article>
+                    <span>Attention</span>
+                    <strong>{interference.attentionWeight.toFixed(2)}</strong>
+                  </article>
+                </div>
+              </section>
+            ) : null}
+          </>
+        ) : null}
+
+        {viewMode === "archive" ? (
+          <section className={styles.archiveIntro}>
+            <p className={styles.eyebrow}>Archive</p>
+            <h2>Memoria activă a sistemului</h2>
             <p className={styles.blogIntro}>
-              Fragmentele de mai jos transformă fiecare felie într-o intrare de
-              blog: concept, atmosferă și direcție vizuală.
+              Aici păstrezi momente, drafturi, istorii scurte și prompturi. Archive este
+              rezerva de materiale din care jurnalul poate extrage noi contaminări.
             </p>
-          </div>
-          <div className={styles.blogGrid}>
-            {blogEntries.map((entry) => (
-              <article key={entry.id} className={styles.blogCard}>
-                <span className={styles.blogMeta}>{entry.mood}</span>
-                <h3>{entry.title}</h3>
-                <p>{entry.excerpt}</p>
-                <strong>{entry.palette}</strong>
-              </article>
-            ))}
-          </div>
-        </section>
+          </section>
+        ) : null}
       </section>
 
       <aside className={styles.controlPanel}>
-        <section className={styles.panelBlock}>
-          <h2>Control</h2>
-          <div className={styles.buttonRow}>
-            <button
-              type="button"
-              onClick={() => setIsActive((previous) => !previous)}
-            >
-              {isActive ? "Pauză" : "Pornește sesiunea"}
-            </button>
-            <button
-              type="button"
-              className={styles.secondary}
-              onClick={() =>
-                setCurrentIndex((previous) => (previous + 1) % libraryLength)
-              }
-            >
-              Schimbă direcția
-            </button>
-          </div>
-          <div className={styles.buttonRow}>
-            <button
-              type="button"
-              className={styles.secondary}
-              onClick={() => setPromptOutput(buildPrompt(false, current))}
-            >
-              Generează prompt
-            </button>
-            <button
-              type="button"
-              className={styles.ghost}
-              onClick={handleSaveMoment}
-            >
-              {saveState === "saving" ? "Se salvează..." : "Salvează momentul"}
-            </button>
-          </div>
-        </section>
+        {viewMode === "live" ? (
+          <>
+            <section className={styles.panelBlock}>
+              <h2>Control</h2>
+              <div className={styles.buttonRow}>
+                <button
+                  type="button"
+                  onClick={() => setIsActive((previous) => !previous)}
+                >
+                  {isActive ? "Pauză" : "Pornește sesiunea"}
+                </button>
+                <button
+                  type="button"
+                  className={styles.secondary}
+                  onClick={() =>
+                    setCurrentIndex((previous) => (previous + 1) % libraryLength)
+                  }
+                >
+                  Schimbă direcția
+                </button>
+              </div>
+              <div className={styles.buttonRow}>
+                <button
+                  type="button"
+                  className={styles.secondary}
+                  onClick={() => setPromptOutput(buildPrompt(false, current))}
+                >
+                  Generează prompt
+                </button>
+                <button
+                  type="button"
+                  className={styles.ghost}
+                  onClick={handleSaveMoment}
+                >
+                  {saveState === "saving" ? "Se salvează..." : "Salvează momentul"}
+                </button>
+              </div>
+            </section>
+
+            <section className={`${styles.panelBlock} ${styles.metricsGrid}`}>
+              <article>
+                <span>Art</span>
+                <strong>{current.triad.art}</strong>
+              </article>
+              <article>
+                <span>Design</span>
+                <strong>{current.triad.design}</strong>
+              </article>
+              <article>
+                <span>Business</span>
+                <strong>{current.triad.business}</strong>
+              </article>
+            </section>
+
+            <section className={`${styles.panelBlock} ${styles.detailList}`}>
+              <div>
+                <span>Mood</span>
+                <strong>{current.mood}</strong>
+              </div>
+              <div>
+                <span>Paleta</span>
+                <strong>{current.palette.join(", ")}</strong>
+              </div>
+              <div>
+                <span>Materiale</span>
+                <strong>{current.materials.join(", ")}</strong>
+              </div>
+              <div>
+                <span>Mișcare</span>
+                <strong>{current.motion}</strong>
+              </div>
+            </section>
+          </>
+        ) : null}
 
         <section className={styles.panelBlock}>
           <h2>Cont</h2>
@@ -1221,270 +1447,244 @@ export default function Home() {
           ) : null}
         </section>
 
-        <section className={`${styles.panelBlock} ${styles.metricsGrid}`}>
-          <article>
-            <span>Art</span>
-            <strong>{current.triad.art}</strong>
-          </article>
-          <article>
-            <span>Design</span>
-            <strong>{current.triad.design}</strong>
-          </article>
-          <article>
-            <span>Business</span>
-            <strong>{current.triad.business}</strong>
-          </article>
-        </section>
+        {viewMode === "journal" ? (
+          <>
+            <section className={styles.panelBlock}>
+              <h2>Drafturi jurnal</h2>
+              <ul className={styles.savedList}>
+                {blogPosts.length ? (
+                  blogPosts.map((entry) => (
+                    <li
+                      key={entry.id}
+                      className={entry.id === activeDraftId ? styles.activeDraftItem : undefined}
+                    >
+                      <span className={styles.historyTime}>
+                        {new Date(entry.updated_at).toLocaleString("ro-RO", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                      <strong>{entry.title}</strong>
+                      <p>{entry.excerpt || "Draft de jurnal fără excerpt încă."}</p>
+                      <span className={styles.draftStatus}>{entry.status}</span>
+                      <button
+                        type="button"
+                        className={styles.savedAction}
+                        onClick={() => handleSelectDraft(entry)}
+                      >
+                        {entry.id === activeDraftId ? "Draft deschis" : "Deschide draftul"}
+                      </button>
+                    </li>
+                  ))
+                ) : (
+                  <li>
+                    <p>Niciun draft de jurnal încă.</p>
+                  </li>
+                )}
+              </ul>
+            </section>
 
-        <section className={`${styles.panelBlock} ${styles.detailList}`}>
-          <div>
-            <span>Mood</span>
-            <strong>{current.mood}</strong>
-          </div>
-          <div>
-            <span>Paleta</span>
-            <strong>{current.palette.join(", ")}</strong>
-          </div>
-          <div>
-            <span>Materiale</span>
-            <strong>{current.materials.join(", ")}</strong>
-          </div>
-          <div>
-            <span>Mișcare</span>
-            <strong>{current.motion}</strong>
-          </div>
-        </section>
-
-        <section className={styles.panelBlock}>
-          <h2>Istoric scurt</h2>
-          <ul className={styles.historyList}>
-            {history.map((entry, index) => (
-              <li
-                key={`${entry.time}-${entry.text}`}
-                className={styles.historyItem}
-                style={{ animationDelay: `${index * 90}ms` }}
-              >
-                <span className={styles.historyTime}>{entry.time}</span>
-                <p>{entry.text}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className={styles.panelBlock}>
-          <h2>Momente salvate</h2>
-          <ul className={styles.savedList}>
-            {savedMoments.length ? (
-              savedMoments.map((entry) => (
-                <li key={entry.id}>
-                  <span className={styles.historyTime}>
-                    {new Date(entry.created_at).toLocaleString("ro-RO", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                  <strong>{entry.direction}</strong>
-                  <p>{entry.thought}</p>
-                  <button
-                    type="button"
-                    className={styles.savedAction}
-                    onClick={() => handleCreateDraftFromMoment(entry.id)}
-                    disabled={draftingMomentId === entry.id}
+            <section className={styles.panelBlock}>
+              <h2>Editor draft</h2>
+              {activeDraftId ? (
+                <div className={styles.draftEditor}>
+                  <label className={styles.editorLabel} htmlFor="draft-title">
+                    Titlu
+                  </label>
+                  <input
+                    id="draft-title"
+                    type="text"
+                    value={draftTitleInput}
+                    onChange={(event) => setDraftTitleInput(event.target.value)}
+                    className={styles.accountInput}
+                  />
+                  <label className={styles.editorLabel} htmlFor="draft-excerpt">
+                    Excerpt
+                  </label>
+                  <textarea
+                    id="draft-excerpt"
+                    value={draftExcerptInput}
+                    onChange={(event) => setDraftExcerptInput(event.target.value)}
+                    className={styles.editorExcerpt}
+                  />
+                  <label className={styles.editorLabel} htmlFor="draft-content">
+                    Conținut
+                  </label>
+                  <textarea
+                    id="draft-content"
+                    value={draftContentInput}
+                    onChange={(event) => setDraftContentInput(event.target.value)}
+                    className={styles.editorContent}
+                  />
+                  <div className={styles.influenceEditorGrid}>
+                    <div>
+                      <label className={styles.editorLabel} htmlFor="sense-weight">
+                        Sense
+                      </label>
+                      <input
+                        id="sense-weight"
+                        type="number"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value={senseWeightInput}
+                        onChange={(event) => setSenseWeightInput(event.target.value)}
+                        className={styles.accountInput}
+                      />
+                    </div>
+                    <div>
+                      <label className={styles.editorLabel} htmlFor="structure-weight">
+                        Structure
+                      </label>
+                      <input
+                        id="structure-weight"
+                        type="number"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value={structureWeightInput}
+                        onChange={(event) => setStructureWeightInput(event.target.value)}
+                        className={styles.accountInput}
+                      />
+                    </div>
+                    <div>
+                      <label className={styles.editorLabel} htmlFor="attention-weight">
+                        Attention
+                      </label>
+                      <input
+                        id="attention-weight"
+                        type="number"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value={attentionWeightInput}
+                        onChange={(event) => setAttentionWeightInput(event.target.value)}
+                        className={styles.accountInput}
+                      />
+                    </div>
+                  </div>
+                  <label className={styles.editorLabel} htmlFor="influence-mode">
+                    Influence mode
+                  </label>
+                  <select
+                    id="influence-mode"
+                    value={influenceModeInput}
+                    onChange={(event) =>
+                      setInfluenceModeInput(
+                        event.target.value as
+                          | "whisper"
+                          | "echo"
+                          | "rupture"
+                          | "counterpoint"
+                          | "stain",
+                      )
+                    }
+                    className={styles.accountSelect}
                   >
-                    {draftingMomentId === entry.id
-                      ? "Se transformă..."
-                      : "Transformă în draft de jurnal"}
-                  </button>
-                </li>
-              ))
-            ) : (
-              <li>
-                <p>Niciun moment salvat încă.</p>
-              </li>
-            )}
-          </ul>
-        </section>
+                    <option value="whisper">whisper</option>
+                    <option value="echo">echo</option>
+                    <option value="rupture">rupture</option>
+                    <option value="counterpoint">counterpoint</option>
+                    <option value="stain">stain</option>
+                  </select>
+                  <label className={styles.checkboxRow}>
+                    <input
+                      type="checkbox"
+                      checked={isContaminantInput}
+                      onChange={(event) => setIsContaminantInput(event.target.checked)}
+                    />
+                    <span>Postarea poate contamina Artistul AI live</span>
+                  </label>
+                  <div className={styles.accountActionRow}>
+                    <button
+                      type="button"
+                      className={styles.accountButton}
+                      onClick={handleSaveDraft}
+                      disabled={isSavingDraft}
+                    >
+                      {isSavingDraft ? "Se salvează..." : "Salvează draftul"}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.savedAction}
+                      onClick={handlePublishDraft}
+                      disabled={isPublishingDraft}
+                    >
+                      {isPublishingDraft ? "Se publică..." : "Publică"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className={styles.accountMessage}>
+                  Creează sau selectează un draft pentru a începe redactarea.
+                </p>
+              )}
+            </section>
+          </>
+        ) : null}
 
-        <section className={styles.panelBlock}>
-          <h2>Drafturi jurnal</h2>
-          <ul className={styles.savedList}>
-            {blogPosts.length ? (
-              blogPosts.map((entry) => (
-                <li
-                  key={entry.id}
-                  className={entry.id === activeDraftId ? styles.activeDraftItem : undefined}
-                >
-                  <span className={styles.historyTime}>
-                    {new Date(entry.updated_at).toLocaleString("ro-RO", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                  <strong>{entry.title}</strong>
-                  <p>{entry.excerpt || "Draft de jurnal fără excerpt încă."}</p>
-                  <span className={styles.draftStatus}>{entry.status}</span>
-                  <button
-                    type="button"
-                    className={styles.savedAction}
-                    onClick={() => handleSelectDraft(entry)}
+        {viewMode === "archive" ? (
+          <>
+            <section className={styles.panelBlock}>
+              <h2>Istoric scurt</h2>
+              <ul className={styles.historyList}>
+                {history.map((entry, index) => (
+                  <li
+                    key={`${entry.time}-${entry.text}`}
+                    className={styles.historyItem}
+                    style={{ animationDelay: `${index * 90}ms` }}
                   >
-                    {entry.id === activeDraftId ? "Draft deschis" : "Deschide draftul"}
-                  </button>
-                </li>
-              ))
-            ) : (
-              <li>
-                <p>Niciun draft de jurnal încă.</p>
-              </li>
-            )}
-          </ul>
-        </section>
+                    <span className={styles.historyTime}>{entry.time}</span>
+                    <p>{entry.text}</p>
+                  </li>
+                ))}
+              </ul>
+            </section>
 
-        <section className={styles.panelBlock}>
-          <h2>Editor draft</h2>
-          {activeDraftId ? (
-            <div className={styles.draftEditor}>
-              <label className={styles.editorLabel} htmlFor="draft-title">
-                Titlu
-              </label>
-              <input
-                id="draft-title"
-                type="text"
-                value={draftTitleInput}
-                onChange={(event) => setDraftTitleInput(event.target.value)}
-                className={styles.accountInput}
-              />
-              <label className={styles.editorLabel} htmlFor="draft-excerpt">
-                Excerpt
-              </label>
-              <textarea
-                id="draft-excerpt"
-                value={draftExcerptInput}
-                onChange={(event) => setDraftExcerptInput(event.target.value)}
-                className={styles.editorExcerpt}
-              />
-              <label className={styles.editorLabel} htmlFor="draft-content">
-                Conținut
-              </label>
-              <textarea
-                id="draft-content"
-                value={draftContentInput}
-                onChange={(event) => setDraftContentInput(event.target.value)}
-                className={styles.editorContent}
-              />
-              <div className={styles.influenceEditorGrid}>
-                <div>
-                  <label className={styles.editorLabel} htmlFor="sense-weight">
-                    Sense
-                  </label>
-                  <input
-                    id="sense-weight"
-                    type="number"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    value={senseWeightInput}
-                    onChange={(event) => setSenseWeightInput(event.target.value)}
-                    className={styles.accountInput}
-                  />
-                </div>
-                <div>
-                  <label className={styles.editorLabel} htmlFor="structure-weight">
-                    Structure
-                  </label>
-                  <input
-                    id="structure-weight"
-                    type="number"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    value={structureWeightInput}
-                    onChange={(event) => setStructureWeightInput(event.target.value)}
-                    className={styles.accountInput}
-                  />
-                </div>
-                <div>
-                  <label className={styles.editorLabel} htmlFor="attention-weight">
-                    Attention
-                  </label>
-                  <input
-                    id="attention-weight"
-                    type="number"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    value={attentionWeightInput}
-                    onChange={(event) => setAttentionWeightInput(event.target.value)}
-                    className={styles.accountInput}
-                  />
-                </div>
-              </div>
-              <label className={styles.editorLabel} htmlFor="influence-mode">
-                Influence mode
-              </label>
-              <select
-                id="influence-mode"
-                value={influenceModeInput}
-                onChange={(event) =>
-                  setInfluenceModeInput(
-                    event.target.value as
-                      | "whisper"
-                      | "echo"
-                      | "rupture"
-                      | "counterpoint"
-                      | "stain",
-                  )
-                }
-                className={styles.accountSelect}
-              >
-                <option value="whisper">whisper</option>
-                <option value="echo">echo</option>
-                <option value="rupture">rupture</option>
-                <option value="counterpoint">counterpoint</option>
-                <option value="stain">stain</option>
-              </select>
-              <label className={styles.checkboxRow}>
-                <input
-                  type="checkbox"
-                  checked={isContaminantInput}
-                  onChange={(event) => setIsContaminantInput(event.target.checked)}
-                />
-                <span>Postarea poate contamina Artistul AI live</span>
-              </label>
-              <div className={styles.accountActionRow}>
-                <button
-                  type="button"
-                  className={styles.accountButton}
-                  onClick={handleSaveDraft}
-                  disabled={isSavingDraft}
-                >
-                  {isSavingDraft ? "Se salvează..." : "Salvează draftul"}
-                </button>
-                <button
-                  type="button"
-                  className={styles.savedAction}
-                  onClick={handlePublishDraft}
-                  disabled={isPublishingDraft}
-                >
-                  {isPublishingDraft ? "Se publică..." : "Publică"}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <p className={styles.accountMessage}>
-              Creează sau selectează un draft pentru a începe redactarea.
-            </p>
-          )}
-        </section>
+            <section className={styles.panelBlock}>
+              <h2>Momente salvate</h2>
+              <ul className={styles.savedList}>
+                {savedMoments.length ? (
+                  savedMoments.map((entry) => (
+                    <li key={entry.id}>
+                      <span className={styles.historyTime}>
+                        {new Date(entry.created_at).toLocaleString("ro-RO", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                      <strong>{entry.direction}</strong>
+                      <p>{entry.thought}</p>
+                      <button
+                        type="button"
+                        className={styles.savedAction}
+                        onClick={() => handleCreateDraftFromMoment(entry.id)}
+                        disabled={draftingMomentId === entry.id}
+                      >
+                        {draftingMomentId === entry.id
+                          ? "Se transformă..."
+                          : "Transformă în draft de jurnal"}
+                      </button>
+                    </li>
+                  ))
+                ) : (
+                  <li>
+                    <p>Niciun moment salvat încă.</p>
+                  </li>
+                )}
+              </ul>
+            </section>
 
-        <section className={styles.panelBlock}>
-          <h2>Prompt final</h2>
-          <textarea readOnly value={promptOutput} className={styles.promptOutput} />
-        </section>
+            <section className={styles.panelBlock}>
+              <h2>Prompt final</h2>
+              <textarea readOnly value={promptOutput} className={styles.promptOutput} />
+            </section>
+          </>
+        ) : null}
       </aside>
     </main>
   );
