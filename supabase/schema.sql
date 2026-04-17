@@ -5,10 +5,15 @@ create table if not exists public.profiles (
   display_name text,
   email text,
   avatar_url text,
+  address_form text check (address_form in ('domnule', 'doamnă', 'domnișoară')),
   bio text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.profiles
+  add column if not exists address_form text
+  check (address_form in ('domnule', 'doamnă', 'domnișoară'));
 
 create table if not exists public.saved_moments (
   id uuid primary key default gen_random_uuid(),

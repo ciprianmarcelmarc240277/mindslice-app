@@ -50,6 +50,16 @@ type SavedMoment = {
   created_at: string;
 };
 
+type AddressForm = "domnule" | "doamnă" | "domnișoară";
+
+type UserProfile = {
+  user_id: string;
+  display_name?: string | null;
+  email?: string | null;
+  avatar_url?: string | null;
+  address_form?: AddressForm | null;
+};
+
 const fallbackStateLibrary: ThoughtState[] = [
   {
     direction: "Slice Thinking Visual Core",
@@ -169,8 +179,10 @@ export default function Home() {
   const [engineMode, setEngineMode] = useState("mock local");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [savedMoments, setSavedMoments] = useState<SavedMoment[]>([]);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [accountMessage, setAccountMessage] = useState("Conectează-te pentru a salva momente.");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [isSavingAddressForm, setIsSavingAddressForm] = useState(false);
   const [promptOutput, setPromptOutput] = useState(() =>
     buildPrompt(false, fallbackStateLibrary[0]),
   );
@@ -274,6 +286,7 @@ export default function Home() {
   useEffect(() => {
     if (!isSignedIn) {
       setSavedMoments([]);
+      setProfile(null);
       setAccountMessage("Conectează-te pentru a salva momente.");
       return;
     }
@@ -284,7 +297,7 @@ export default function Home() {
       try {
         const response = await fetch("/api/user-state", { cache: "no-store" });
         const payload = (await response.json()) as {
-          profile?: { user_id: string };
+          profile?: UserProfile;
           savedMoments?: SavedMoment[];
           error?: string;
         };
@@ -294,6 +307,7 @@ export default function Home() {
         }
 
         if (!cancelled) {
+          setProfile(payload.profile ?? null);
           setSavedMoments(Array.isArray(payload.savedMoments) ? payload.savedMoments : []);
           setAccountMessage("Momentele tale salvate sunt sincronizate cu Supabase.");
         }
@@ -366,6 +380,59 @@ export default function Home() {
         error instanceof Error ? error.message : "Nu am putut salva momentul.",
       );
       setSaveState("error");
+    }
+  };
+
+  const handleAddressFormChange = async (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    const nextAddressForm = event.target.value as AddressForm;
+
+    if (!isSignedIn) {
+      setAccountMessage("Autentifică-te ca să-ți poți seta formula de adresare.");
+      return;
+    }
+
+    setProfile((previous) =>
+      previous
+        ? { ...previous, address_form: nextAddressForm }
+        : { user_id: "current", address_form: nextAddressForm },
+    );
+    setIsSavingAddressForm(true);
+
+    try {
+      const response = await fetch("/api/user-state", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ addressForm: nextAddressForm }),
+      });
+
+      const payload = (await response.json()) as {
+        profile?: UserProfile;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.profile) {
+        throw new Error(payload.error || "Nu am putut actualiza formula de adresare.");
+      }
+
+      setProfile(payload.profile);
+      window.dispatchEvent(
+        new CustomEvent("address-form-updated", {
+          detail: { addressForm: payload.profile.address_form ?? "domnule" },
+        }),
+      );
+      setAccountMessage("Formula de adresare a fost actualizată.");
+    } catch (error) {
+      setAccountMessage(
+        error instanceof Error
+          ? error.message
+          : "Nu am putut actualiza formula de adresare.",
+      );
+    } finally {
+      setIsSavingAddressForm(false);
     }
   };
 
@@ -490,6 +557,22 @@ export default function Home() {
         <section className={styles.panelBlock}>
           <h2>Cont</h2>
           <p className={styles.accountMessage}>{accountMessage}</p>
+          {isSignedIn ? (
+            <div className={styles.accountSettings}>
+              <label htmlFor="address-form">Formula de adresare</label>
+              <select
+                id="address-form"
+                value={profile?.address_form ?? "domnule"}
+                onChange={handleAddressFormChange}
+                disabled={isSavingAddressForm}
+                className={styles.accountSelect}
+              >
+                <option value="domnule">domnule</option>
+                <option value="doamnă">doamnă</option>
+                <option value="domnișoară">domnișoară</option>
+              </select>
+            </div>
+          ) : null}
         </section>
 
         <section className={`${styles.panelBlock} ${styles.metricsGrid}`}>

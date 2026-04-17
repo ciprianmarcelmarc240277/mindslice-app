@@ -5,23 +5,98 @@ import {
   SignInButton,
   SignUpButton,
   UserButton,
+  useAuth,
   useUser,
 } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
 
-function useDisplayName() {
+type AddressForm = "domnule" | "doamnă" | "domnișoară";
+
+type UserProfilePayload = {
+  profile?: {
+    address_form?: AddressForm | null;
+  };
+};
+
+function useWelcomeName() {
   const { user } = useUser();
+  const fullName = user?.fullName?.trim();
+  const lastName = user?.lastName?.trim();
+
+  if (lastName) {
+    return lastName;
+  }
+
+  if (fullName?.includes(",")) {
+    return fullName.split(",")[0]?.trim() || "domnule";
+  }
+
+  if (fullName) {
+    const parts = fullName.split(/\s+/).filter(Boolean);
+    return parts.at(-1) || fullName;
+  }
 
   return (
-    user?.fullName ||
-    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
     user?.username ||
     user?.primaryEmailAddress?.emailAddress ||
-    "Contul tău"
+    "domnule"
   );
 }
 
+function useAddressForm() {
+  const { isSignedIn } = useAuth();
+  const [addressForm, setAddressForm] = useState<AddressForm>("domnule");
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      setAddressForm("domnule");
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadProfile() {
+      try {
+        const response = await fetch("/api/user-state", { cache: "no-store" });
+        const payload = (await response.json()) as UserProfilePayload;
+
+        if (!response.ok) {
+          throw new Error("Nu am putut încărca profilul.");
+        }
+
+        if (!cancelled && payload.profile?.address_form) {
+          setAddressForm(payload.profile.address_form);
+        }
+      } catch {
+        if (!cancelled) {
+          setAddressForm("domnule");
+        }
+      }
+    }
+
+    loadProfile();
+
+    function handleAddressFormUpdated(event: Event) {
+      const customEvent = event as CustomEvent<{ addressForm?: AddressForm }>;
+      if (customEvent.detail?.addressForm) {
+        setAddressForm(customEvent.detail.addressForm);
+      }
+    }
+
+    window.addEventListener("address-form-updated", handleAddressFormUpdated);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("address-form-updated", handleAddressFormUpdated);
+    };
+  }, [isSignedIn]);
+
+  return addressForm;
+}
+
 export function AuthHeader() {
-  const displayName = useDisplayName();
+  const welcomeName = useWelcomeName();
+  const addressForm = useAddressForm();
 
   return (
     <header
@@ -59,7 +134,7 @@ export function AuthHeader() {
               color: "#2a211b",
             }}
           >
-            {displayName}
+            {`Bun venit, ${addressForm} ${welcomeName}!`}
           </strong>
         </div>
       </Show>
