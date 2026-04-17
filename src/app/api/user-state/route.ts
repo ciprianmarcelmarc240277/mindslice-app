@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -16,6 +16,8 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const clerkUser = await currentUser();
+
   let supabase;
   try {
     supabase = createServerSupabaseClient();
@@ -26,11 +28,17 @@ export async function GET() {
     );
   }
 
-  const profilePayload = { user_id: userId };
+  const profilePayload = {
+    user_id: userId,
+    display_name: clerkUser?.fullName ?? null,
+    email: clerkUser?.primaryEmailAddress?.emailAddress ?? null,
+    avatar_url: clerkUser?.imageUrl ?? null,
+    updated_at: new Date().toISOString(),
+  };
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .upsert(profilePayload, { onConflict: "user_id" })
-    .select("user_id, created_at, updated_at")
+    .select("user_id, display_name, email, avatar_url, created_at, updated_at")
     .single();
 
   if (profileError) {
