@@ -1,0 +1,28 @@
+name: Feature request
+description: Propune o functionalitate noua pentru MindSlice.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema sau oportunitate
+      description: Ce ne lipseste acum?
+      placeholder: Utilizatorii nu pot grupa momentele salvate in colectii din UI.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Propunere
+      description: Cum ai vrea sa functioneze?
+      placeholder: As vrea un flow simplu de creare colectie si adaugare a momentelor existente.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: Ce valoare aduce functionalitatea?
+      placeholder: Ar face browsing-ul si organizarea mai utile pentru sesiuni mai lungi.

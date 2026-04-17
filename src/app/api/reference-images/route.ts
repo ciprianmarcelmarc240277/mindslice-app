@@ -2,27 +2,19 @@ import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { NextResponse } from "next/server";
 
-const ALLOWED_FOLDERS = ["img_used", "img"] as const;
 const IMAGE_PATTERN = /\.(jpg|jpeg|png|webp)$/i;
+const REFERENCE_IMAGES_DIR = join(process.cwd(), "public", "reference-images");
 
 export async function GET() {
-  const workspaceRoot = join(/* turbopackIgnore: true */ process.cwd(), "..");
-  const images: string[] = [];
+  try {
+    const entries = await readdir(REFERENCE_IMAGES_DIR, { withFileTypes: true });
+    const images = entries
+      .filter((entry) => entry.isFile() && IMAGE_PATTERN.test(entry.name))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((entry) => `/reference-images/${encodeURIComponent(entry.name)}`);
 
-  for (const folder of ALLOWED_FOLDERS) {
-    try {
-      const entries = await readdir(join(workspaceRoot, folder), { withFileTypes: true });
-
-      entries
-        .filter((entry) => entry.isFile() && IMAGE_PATTERN.test(entry.name))
-        .sort((a, b) => a.name.localeCompare(b.name))
-        .forEach((entry) => {
-          images.push(`/api/reference-images/${folder}/${encodeURIComponent(entry.name)}`);
-        });
-    } catch {
-      continue;
-    }
+    return NextResponse.json({ images });
+  } catch {
+    return NextResponse.json({ images: [] });
   }
-
-  return NextResponse.json({ images });
 }

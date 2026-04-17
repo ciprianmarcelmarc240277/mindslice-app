@@ -1,0 +1,37 @@
+name: Bug report
+description: Raporteaza un bug din UI, auth sau persistence flow.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Ce se intampla
+      description: Descrie pe scurt problema observata.
+      placeholder: Cand incerc sa salvez un moment, request-ul esueaza cu 500.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasi de reproducere
+      description: Listeaza pasii clari care duc la problema.
+      placeholder: |
+        1. Ma autentific
+        2. Deschid pagina principala
+        3. Apas Save moment
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportament asteptat
+      placeholder: Momentul ar trebui salvat si afisat in lista recenta.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context suplimentar
+      description: Logs, capturi, browser, mediu local sau productie.

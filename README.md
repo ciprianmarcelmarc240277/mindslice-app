@@ -1,38 +1,44 @@
 # MindSlice App
 
-MindSlice este o aplicație Next.js pentru explorare vizuală și salvată a unor "live artistic moments". Interfața afișează direcții conceptuale, fragmente de gândire, palette vizuale și prompturi generate dintr-o bibliotecă de slice-uri, iar utilizatorii autentificați pot salva momentele în Supabase.
+[![CI](https://github.com/ciprianmarcelmarc240277/mindslice-app/actions/workflows/ci.yml/badge.svg)](https://github.com/ciprianmarcelmarc240277/mindslice-app/actions/workflows/ci.yml)
 
-## Ce face
+MindSlice este o aplicație Next.js pentru explorare vizuală, prompting și salvare de "live artistic moments". Interfața combină o bibliotecă de slice-uri conceptuale, imagini de referință, autentificare cu Clerk și persistență în Supabase.
 
-- afișează stări artistice live pornind dintr-o bibliotecă locală de slice-uri
-- construiește prompturi vizuale pe baza direcției curente
-- încarcă imagini de referință din API-ul aplicației
-- permite autentificare cu Clerk
-- salvează momentele utilizatorului în Supabase
+![MindSlice cover](./public/readme/mindslice-cover.jpg)
+
+## Ce oferă
+
+- un flux vizual live bazat pe direcții artistice și fragmente conceptuale
+- prompturi construite din starea curentă a momentului
+- imagini de referință servite prin API routes
+- autentificare și stare de utilizator prin Clerk
+- salvare de momente și profiluri în Supabase
 
 ## Stack
 
 - Next.js 16
 - React 19
 - TypeScript
-- Clerk pentru autentificare
-- Supabase pentru persistență
+- Clerk
+- Supabase
+- GitHub Actions pentru CI
+- Vercel pentru deploy
 
 ## Rulare locală
 
 1. Instalează dependențele:
 
 ```bash
-npm install
+npm ci
 ```
 
-2. Creează fișierul `.env.local` pe baza exemplului:
+2. Creează fișierul `.env.local`:
 
 ```bash
 cp .env.example .env.local
 ```
 
-3. Completează variabilele de mediu necesare:
+3. Completează variabilele:
 
 ```env
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
@@ -48,31 +54,55 @@ SUPABASE_SERVICE_ROLE_KEY=
 npm run dev
 ```
 
-Aplicația va fi disponibilă la `http://localhost:3000`.
+Aplicația rulează la `http://localhost:3000`.
 
-## Setup Supabase
+## CI
 
-Schema bazei de date se află în [`supabase/schema.sql`](./supabase/schema.sql).
+Workflow-ul din [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) rulează automat pe `push` și `pull_request` și verifică:
 
-Pașii rapizi sunt descriși în [`SUPABASE_SETUP.md`](./SUPABASE_SETUP.md).
+- instalarea dependențelor cu `npm ci`
+- lint cu `npm run lint`
+- build cu `npm run build`
 
-## Structură utilă
+CI folosește valori placeholder pentru variabilele de mediu, astfel încât pipeline-ul să valideze build-ul fără a expune chei reale.
 
-- `src/app/page.tsx` - interfața principală
-- `src/app/api/slices/route.ts` - construiește biblioteca de slice-uri
+## Deploy Pe Vercel
+
+Repo-ul este pregătit pentru deploy din GitHub în Vercel.
+
+1. Importă repository-ul `ciprianmarcelmarc240277/mindslice-app` în Vercel.
+2. Confirmă framework-ul `Next.js`.
+3. Adaugă aceste environment variables în Vercel:
+
+```env
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+```
+
+4. Lasă `Install Command` pe `npm ci` și `Build Command` pe `npm run build`.
+
+Config-ul de bază este deja definit în [`vercel.json`](./vercel.json).
+
+## Supabase
+
+- schema bazei de date: [`supabase/schema.sql`](./supabase/schema.sql)
+- ghid rapid: [`SUPABASE_SETUP.md`](./SUPABASE_SETUP.md)
+
+## Structură Utilă
+
+- `src/app/page.tsx` - experiența principală din UI
+- `src/app/api/slices/route.ts` - generează biblioteca de slice-uri
 - `src/app/api/reference-images` - expune imaginile de referință
 - `src/app/api/user-state/route.ts` - citește și salvează momentele utilizatorului
-- `src/lib/supabase/server.ts` - clientul server-side pentru Supabase
-- `supabase/schema.sql` - schema tabelelor necesare
+- `src/lib/supabase/server.ts` - clientul Supabase pentru route-uri server-side
+- `supabase/schema.sql` - schema tabelelor și indecșilor
 
-## GitHub Readiness
+## GitHub Hygiene
 
-Înainte de publicare:
-
-- nu urca `.env.local`
-- folosește doar `.env.example` cu valori goale
-- dacă ai folosit chei reale local, rotește `CLERK_SECRET_KEY` și `SUPABASE_SERVICE_ROLE_KEY` înainte de un repo public
-
-## Status
-
-Repo-ul este potrivit pentru GitHub ca aplicație separată, în folderul `mindslice-app`, nu ca întregul director de lucru `MindSlice`.
+- `.env.local` rămâne local și este ignorat de Git
+- `.env.example` trebuie păstrat fără chei reale
+- issue templates și PR template sunt în `.github/`
+- pentru protecție de branch, recomand activarea după ce confirmi dacă vrei workflow bazat pe PR-uri sau push direct

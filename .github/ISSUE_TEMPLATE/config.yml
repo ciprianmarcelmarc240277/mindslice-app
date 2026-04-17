@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: MindSlice README
+    url: https://github.com/ciprianmarcelmarc240277/mindslice-app#readme
+    about: Verifica setup-ul local, mediul si pasii de deploy inainte de a deschide un issue.
