@@ -241,6 +241,8 @@ export default function Home() {
   const [pseudonymInput, setPseudonymInput] = useState("");
   const [isSavingPseudonym, setIsSavingPseudonym] = useState(false);
   const [isEditingPseudonym, setIsEditingPseudonym] = useState(false);
+  const [animatedThought, setAnimatedThought] = useState(fallbackStateLibrary[0].thought);
+  const [thoughtAnimationKey, setThoughtAnimationKey] = useState(0);
   const [promptOutput, setPromptOutput] = useState(() =>
     buildPrompt(false, fallbackStateLibrary[0]),
   );
@@ -340,6 +342,63 @@ export default function Home() {
   useEffect(() => {
     setPromptOutput(buildPrompt(false, current));
   }, [current, currentIndex]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timeoutId: number | undefined;
+
+    setThoughtAnimationKey((previous) => previous + 1);
+    setAnimatedThought("");
+
+    const nextThought = current.thought;
+    const influenceMode = interference?.influenceMode;
+
+    const getDelay = (character: string) => {
+      if (character === "," || character === ";") {
+        return influenceMode === "stain" ? 150 : 110;
+      }
+
+      if (character === "." || character === ":" || character === "!") {
+        return influenceMode === "rupture" ? 240 : 180;
+      }
+
+      if (influenceMode === "echo") {
+        return 28;
+      }
+
+      if (influenceMode === "rupture") {
+        return 16;
+      }
+
+      return 22;
+    };
+
+    const writeCharacter = (index: number) => {
+      if (cancelled) {
+        return;
+      }
+
+      setAnimatedThought(nextThought.slice(0, index + 1));
+
+      if (index >= nextThought.length - 1) {
+        return;
+      }
+
+      timeoutId = window.setTimeout(
+        () => writeCharacter(index + 1),
+        getDelay(nextThought[index]),
+      );
+    };
+
+    timeoutId = window.setTimeout(() => writeCharacter(0), 160);
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [current.thought, interference?.influenceMode]);
 
   useEffect(() => {
     if (!isSignedIn) {
@@ -850,8 +909,8 @@ export default function Home() {
       <section className={styles.heroPanel}>
         <div className={styles.heroCopy}>
           <p className={styles.eyebrow}>MindSlice Next Prototype 01</p>
-          <h1>Artist AI live care gândește artă în timp real.</h1>
-          <p className={styles.lede}>
+          <h1 className={styles.heroTitle}>Artist AI live care gândește artă în timp real.</h1>
+          <p className={`${styles.lede} ${styles.heroLede}`}>
             Sistemul rulează prin triada art, design, business și transformă
             gândirea curentă într-un câmp vizual viu, procedural.
           </p>
@@ -860,15 +919,19 @@ export default function Home() {
         <div className={styles.statusBar}>
           <div>
             <span className={styles.statusLabel}>Stare curentă</span>
-            <strong>{isActive ? "artistul gândește live" : "în așteptare"}</strong>
+            <strong className={styles.statusValue}>
+              {isActive ? "artistul gândește live" : "în așteptare"}
+            </strong>
           </div>
           <div>
             <span className={styles.statusLabel}>Sursa thinking</span>
-            <strong>{engineMode}</strong>
+            <strong className={styles.statusValue}>{engineMode}</strong>
           </div>
           <div>
             <span className={styles.statusLabel}>Direcție</span>
-            <strong>{current.direction}</strong>
+            <strong key={current.direction} className={styles.statusValue}>
+              {current.direction}
+            </strong>
           </div>
         </div>
 
@@ -894,9 +957,16 @@ export default function Home() {
             <strong>O felie de gândire</strong>
             <span>Marc, Ciprian-Marcel</span>
           </div>
-          <div className={styles.thoughtOverlay}>
+          <div
+            className={`${styles.thoughtOverlay} ${
+              interference ? styles.thoughtOverlayInterference : ""
+            }`}
+          >
             <span className={styles.overlayLabel}>Acum mă gândesc la</span>
-            <p>{current.thought}</p>
+            <p key={thoughtAnimationKey} className={styles.typewriterText}>
+              {animatedThought}
+              <span className={styles.typewriterCaret} aria-hidden="true" />
+            </p>
           </div>
         </div>
 
@@ -1188,8 +1258,12 @@ export default function Home() {
         <section className={styles.panelBlock}>
           <h2>Istoric scurt</h2>
           <ul className={styles.historyList}>
-            {history.map((entry) => (
-              <li key={`${entry.time}-${entry.text}`}>
+            {history.map((entry, index) => (
+              <li
+                key={`${entry.time}-${entry.text}`}
+                className={styles.historyItem}
+                style={{ animationDelay: `${index * 90}ms` }}
+              >
                 <span className={styles.historyTime}>{entry.time}</span>
                 <p>{entry.text}</p>
               </li>
