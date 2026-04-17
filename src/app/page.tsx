@@ -268,7 +268,10 @@ export default function Home() {
           throw new Error(`Slices request failed with status ${response.status}`);
         }
 
-        const payload = (await response.json()) as { slices?: ThoughtState[] };
+        const payload = (await response.json()) as {
+          slices?: ThoughtState[];
+          engineMode?: string;
+        };
         const slices = Array.isArray(payload.slices) ? payload.slices : [];
         if (!slices.length || ignore) {
           return;
@@ -276,7 +279,7 @@ export default function Home() {
 
         setStateLibrary(slices);
         setCurrentIndex(0);
-        setEngineMode("Slices file");
+        setEngineMode(payload.engineMode || "Slices file");
       } catch {
         if (!ignore) {
           setStateLibrary(fallbackStateLibrary);
@@ -290,7 +293,7 @@ export default function Home() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [isSignedIn, interference?.sourceId, interference?.publishedAt, interference?.influenceMode]);
 
   useEffect(() => {
     let cancelled = false;
@@ -554,24 +557,6 @@ export default function Home() {
 
     return () => window.clearInterval(interval);
   }, [isActive, referenceImageUrls.length]);
-
-  const handlePreviousImage = () => {
-    if (!referenceImageUrls.length) {
-      return;
-    }
-
-    setImageIndex((previous) =>
-      previous === 0 ? referenceImageUrls.length - 1 : previous - 1,
-    );
-  };
-
-  const handleNextImage = () => {
-    if (!referenceImageUrls.length) {
-      return;
-    }
-
-    setImageIndex((previous) => (previous + 1) % referenceImageUrls.length);
-  };
 
   const handleSaveMoment = async () => {
     setPromptOutput(buildPrompt(true, current));
@@ -1014,56 +999,6 @@ export default function Home() {
                   </div>
                 )}
               </div>
-              {referenceImageUrls.length ? (
-                <div className={styles.imageNavigator}>
-                  <div className={styles.imageNavigatorTop}>
-                    <span className={styles.overlayLabel}>Flux vizual</span>
-                    <strong>
-                      cadrul {imageIndex + 1} din {referenceImageUrls.length}
-                    </strong>
-                  </div>
-                  <div className={styles.imageNavigatorControls}>
-                    <button
-                      type="button"
-                      className={styles.imageNavButton}
-                      onClick={handlePreviousImage}
-                      aria-label="Imaginea anterioară"
-                    >
-                      Inapoi
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.imageNavButton}
-                      onClick={handleNextImage}
-                      aria-label="Imaginea următoare"
-                    >
-                      Inainte
-                    </button>
-                  </div>
-                  <div className={styles.thumbnailRail}>
-                    {referenceImageUrls.map((url, index) => (
-                      <button
-                        key={url}
-                        type="button"
-                        className={`${styles.thumbnailButton} ${
-                          index === imageIndex ? styles.thumbnailButtonActive : ""
-                        }`}
-                        onClick={() => setImageIndex(index)}
-                        aria-label={`Deschide cadrul ${index + 1}`}
-                      >
-                        <Image
-                          src={url}
-                          alt={`Cadru de referință ${index + 1}`}
-                          fill
-                          sizes="72px"
-                          className={styles.thumbnailImage}
-                          unoptimized
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
               <div className={styles.cornerSignature}>
                 <strong>O felie de gândire</strong>
                 <span>Marc, Ciprian-Marcel</span>

@@ -1,5 +1,7 @@
+import { auth } from "@clerk/nextjs/server";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const stopwords = new Set([
   "și",
@@ -31,6 +33,45 @@ const stopwords = new Set([
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
+
+type InfluenceMode = "whisper" | "echo" | "rupture" | "counterpoint" | "stain";
+
+type ContaminationSource = {
+  title: string;
+  excerpt: string | null;
+  content: string;
+  senseWeight: number;
+  structureWeight: number;
+  attentionWeight: number;
+  influenceMode: InfluenceMode;
+};
+
+type SliceState = {
+  direction: string;
+  thought: string;
+  fragments: string[];
+  mood: string;
+  palette: string[];
+  materials: string[];
+  motion: string;
+  triad: {
+    art: string;
+    design: string;
+    business: string;
+  };
+  visual: {
+    background: string;
+    accent: string;
+    ink: string;
+    mode: string;
+    density: number;
+    wave: number;
+    fracture: number;
+    drift: number;
+    convergence: number;
+  };
+  keywords: string[];
+};
 
 function normalizeSliceLine(line: string) {
   return line
@@ -74,6 +115,14 @@ function titleCase(value: string) {
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function sentenceCase(value: string) {
+  if (!value) {
+    return value;
+  }
+
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 function extractKeywords(lines: string[]) {
@@ -237,7 +286,7 @@ function inferMode(keywords: string[]) {
   return "fractured_field";
 }
 
-function parseSliceBlock(block: string, index: number) {
+function parseSliceBlock(block: string, index: number): SliceState | null {
   const rawLines = block.replace("[SLICE_START]", "").replace("[SLICE_END]", "").split(/\r?\n/);
 
   const structuredLines = rawLines
@@ -306,22 +355,203 @@ function parseSliceBlock(block: string, index: number) {
   };
 }
 
-function parseSlicesContent(content: string) {
+function parseSlicesContent(content: string): SliceState[] {
   const blockMatches = content.match(/\[SLICE_START\]([\s\S]*?)\[SLICE_END\]/g) || [];
   if (!blockMatches.length) {
     return [];
   }
 
-  return blockMatches.map(parseSliceBlock).filter(Boolean);
+  return blockMatches
+    .map(parseSliceBlock)
+    .filter((slice): slice is SliceState => slice !== null);
+}
+
+function buildContaminationKeywords(source: ContaminationSource) {
+  const text = [source.title, source.excerpt ?? "", source.content].join(" ");
+  const unique = [...new Set(tokenize(text))];
+  return unique.slice(0, 8);
+}
+
+function buildContaminationFragment(source: ContaminationSource) {
+  const excerpt = (source.excerpt ?? source.content).trim();
+  if (!excerpt) {
+    return source.title;
+  }
+
+  return excerpt.split(/[.!?]/)[0]?.trim() || source.title;
+}
+
+function blendUnique(base: string[], additions: string[], limit: number) {
+  const merged = [...base];
+
+  additions.forEach((item) => {
+    if (!merged.includes(item)) {
+      merged.push(item);
+    }
+  });
+
+  return merged.slice(0, limit);
+}
+
+function applyContamination(slice: SliceState, source: ContaminationSource, index: number): SliceState {
+  const contaminationKeywords = buildContaminationKeywords(source);
+  const contaminationFragment = buildContaminationFragment(source);
+  const pickedKeyword =
+    contaminationKeywords[index % contaminationKeywords.length] ?? tokenize(source.title)[0] ?? "interferență";
+  const pickedPhrase = sentenceCase(pickedKeyword.replace(/-/g, " "));
+
+  const nextThoughtBase = slice.thought.replace(/[.]+$/, "");
+  let thought = `${nextThoughtBase}.`;
+  let direction = slice.direction;
+  let mood = slice.mood;
+  let motion = slice.motion;
+  const triad = { ...slice.triad };
+
+  switch (source.influenceMode) {
+    case "echo":
+      thought = `${nextThoughtBase}, iar jurnalul face să revină ${pickedPhrase.toLowerCase()} ca ecou activ.`;
+      mood = `${slice.mood}, reverberant`;
+      motion = `${slice.motion} with recursive returns`;
+      triad.art = source.senseWeight >= 0.55 ? "charged" : triad.art;
+      triad.business = source.attentionWeight >= 0.55 ? "locked" : triad.business;
+      break;
+    case "rupture":
+      direction = `${slice.direction} / Ruptură ${pickedPhrase}`;
+      thought = `${nextThoughtBase}, dar jurnalul rupe direcția și introduce ${pickedPhrase.toLowerCase()}.`;
+      mood = `${slice.mood}, deviat`;
+      motion = `${slice.motion} with abrupt fractures`;
+      triad.design = "fractured";
+      break;
+    case "counterpoint":
+      thought = `${nextThoughtBase}, însă jurnalul opune ${pickedPhrase.toLowerCase()} ca tensiune secundară.`;
+      mood = `${slice.mood}, tensionat`;
+      motion = `${slice.motion} with counterpoint resistance`;
+      triad.art = source.senseWeight >= 0.45 ? "tense" : triad.art;
+      triad.design = source.structureWeight >= 0.45 ? "countered" : triad.design;
+      break;
+    case "stain":
+      thought = `${nextThoughtBase}, iar jurnalul lasă urme persistente de ${pickedPhrase.toLowerCase()}.`;
+      mood = `${slice.mood}, pătat`;
+      motion = `${slice.motion} with lingering residue`;
+      triad.art = "stained";
+      triad.business = source.attentionWeight >= 0.5 ? "retained" : triad.business;
+      break;
+    case "whisper":
+    default:
+      thought = `${nextThoughtBase}, cu o abatere discretă spre ${pickedPhrase.toLowerCase()}.`;
+      mood = `${slice.mood}, contaminat fin`;
+      motion = `${slice.motion} with soft interference`;
+      triad.art = source.senseWeight >= 0.6 ? "lit" : triad.art;
+      break;
+  }
+
+  const nextPalette = blendUnique(
+    slice.palette,
+    source.senseWeight > 0.55 ? ["signal red"] : ["mist"],
+    4,
+  );
+  const nextMaterials = blendUnique(
+    slice.materials,
+    source.structureWeight > 0.55 ? ["cut paper"] : ["paper grain"],
+    4,
+  );
+  const nextFragments = blendUnique(slice.fragments, [contaminationFragment, pickedPhrase], 5);
+  const nextKeywords = blendUnique(slice.keywords, contaminationKeywords, 8);
+
+  return {
+    ...slice,
+    direction,
+    thought,
+    fragments: nextFragments,
+    mood,
+    palette: nextPalette,
+    materials: nextMaterials,
+    motion,
+    triad,
+    visual: {
+      ...slice.visual,
+      density: clamp(slice.visual.density + source.senseWeight * 0.18, 0.9, 1.95),
+      wave: clamp(slice.visual.wave + source.attentionWeight * 0.22, 0.35, 1.55),
+      fracture: clamp(
+        slice.visual.fracture +
+          (source.influenceMode === "rupture" ? 0.18 : source.structureWeight * 0.08),
+        0.18,
+        0.95,
+      ),
+      drift: clamp(
+        slice.visual.drift +
+          (source.influenceMode === "counterpoint" ? 0.1 : source.attentionWeight * 0.06),
+        0.25,
+        1.2,
+      ),
+      convergence: clamp(
+        slice.visual.convergence +
+          (source.influenceMode === "echo" ? 0.08 : source.structureWeight * 0.05),
+        0.45,
+        0.95,
+      ),
+    },
+    keywords: nextKeywords,
+  };
+}
+
+async function getActiveContamination(userId: string | null) {
+  if (!userId) {
+    return null;
+  }
+
+  let supabase;
+  try {
+    supabase = createServerSupabaseClient();
+  } catch {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .select("title, excerpt, content, sense_weight, structure_weight, attention_weight, influence_mode")
+    .eq("user_id", userId)
+    .eq("status", "published")
+    .eq("is_contaminant", true)
+    .order("published_at", { ascending: false, nullsFirst: false })
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return {
+    title: data.title,
+    excerpt: data.excerpt,
+    content: data.content,
+    senseWeight: Number(data.sense_weight ?? 0),
+    structureWeight: Number(data.structure_weight ?? 0),
+    attentionWeight: Number(data.attention_weight ?? 0),
+    influenceMode: (data.influence_mode ?? "whisper") as InfluenceMode,
+  } satisfies ContaminationSource;
 }
 
 export async function GET() {
   const fallback = { slices: [] as unknown[] };
 
   try {
+    const { userId } = await auth();
     const filePath = path.resolve(process.cwd(), "..", "Slices");
     const content = await readFile(filePath, "utf8");
-    return Response.json({ slices: parseSlicesContent(content) });
+    const baseSlices = parseSlicesContent(content);
+    const contamination = await getActiveContamination(userId);
+    const slices = contamination
+      ? baseSlices.map((slice, index) => applyContamination(slice, contamination, index))
+      : baseSlices;
+
+    return Response.json({
+      slices,
+      engineMode: contamination
+        ? `Slices file + ${contamination.influenceMode} contamination`
+        : "Slices file",
+    });
   } catch {
     return Response.json(fallback);
   }
