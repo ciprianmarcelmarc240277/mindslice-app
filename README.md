@@ -1,18 +1,86 @@
-# MindSlice App
+# MindSlice
 
 [![CI](https://github.com/ciprianmarcelmarc240277/mindslice-app/actions/workflows/ci.yml/badge.svg)](https://github.com/ciprianmarcelmarc240277/mindslice-app/actions/workflows/ci.yml)
 
-MindSlice este o aplicație Next.js pentru explorare vizuală, prompting și salvare de "live artistic moments". Interfața combină o bibliotecă de slice-uri conceptuale, imagini de referință, autentificare cu Clerk și persistență în Supabase.
+MindSlice este o platforma scriitoriceasca si artistica bazata pe ideea unui `Artist AI care gandeste live si poate fi contaminat de autorii care publica in jurnal`.
 
 ![MindSlice cover](./public/readme/mindslice-cover.jpg)
 
-## Ce oferă
+## Core Concept
 
-- un flux vizual live bazat pe direcții artistice și fragmente conceptuale
-- prompturi construite din starea curentă a momentului
-- imagini de referință servite prin API routes
-- autentificare și stare de utilizator prin Clerk
-- salvare de momente și profiluri în Supabase
+MindSlice nu este un simplu generator AI. Este un sistem cognitiv post-generativ in care autorii influenteaza gandirea live a unui artist artificial.
+
+Formula centrala a produsului este:
+
+`Artist AI live + jurnal contaminant + triada sense / structure / attention`
+
+Jurnalul nu este doar arhiva. Jurnalul este agent de contaminare.
+
+## Triada Sistemului
+
+- `ART ↔ SENSE`
+- `DESIGN ↔ STRUCTURE`
+- `BUSINESS ↔ ATTENTION`
+
+### ART ↔ SENSE
+
+Axa sensului: simbol, emotie, memorie, ambiguitate, tensiune poetica, imaginar.
+
+### DESIGN ↔ STRUCTURE
+
+Axa structurii: compozitie, organizare, tipar, fragmentare, arhitectura interna a gandirii.
+
+### BUSINESS ↔ ATTENTION
+
+Axa atentiei: focalizare, ritm, dominanta, persistenta, distributia tensiunii.
+
+Autorii nu publica doar continut. Ei modifica:
+
+- distributia sensului
+- structura gandirii
+- regimul atentiei
+
+## Ce Face Aplicatia
+
+- ruleaza un flux live de gandire artistica
+- expune directii conceptuale si stari vizuale
+- permite salvarea de momente in cont
+- defineste identitatea publica a autorului prin nume, pseudonim si formula de adresare
+- pregateste infrastructura pentru transformarea momentelor salvate in jurnal contaminant
+
+## Identitatea Autorului
+
+Profilul public al autorului este tratat editorial, nu administrativ.
+
+- `display_name` este numele public si trebuie salvat in formatul `Nume, Prenume`
+- `pseudonym` este optional si este afisat intre ghilimele
+- `address_form` controleaza formula de adresare din interfata
+
+Scopul nu este doar autentificarea, ci construirea unei semnaturi coerente pentru o platforma de autori, compozitori si creatori.
+
+## Jurnalul Gandirii
+
+Directia de produs pentru jurnal este:
+
+1. un moment salvat devine draft editorial
+2. autorul il transforma in text de jurnal
+3. textul publicat devine sursa de influenta pentru Artistul AI
+4. sistemul injecteaza contaminarea in gandirea live
+
+Asta inseamna ca postarea publicata poate schimba:
+
+- vocabularul activ
+- structura interna a gandirii
+- centrul de atentie al sistemului
+
+## Roadmap MVP
+
+1. `saved_moments` ca memorie de lucru
+2. `blog_posts` ca drafturi si publicari
+3. transformarea unui moment salvat in draft de jurnal
+4. scoruri de influenta pentru `sense`, `structure`, `attention`
+5. contaminarea Artistului AI live pe baza postarilor publicate
+6. UI care arata clar sursa bruiajului
 
 ## Stack
 
@@ -21,24 +89,24 @@ MindSlice este o aplicație Next.js pentru explorare vizuală, prompting și sal
 - TypeScript
 - Clerk
 - Supabase
-- GitHub Actions pentru CI
-- Vercel pentru deploy
+- GitHub Actions
+- Vercel
 
-## Rulare locală
+## Rulare Locala
 
-1. Instalează dependențele:
+1. Instaleaza dependintele:
 
 ```bash
 npm ci
 ```
 
-2. Creează fișierul `.env.local`:
+2. Creeaza `.env.local`:
 
 ```bash
 cp .env.example .env.local
 ```
 
-3. Completează variabilele:
+3. Completeaza variabilele:
 
 ```env
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
@@ -48,61 +116,26 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 ```
 
-4. Pornește aplicația:
+4. Porneste aplicatia:
 
 ```bash
 npm run dev
 ```
 
-Aplicația rulează la `http://localhost:3000`.
-
-## CI
-
-Workflow-ul din [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) rulează automat pe `push` și `pull_request` și verifică:
-
-- instalarea dependențelor cu `npm ci`
-- lint cu `npm run lint`
-- build cu `npm run build`
-
-CI folosește valori placeholder pentru variabilele de mediu, astfel încât pipeline-ul să valideze build-ul fără a expune chei reale.
-
-## Deploy Pe Vercel
-
-Repo-ul este pregătit pentru deploy din GitHub în Vercel.
-
-1. Importă repository-ul `ciprianmarcelmarc240277/mindslice-app` în Vercel.
-2. Confirmă framework-ul `Next.js`.
-3. Adaugă aceste environment variables în Vercel:
-
-```env
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
-CLERK_SECRET_KEY=
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-```
-
-4. Lasă `Install Command` pe `npm ci` și `Build Command` pe `npm run build`.
-
-Config-ul de bază este deja definit în [`vercel.json`](./vercel.json).
+Aplicatia ruleaza la `http://localhost:3000`.
 
 ## Supabase
 
-- schema bazei de date: [`supabase/schema.sql`](./supabase/schema.sql)
-- ghid rapid: [`SUPABASE_SETUP.md`](./SUPABASE_SETUP.md)
+- schema: [`supabase/schema.sql`](./supabase/schema.sql)
+- setup rapid: [`SUPABASE_SETUP.md`](./SUPABASE_SETUP.md)
 
-## Structură Utilă
+## Specificatie Tehnica
 
-- `src/app/page.tsx` - experiența principală din UI
-- `src/app/api/slices/route.ts` - generează biblioteca de slice-uri
-- `src/app/api/reference-images` - expune imaginile de referință
-- `src/app/api/user-state/route.ts` - citește și salvează momentele utilizatorului
-- `src/lib/supabase/server.ts` - clientul Supabase pentru route-uri server-side
-- `supabase/schema.sql` - schema tabelelor și indecșilor
+Documentul tehnic pentru MVP este in [`TECH_SPEC.md`](./TECH_SPEC.md).
 
-## GitHub Hygiene
+## Manifest Scurt
 
-- `.env.local` rămâne local și este ignorat de Git
-- `.env.example` trebuie păstrat fără chei reale
-- issue templates și PR template sunt în `.github/`
-- pentru protecție de branch, recomand activarea după ce confirmi dacă vrei workflow bazat pe PR-uri sau push direct
+MindSlice este un sistem in care gandirea nu este fixa.
+Ea poate fi tulburata, contaminata si reordonata.
+Autorii nu publica doar texte.
+Ei schimba sensul, structura si atentia unui Artist AI care gandeste live.
