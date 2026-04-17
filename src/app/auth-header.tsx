@@ -14,42 +14,28 @@ type AddressForm = "domnule" | "doamnă" | "domnișoară";
 
 type UserProfilePayload = {
   profile?: {
+    display_name?: string | null;
+    pseudonym?: string | null;
     address_form?: AddressForm | null;
   };
 };
 
-function useWelcomeName() {
-  const { user } = useUser();
-  const fullName = user?.fullName?.trim();
-  const lastName = user?.lastName?.trim();
+type HeaderProfile = {
+  addressForm: AddressForm;
+};
 
-  if (lastName) {
-    return lastName;
-  }
-
-  if (fullName?.includes(",")) {
-    return fullName.split(",")[0]?.trim() || "domnule";
-  }
-
-  if (fullName) {
-    const parts = fullName.split(/\s+/).filter(Boolean);
-    return parts.at(-1) || fullName;
-  }
-
-  return (
-    user?.username ||
-    user?.primaryEmailAddress?.emailAddress ||
-    "domnule"
-  );
-}
-
-function useAddressForm() {
+function useHeaderProfile() {
   const { isSignedIn } = useAuth();
-  const [addressForm, setAddressForm] = useState<AddressForm>("domnule");
+  const { user } = useUser();
+  const [profile, setProfile] = useState<HeaderProfile>({
+    addressForm: "domnule",
+  });
 
   useEffect(() => {
     if (!isSignedIn) {
-      setAddressForm("domnule");
+      setProfile({
+        addressForm: "domnule",
+      });
       return;
     }
 
@@ -64,39 +50,46 @@ function useAddressForm() {
           throw new Error("Nu am putut încărca profilul.");
         }
 
-        if (!cancelled && payload.profile?.address_form) {
-          setAddressForm(payload.profile.address_form);
+        if (!cancelled) {
+          setProfile({
+            addressForm: payload.profile?.address_form || "domnule",
+          });
         }
       } catch {
         if (!cancelled) {
-          setAddressForm("domnule");
+          setProfile({
+            addressForm: "domnule",
+          });
         }
       }
     }
 
     loadProfile();
 
-    function handleAddressFormUpdated(event: Event) {
-      const customEvent = event as CustomEvent<{ addressForm?: AddressForm }>;
-      if (customEvent.detail?.addressForm) {
-        setAddressForm(customEvent.detail.addressForm);
-      }
+    function handleProfileUpdated(event: Event) {
+      const customEvent = event as CustomEvent<{
+        addressForm?: AddressForm;
+        pseudonym?: string;
+      }>;
+
+      setProfile((previous) => ({
+        addressForm: customEvent.detail?.addressForm || previous.addressForm,
+      }));
     }
 
-    window.addEventListener("address-form-updated", handleAddressFormUpdated);
+    window.addEventListener("profile-updated", handleProfileUpdated);
 
     return () => {
       cancelled = true;
-      window.removeEventListener("address-form-updated", handleAddressFormUpdated);
+      window.removeEventListener("profile-updated", handleProfileUpdated);
     };
-  }, [isSignedIn]);
+  }, [isSignedIn, user]);
 
-  return addressForm;
+  return profile;
 }
 
 export function AuthHeader() {
-  const welcomeName = useWelcomeName();
-  const addressForm = useAddressForm();
+  const profile = useHeaderProfile();
 
   return (
     <header
@@ -134,7 +127,7 @@ export function AuthHeader() {
               color: "#2a211b",
             }}
           >
-            {`Bun venit, ${addressForm} ${welcomeName}!`}
+            {`Bun venit, ${profile.addressForm}!`}
           </strong>
         </div>
       </Show>

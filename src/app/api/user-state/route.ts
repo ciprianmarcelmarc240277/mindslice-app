@@ -13,7 +13,13 @@ type SaveMomentPayload = {
 
 type UpdateProfilePayload = {
   addressForm?: string;
+  displayName?: string;
+  pseudonym?: string;
 };
+
+function normalizePseudonym(value: string) {
+  return value.trim().replace(/^[„"']+|[”"']+$/g, "").trim();
+}
 
 export async function GET() {
   const { userId } = await auth();
@@ -34,17 +40,25 @@ export async function GET() {
     );
   }
 
+  const { data: existingProfile } = await supabase
+    .from("profiles")
+    .select("user_id, display_name, pseudonym, email, avatar_url, address_form, created_at, updated_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+
   const profilePayload = {
     user_id: userId,
-    display_name: clerkUser?.fullName ?? null,
-    email: clerkUser?.primaryEmailAddress?.emailAddress ?? null,
-    avatar_url: clerkUser?.imageUrl ?? null,
+    display_name: existingProfile?.display_name ?? null,
+    pseudonym: existingProfile?.pseudonym ?? null,
+    email: clerkUser?.primaryEmailAddress?.emailAddress ?? existingProfile?.email ?? null,
+    avatar_url: clerkUser?.imageUrl ?? existingProfile?.avatar_url ?? null,
+    address_form: existingProfile?.address_form ?? null,
     updated_at: new Date().toISOString(),
   };
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .upsert(profilePayload, { onConflict: "user_id" })
-    .select("user_id, display_name, email, avatar_url, address_form, created_at, updated_at")
+    .select("user_id, display_name, pseudonym, email, avatar_url, address_form, created_at, updated_at")
     .single();
 
   if (profileError) {
@@ -83,10 +97,12 @@ export async function PATCH(request: Request) {
   }
 
   if (!payload.addressForm || !ADDRESS_FORM_OPTIONS.includes(payload.addressForm as (typeof ADDRESS_FORM_OPTIONS)[number])) {
-    return NextResponse.json(
-      { error: "addressForm must be one of: domnule, doamnă, domnișoară" },
-      { status: 400 },
-    );
+    if (payload.addressForm !== undefined) {
+      return NextResponse.json(
+        { error: "addressForm must be one of: domnule, doamnă, domnișoară" },
+        { status: 400 },
+      );
+    }
   }
 
   let supabase;
@@ -99,17 +115,56 @@ export async function PATCH(request: Request) {
     );
   }
 
+  const nextDisplayName =
+    payload.displayName === undefined ? undefined : payload.displayName.trim();
+  const nextPseudonym =
+    payload.pseudonym === undefined ? undefined : normalizePseudonym(payload.pseudonym);
+
+  if (nextDisplayName !== undefined && !nextDisplayName) {
+    return NextResponse.json(
+      { error: "displayName nu poate fi gol." },
+      { status: 400 },
+    );
+  }
+
+  if (nextDisplayName !== undefined && !nextDisplayName.includes(",")) {
+    return NextResponse.json(
+      { error: 'Numele afișat trebuie să fie în formatul "Nume, Prenume".' },
+      { status: 400 },
+    );
+  }
+
+  if (nextPseudonym !== undefined && !nextPseudonym) {
+    return NextResponse.json(
+      { error: "Pseudonimul nu poate fi gol dacă este trimis." },
+      { status: 400 },
+    );
+  }
+
+  if (
+    payload.addressForm === undefined &&
+    nextDisplayName === undefined &&
+    nextPseudonym === undefined
+  ) {
+    return NextResponse.json(
+      { error: "Trimite cel puțin addressForm, displayName sau pseudonym." },
+      { status: 400 },
+    );
+  }
+
   const { data: profile, error } = await supabase
     .from("profiles")
     .upsert(
       {
         user_id: userId,
-        address_form: payload.addressForm,
+        ...(payload.addressForm !== undefined ? { address_form: payload.addressForm } : {}),
+        ...(nextDisplayName !== undefined ? { display_name: nextDisplayName } : {}),
+        ...(nextPseudonym !== undefined ? { pseudonym: nextPseudonym } : {}),
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id" },
     )
-    .select("user_id, display_name, email, avatar_url, address_form, created_at, updated_at")
+    .select("user_id, display_name, pseudonym, email, avatar_url, address_form, created_at, updated_at")
     .single();
 
   if (error) {

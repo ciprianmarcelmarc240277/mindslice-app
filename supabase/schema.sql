@@ -3,6 +3,7 @@ create extension if not exists "pgcrypto";
 create table if not exists public.profiles (
   user_id text primary key,
   display_name text,
+  pseudonym text,
   email text,
   avatar_url text,
   address_form text check (address_form in ('domnule', 'doamnă', 'domnișoară')),
@@ -12,8 +13,23 @@ create table if not exists public.profiles (
 );
 
 alter table public.profiles
+  add column if not exists display_name text;
+
+alter table public.profiles
+  add column if not exists pseudonym text;
+
+alter table public.profiles
+  add column if not exists email text;
+
+alter table public.profiles
+  add column if not exists avatar_url text;
+
+alter table public.profiles
   add column if not exists address_form text
   check (address_form in ('domnule', 'doamnă', 'domnișoară'));
+
+alter table public.profiles
+  add column if not exists bio text;
 
 create table if not exists public.saved_moments (
   id uuid primary key default gen_random_uuid(),

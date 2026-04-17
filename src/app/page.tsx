@@ -55,10 +55,15 @@ type AddressForm = "domnule" | "doamnă" | "domnișoară";
 type UserProfile = {
   user_id: string;
   display_name?: string | null;
+  pseudonym?: string | null;
   email?: string | null;
   avatar_url?: string | null;
   address_form?: AddressForm | null;
 };
+
+function formatQuotedPseudonym(value: string) {
+  return `„${value}”`;
+}
 
 const fallbackStateLibrary: ThoughtState[] = [
   {
@@ -183,6 +188,13 @@ export default function Home() {
   const [accountMessage, setAccountMessage] = useState("Conectează-te pentru a salva momente.");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [isSavingAddressForm, setIsSavingAddressForm] = useState(false);
+  const [isEditingAddressForm, setIsEditingAddressForm] = useState(false);
+  const [displayNameInput, setDisplayNameInput] = useState("");
+  const [isSavingDisplayName, setIsSavingDisplayName] = useState(false);
+  const [isEditingDisplayName, setIsEditingDisplayName] = useState(false);
+  const [pseudonymInput, setPseudonymInput] = useState("");
+  const [isSavingPseudonym, setIsSavingPseudonym] = useState(false);
+  const [isEditingPseudonym, setIsEditingPseudonym] = useState(false);
   const [promptOutput, setPromptOutput] = useState(() =>
     buildPrompt(false, fallbackStateLibrary[0]),
   );
@@ -308,6 +320,8 @@ export default function Home() {
 
         if (!cancelled) {
           setProfile(payload.profile ?? null);
+          setDisplayNameInput(payload.profile?.display_name ?? "");
+          setPseudonymInput(payload.profile?.pseudonym ?? "");
           setSavedMoments(Array.isArray(payload.savedMoments) ? payload.savedMoments : []);
           setAccountMessage("Momentele tale salvate sunt sincronizate cu Supabase.");
         }
@@ -419,9 +433,14 @@ export default function Home() {
       }
 
       setProfile(payload.profile);
+      setIsEditingAddressForm(false);
       window.dispatchEvent(
-        new CustomEvent("address-form-updated", {
-          detail: { addressForm: payload.profile.address_form ?? "domnule" },
+        new CustomEvent("profile-updated", {
+          detail: {
+            addressForm: payload.profile.address_form ?? "domnule",
+            displayName: payload.profile.display_name ?? profile?.display_name ?? displayNameInput,
+            pseudonym: payload.profile.pseudonym ?? profile?.pseudonym ?? pseudonymInput,
+          },
         }),
       );
       setAccountMessage("Formula de adresare a fost actualizată.");
@@ -433,6 +452,116 @@ export default function Home() {
       );
     } finally {
       setIsSavingAddressForm(false);
+    }
+  };
+
+  const handleDisplayNameSave = async () => {
+    const nextDisplayName = displayNameInput.trim();
+
+    if (!isSignedIn) {
+      setAccountMessage("Autentifică-te ca să-ți poți seta numele afișat.");
+      return;
+    }
+
+    if (!nextDisplayName) {
+      setAccountMessage("Numele afișat nu poate fi gol.");
+      return;
+    }
+
+    setIsSavingDisplayName(true);
+
+    try {
+      const response = await fetch("/api/user-state", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ displayName: nextDisplayName }),
+      });
+
+      const payload = (await response.json()) as {
+        profile?: UserProfile;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.profile) {
+        throw new Error(payload.error || "Nu am putut actualiza numele afișat.");
+      }
+
+      setProfile(payload.profile);
+      setDisplayNameInput(payload.profile.display_name ?? nextDisplayName);
+      setIsEditingDisplayName(false);
+      window.dispatchEvent(
+        new CustomEvent("profile-updated", {
+          detail: {
+            addressForm: payload.profile.address_form ?? "domnule",
+            displayName: payload.profile.display_name ?? nextDisplayName,
+            pseudonym: payload.profile.pseudonym ?? profile?.pseudonym ?? pseudonymInput,
+          },
+        }),
+      );
+      setAccountMessage("Numele afișat a fost actualizat.");
+    } catch (error) {
+      setAccountMessage(
+        error instanceof Error ? error.message : "Nu am putut actualiza numele afișat.",
+      );
+    } finally {
+      setIsSavingDisplayName(false);
+    }
+  };
+
+  const handlePseudonymSave = async () => {
+    const nextPseudonym = pseudonymInput.trim();
+
+    if (!isSignedIn) {
+      setAccountMessage("Autentifică-te ca să-ți poți seta pseudonimul.");
+      return;
+    }
+
+    if (!nextPseudonym) {
+      setAccountMessage("Pseudonimul nu poate fi gol.");
+      return;
+    }
+
+    setIsSavingPseudonym(true);
+
+    try {
+      const response = await fetch("/api/user-state", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ pseudonym: nextPseudonym }),
+      });
+
+      const payload = (await response.json()) as {
+        profile?: UserProfile;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.profile) {
+        throw new Error(payload.error || "Nu am putut actualiza pseudonimul.");
+      }
+
+      setProfile(payload.profile);
+      setPseudonymInput(payload.profile.pseudonym ?? nextPseudonym);
+      setIsEditingPseudonym(false);
+      window.dispatchEvent(
+        new CustomEvent("profile-updated", {
+          detail: {
+            addressForm: payload.profile.address_form ?? "domnule",
+            displayName: payload.profile.display_name ?? profile?.display_name ?? displayNameInput,
+            pseudonym: payload.profile.pseudonym ?? nextPseudonym,
+          },
+        }),
+      );
+      setAccountMessage("Pseudonimul a fost actualizat.");
+    } catch (error) {
+      setAccountMessage(
+        error instanceof Error ? error.message : "Nu am putut actualiza pseudonimul.",
+      );
+    } finally {
+      setIsSavingPseudonym(false);
     }
   };
 
@@ -557,20 +686,155 @@ export default function Home() {
         <section className={styles.panelBlock}>
           <h2>Cont</h2>
           <p className={styles.accountMessage}>{accountMessage}</p>
-          {isSignedIn ? (
-            <div className={styles.accountSettings}>
-              <label htmlFor="address-form">Formula de adresare</label>
-              <select
-                id="address-form"
-                value={profile?.address_form ?? "domnule"}
-                onChange={handleAddressFormChange}
-                disabled={isSavingAddressForm}
-                className={styles.accountSelect}
-              >
-                <option value="domnule">domnule</option>
-                <option value="doamnă">doamnă</option>
-                <option value="domnișoară">domnișoară</option>
-              </select>
+          {isSignedIn && profile ? (
+            <div className={styles.accountProfile}>
+              <div className={styles.accountProfileItem}>
+                <span>Nume</span>
+                <div className={styles.accountValueRow}>
+                  {isEditingDisplayName ? (
+                    <div className={styles.accountInlineEditor}>
+                      <input
+                        id="display-name"
+                        type="text"
+                        value={displayNameInput}
+                        onChange={(event) => setDisplayNameInput(event.target.value)}
+                        disabled={isSavingDisplayName}
+                        className={styles.accountInput}
+                        placeholder="Ex: Marc, Ciprian-Marcel"
+                      />
+                      <p className={styles.accountHint}>Format obligatoriu: `Nume, Prenume`.</p>
+                      <div className={styles.accountActionRow}>
+                        <button
+                          type="button"
+                          className={styles.accountButton}
+                          onClick={handleDisplayNameSave}
+                          disabled={isSavingDisplayName}
+                        >
+                          {isSavingDisplayName ? "Se salvează..." : "Salvează"}
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.accountTextButton}
+                          onClick={() => {
+                            setDisplayNameInput(profile.display_name ?? "");
+                            setIsEditingDisplayName(false);
+                          }}
+                          disabled={isSavingDisplayName}
+                        >
+                          Renunță
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <strong>{profile.display_name || "Nesetat încă"}</strong>
+                      <button
+                        type="button"
+                        className={styles.accountTextButton}
+                        onClick={() => setIsEditingDisplayName(true)}
+                      >
+                        {profile.display_name ? "Editează" : "Setează"}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className={styles.accountProfileItem}>
+                <span>Pseudonim</span>
+                <div className={styles.accountValueRow}>
+                  {isEditingPseudonym ? (
+                    <div className={styles.accountInlineEditor}>
+                      <input
+                        id="pseudonym"
+                        type="text"
+                        value={pseudonymInput}
+                        onChange={(event) => setPseudonymInput(event.target.value)}
+                        disabled={isSavingPseudonym}
+                        className={styles.accountInput}
+                        placeholder="Ex: Arhitectul Tăcut"
+                      />
+                      <p className={styles.accountHint}>
+                        Pseudonimul este afișat automat între ghilimele.
+                      </p>
+                      <div className={styles.accountActionRow}>
+                        <button
+                          type="button"
+                          className={styles.accountButton}
+                          onClick={handlePseudonymSave}
+                          disabled={isSavingPseudonym}
+                        >
+                          {isSavingPseudonym ? "Se salvează..." : "Salvează"}
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.accountTextButton}
+                          onClick={() => {
+                            setPseudonymInput(profile.pseudonym ?? "");
+                            setIsEditingPseudonym(false);
+                          }}
+                          disabled={isSavingPseudonym}
+                        >
+                          Renunță
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <strong>
+                        {profile.pseudonym
+                          ? formatQuotedPseudonym(profile.pseudonym)
+                          : "Nesetat încă"}
+                      </strong>
+                      <button
+                        type="button"
+                        className={styles.accountTextButton}
+                        onClick={() => setIsEditingPseudonym(true)}
+                      >
+                        {profile.pseudonym ? "Editează" : "Setează"}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className={styles.accountProfileItem}>
+                <span>Formula de adresare dorită</span>
+                {isEditingAddressForm ? (
+                  <div className={styles.accountInlineEditor}>
+                    <select
+                      id="address-form"
+                      value={profile?.address_form ?? "domnule"}
+                      onChange={handleAddressFormChange}
+                      disabled={isSavingAddressForm}
+                      className={styles.accountSelect}
+                    >
+                      <option value="domnule">domnule</option>
+                      <option value="doamnă">doamnă</option>
+                      <option value="domnișoară">domnișoară</option>
+                    </select>
+                    <div className={styles.accountActionRow}>
+                      <button
+                        type="button"
+                        className={styles.accountTextButton}
+                        onClick={() => setIsEditingAddressForm(false)}
+                        disabled={isSavingAddressForm}
+                      >
+                        {isSavingAddressForm ? "Se salvează..." : "Renunță"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={styles.accountValueRow}>
+                    <strong>{profile.address_form || "domnule"}</strong>
+                    <button
+                      type="button"
+                      className={styles.accountTextButton}
+                      onClick={() => setIsEditingAddressForm(true)}
+                    >
+                      Editează
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           ) : null}
         </section>

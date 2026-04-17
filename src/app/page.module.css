@@ -187,6 +187,42 @@
   font: inherit;
 }
 
+.accountInput {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--ink);
+  padding: 12px 14px;
+  font: inherit;
+}
+
+.accountButton {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 11px 16px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--ink);
+  color: #f6f0e7;
+}
+
+.accountButton:disabled,
+.accountSelect:disabled,
+.accountInput:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.accountHint {
+  margin: -2px 0 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
 .canvas {
   display: block;
   width: 100%;
@@ -389,6 +425,76 @@
   margin: 0;
   line-height: 1.6;
   color: var(--muted);
+}
+
+.accountProfile {
+  margin-top: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.accountProfile div {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(24, 20, 17, 0.08);
+}
+
+.accountProfileItem {
+  display: grid;
+  gap: 8px;
+}
+
+.accountProfile span {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.accountProfile strong {
+  display: block;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.accountValueRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.accountInlineEditor {
+  width: 100%;
+  display: grid;
+  gap: 8px;
+}
+
+.accountActionRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.accountTextButton {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
+}
+
+.accountTextButton:disabled {
+  opacity: 0.7;
+  cursor: default;
 }
 
 .historyList {
