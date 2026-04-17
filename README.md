@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MindSlice App
 
-## Getting Started
+MindSlice este o aplicație Next.js pentru explorare vizuală și salvată a unor "live artistic moments". Interfața afișează direcții conceptuale, fragmente de gândire, palette vizuale și prompturi generate dintr-o bibliotecă de slice-uri, iar utilizatorii autentificați pot salva momentele în Supabase.
 
-First, run the development server:
+## Ce face
+
+- afișează stări artistice live pornind dintr-o bibliotecă locală de slice-uri
+- construiește prompturi vizuale pe baza direcției curente
+- încarcă imagini de referință din API-ul aplicației
+- permite autentificare cu Clerk
+- salvează momentele utilizatorului în Supabase
+
+## Stack
+
+- Next.js 16
+- React 19
+- TypeScript
+- Clerk pentru autentificare
+- Supabase pentru persistență
+
+## Rulare locală
+
+1. Instalează dependențele:
+
+```bash
+npm install
+```
+
+2. Creează fișierul `.env.local` pe baza exemplului:
+
+```bash
+cp .env.example .env.local
+```
+
+3. Completează variabilele de mediu necesare:
+
+```env
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+```
+
+4. Pornește aplicația:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Aplicația va fi disponibilă la `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Setup Supabase
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Schema bazei de date se află în [`supabase/schema.sql`](./supabase/schema.sql).
 
-## Learn More
+Pașii rapizi sunt descriși în [`SUPABASE_SETUP.md`](./SUPABASE_SETUP.md).
 
-To learn more about Next.js, take a look at the following resources:
+## Structură utilă
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `src/app/page.tsx` - interfața principală
+- `src/app/api/slices/route.ts` - construiește biblioteca de slice-uri
+- `src/app/api/reference-images` - expune imaginile de referință
+- `src/app/api/user-state/route.ts` - citește și salvează momentele utilizatorului
+- `src/lib/supabase/server.ts` - clientul server-side pentru Supabase
+- `supabase/schema.sql` - schema tabelelor necesare
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## GitHub Readiness
 
-## Deploy on Vercel
+Înainte de publicare:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- nu urca `.env.local`
+- folosește doar `.env.example` cu valori goale
+- dacă ai folosit chei reale local, rotește `CLERK_SECRET_KEY` și `SUPABASE_SERVICE_ROLE_KEY` înainte de un repo public
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Status
+
+Repo-ul este potrivit pentru GitHub ca aplicație separată, în folderul `mindslice-app`, nu ca întregul director de lucru `MindSlice`.
