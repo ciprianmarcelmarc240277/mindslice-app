@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Show,
   SignInButton,
@@ -103,34 +104,65 @@ export function AuthHeader() {
         gap: "12px",
       }}
     >
-      <Show when="signed-in">
-        <div
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "18px",
+          flexWrap: "wrap",
+        }}
+      >
+        <Link
+          href="/"
           style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "4px",
+            fontSize: "12px",
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            color: "rgba(69, 48, 34, 0.7)",
           }}
         >
-          <span
+          MindSlice
+        </Link>
+        <Link
+          href="/about-theory"
+          style={{
+            fontSize: "12px",
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            color: "rgba(69, 48, 34, 0.7)",
+          }}
+        >
+          About / Theory
+        </Link>
+        <Show when="signed-in">
+          <div
             style={{
-              fontSize: "11px",
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              color: "rgba(69, 48, 34, 0.58)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "4px",
             }}
           >
-            Cont conectat
-          </span>
-          <strong
-            style={{
-              fontSize: "15px",
-              color: "#2a211b",
-            }}
-          >
-            {`Bun venit, ${profile.addressForm}!`}
-          </strong>
-        </div>
-      </Show>
+            <span
+              style={{
+                fontSize: "11px",
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                color: "rgba(69, 48, 34, 0.58)",
+              }}
+            >
+              Cont conectat
+            </span>
+            <strong
+              style={{
+                fontSize: "15px",
+                color: "#2a211b",
+              }}
+            >
+              {`Bun venit, ${profile.addressForm}!`}
+            </strong>
+          </div>
+        </Show>
+      </div>
 
       <div
         style={{

@@ -1,0 +1,183 @@
+.page {
+  width: min(1200px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 48px;
+  display: grid;
+  gap: 22px;
+}
+
+.hero,
+.block {
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(255, 252, 247, 0.88), rgba(241, 231, 219, 0.94)),
+    var(--panel);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow);
+  border-radius: 28px;
+  padding: 28px;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.hero h1,
+.block h2,
+.branchCard h3,
+.personCard strong {
+  font-family: var(--display-font);
+}
+
+.hero h1 {
+  margin: 8px 0 14px;
+  font-size: clamp(2.6rem, 4vw, 5rem);
+  line-height: 0.95;
+  max-width: 12ch;
+}
+
+.lede {
+  max-width: 72ch;
+  color: var(--muted);
+  line-height: 1.7;
+  font-size: 1.02rem;
+}
+
+.headerLinks {
+  margin-top: 18px;
+}
+
+.headerLinks a {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.52);
+  font-weight: 600;
+}
+
+.block h2 {
+  margin: 6px 0 16px;
+  font-size: clamp(1.8rem, 2.6vw, 3rem);
+  line-height: 0.98;
+}
+
+.preBlock {
+  margin: 0;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(24, 20, 17, 0.05);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  font: 500 0.92rem/1.7 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--ink);
+}
+
+.branchList {
+  display: grid;
+  gap: 16px;
+}
+
+.branchCard {
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(24, 20, 17, 0.08);
+  background: rgba(255, 255, 255, 0.44);
+}
+
+.branchCard h3 {
+  margin: 0 0 14px;
+  font-size: 1.35rem;
+}
+
+.peopleList {
+  display: grid;
+  gap: 12px;
+}
+
+.personCard {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.54);
+  border: 1px solid rgba(24, 20, 17, 0.08);
+  display: grid;
+  gap: 6px;
+}
+
+.personCard strong {
+  font-size: 1.05rem;
+}
+
+.personCard span {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.personCard p {
+  margin: 0;
+  line-height: 1.65;
+  color: var(--ink);
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.matrixTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 960px;
+}
+
+.matrixTable th,
+.matrixTable td {
+  padding: 14px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid rgba(24, 20, 17, 0.08);
+}
+
+.matrixTable th {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.matrixTable td {
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.summaryList,
+.sourcesList {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 10px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+.summaryList li strong {
+  font-family: var(--display-font);
+  font-size: 0.98rem;
+}
+
+@media (max-width: 720px) {
+  .page {
+    width: min(100% - 18px, 100%);
+    padding-top: 18px;
+  }
+
+  .hero,
+  .block {
+    padding: 20px;
+  }
+}
