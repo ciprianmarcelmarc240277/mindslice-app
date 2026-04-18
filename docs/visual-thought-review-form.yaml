@@ -1,0 +1,50 @@
+review_form:
+  name: MindSlice Visual Thought Review Form
+  usage: >
+    Duplică acest formular pentru fiecare output vizual pe care vrei să-l evaluezi
+    manual în faza alpha. Păstrează notele scurte și consistente.
+
+  template:
+    review_id: ""
+    date: ""
+    evaluator: ""
+
+    direction: ""
+    mode: ""
+    contamination_mode: none
+
+    quick_verdict: ""
+    # valori recomandate:
+    # - weak
+    # - promising
+    # - strong
+    # - reference
+
+    sense:
+      score: 0.00
+      note: ""
+
+    structure:
+      score: 0.00
+      note: ""
+
+    attention:
+      score: 0.00
+      note: ""
+
+    typographic_intelligence:
+      score: 0.00
+      note: ""
+
+    contamination_readability:
+      score: 0.00
+      note: ""
+
+    system_identity:
+      score: 0.00
+      note: ""
+
+    strongest_element: ""
+    weakest_element: ""
+    next_adjustment: ""
+    overall_note: ""

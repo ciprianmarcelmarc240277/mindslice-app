@@ -1,0 +1,342 @@
+dataset:
+  name: MindSlice Visual Thought Calibration Dataset
+  version: 0.1
+  phase: alpha
+  purpose: >
+    Primul set etalon pentru evaluarea construirii gandului ca output vizual.
+    Exemplele sunt calibrate manual si servesc comparatiei dintre motorul local,
+    contaminare si eventualul refinement structurat.
+
+examples:
+  - id: alpha-001
+    source: fallback_state_library
+    direction: Slice Thinking Visual Core
+    mode: fractured_field
+    contamination_mode: none
+    thought: >
+      Acum mă gândesc la postmodernism ca memorie spartă, unde tipografia devine
+      arhitectura emoțională.
+    fragments:
+      - postmodernism
+      - memorie spartă
+      - tipografie
+      - arhitectură emoțională
+    keywords:
+      - structura
+      - schelet
+      - schema
+      - fractura
+      - plan
+      - logigrama
+      - perspectiva
+    evaluation:
+      sense:
+        score: 0.76
+        note: Memoria spartă și arhitectura emoțională creează tensiune semantică puternică.
+      structure:
+        score: 0.72
+        note: Câmpul este clar articulat între axă și fragmente, cu fractură controlată.
+      attention:
+        score: 0.58
+        note: Există centru de greutate, dar privirea mai poate deriva în zonele periferice.
+      typographic_intelligence:
+        score: 0.74
+        note: Tipografia susține gândirea și nu pare doar atmosferă.
+      contamination_readability:
+        score: 0.00
+        note: Fără contaminare activă.
+      system_identity:
+        score: 0.82
+        note: Exemplu puternic de voce MindSlice.
+      overall_note: >
+        Bun etalon de bază pentru câmpul fracturat, cu raport sănătos între densitate,
+        fragment și memorie.
+
+  - id: alpha-002
+    source: fallback_state_library
+    direction: Attention Architecture
+    mode: balanced_orbit
+    contamination_mode: none
+    thought: >
+      Acum mă gândesc la modul în care atenția poate fi dirijată ca o scenă:
+      intrări lente, tensiuni mici, convergență finală.
+    fragments:
+      - atenție
+      - scenă
+      - intrări lente
+      - convergență finală
+    keywords:
+      - focus
+      - signal
+      - sequence
+      - attention
+      - anchor
+      - drift
+    evaluation:
+      sense:
+        score: 0.57
+        note: Sensul este clar, dar mai sobru și mai puțin simbolic decât alte exemple.
+      structure:
+        score: 0.69
+        note: Construcția este bine ancorată și foarte lizibilă.
+      attention:
+        score: 0.84
+        note: Direcția privirii este compusă foarte clar și justifică un scor ridicat.
+      typographic_intelligence:
+        score: 0.64
+        note: Structura tipografică este inteligentă, dar mai puțin riscantă.
+      contamination_readability:
+        score: 0.00
+        note: Fără contaminare activă.
+      system_identity:
+        score: 0.71
+        note: Bun exemplu pentru axa attention, dar mai puțin memorabil semantic.
+      overall_note: >
+        Etalon bun pentru compoziție orientată pe atenție și pentru controlul ritmului de lectură.
+
+  - id: alpha-003
+    source: fallback_state_library
+    direction: Cognitive Typographic System
+    mode: study_lattice
+    contamination_mode: none
+    thought: >
+      Acum mă gândesc la un sistem cognitiv desenat de mână, unde fiecare cuvânt
+      e o particulă care caută centru și rezistă în același timp.
+    fragments:
+      - sistem cognitiv
+      - desenat de mână
+      - particulă
+      - caută centru
+    keywords:
+      - densitate
+      - text
+      - conflict
+      - convergență
+      - particule
+    evaluation:
+      sense:
+        score: 0.81
+        note: Câmpul are imaginație și densitate simbolică foarte clară.
+      structure:
+        score: 0.77
+        note: Sistemul se simte construit, chiar dacă păstrează tensiune internă.
+      attention:
+        score: 0.41
+        note: Privirea poate rătăci, ceea ce e parțial productiv, dar reduce controlul.
+      typographic_intelligence:
+        score: 0.83
+        note: Un exemplu foarte bun de tipografie ca structură cognitivă.
+      contamination_readability:
+        score: 0.00
+        note: Fără contaminare activă.
+      system_identity:
+        score: 0.88
+        note: Probabil unul dintre cele mai MindSlice exemple din setul de bază.
+      overall_note: >
+        Etalon important pentru densitate și inteligență tipografică, chiar dacă atenția este
+        mai difuză.
+
+  - id: alpha-004
+    source: local_engine_simulated
+    direction: Memory Axis / Whisper Drift
+    mode: fractured_field
+    contamination_mode: whisper
+    thought: >
+      Acum mă gândesc la o schemă calmă a memoriei, cu o abatere discretă spre respirație
+      și urme care rămân în periferie.
+    fragments:
+      - memorie calmă
+      - abatere discretă
+      - respirație
+      - urme periferice
+    keywords:
+      - memorie
+      - respirație
+      - abatere
+      - urmă
+      - periferie
+    evaluation:
+      sense:
+        score: 0.68
+        note: Sensul este bun, dar se manifestă prin subtilitate, nu prin șoc.
+      structure:
+        score: 0.63
+        note: Structura rămâne lizibilă și nu este destabilizată excesiv.
+      attention:
+        score: 0.52
+        note: Whisper-ul păstrează atenția destul de calmă și ușor dispersată.
+      typographic_intelligence:
+        score: 0.66
+        note: Bun echilibru între centru și periferie, fără spectaculos gratuit.
+      contamination_readability:
+        score: 0.72
+        note: Contaminarea este recognoscibilă tocmai prin finețea ei.
+      system_identity:
+        score: 0.74
+        note: Se simte MindSlice, mai ales prin calmul tensionat al scenei.
+      overall_note: >
+        Etalon pentru whisper: schimbă tonul fără să rupă violent structura.
+
+  - id: alpha-005
+    source: local_engine_simulated
+    direction: Rupture of the Constructed Field
+    mode: fractured_field
+    contamination_mode: rupture
+    thought: >
+      Acum mă gândesc la o construcție care aproape ținea, dar jurnalul rupe direcția și
+      introduce o tăietură vizibilă în ritm și sens.
+    fragments:
+      - construcție care ceda
+      - tăietură
+      - ritm rupt
+      - sens deviat
+    keywords:
+      - tăietură
+      - deviere
+      - ruptură
+      - ritm
+      - sens
+    evaluation:
+      sense:
+        score: 0.71
+        note: Sensul este puternic tocmai prin tensiunea creată de ruptură.
+      structure:
+        score: 0.59
+        note: Structura e afectată, dar încă păstrează suficientă coerență pentru lectură.
+      attention:
+        score: 0.67
+        note: Ruptura captează bine privirea și redistribuie focusul.
+      typographic_intelligence:
+        score: 0.61
+        note: Funcționează dacă ruptura pare compusă, nu arbitrară.
+      contamination_readability:
+        score: 0.86
+        note: Mod de contaminare foarte ușor de identificat.
+      system_identity:
+        score: 0.78
+        note: Aproape de vocea MindSlice, atât timp cât nu cade în simplu efect dramatic.
+      overall_note: >
+        Etalon pentru rupture: bun pentru verificarea pragului dintre fractură productivă și haos.
+
+  - id: alpha-006
+    source: local_engine_simulated
+    direction: Counterpoint for a Split Stage
+    mode: binary_axis
+    contamination_mode: counterpoint
+    thought: >
+      Acum mă gândesc la o scenă care merge într-o direcție, însă jurnalul opune o a doua
+      voce și refuză reconcilierea completă.
+    fragments:
+      - voce principală
+      - a doua voce
+      - opoziție
+      - refuz de reconciliere
+    keywords:
+      - contrapunct
+      - opoziție
+      - axă
+      - voce
+      - tensiune
+    evaluation:
+      sense:
+        score: 0.73
+        note: Sensul câștigă profunzime prin opoziția controlată dintre cele două forțe.
+      structure:
+        score: 0.70
+        note: Structura binară este productivă și menține tensiunea vie.
+      attention:
+        score: 0.63
+        note: Privirea oscilează între poli, ceea ce este adecvat pentru counterpoint.
+      typographic_intelligence:
+        score: 0.75
+        note: Exemplu bun pentru relația dintre opoziție și compoziție.
+      contamination_readability:
+        score: 0.79
+        note: Counterpoint-ul este lizibil fără să devină schematic.
+      system_identity:
+        score: 0.8
+        note: Se simte bine în logica MindSlice, mai ales pe axa structure.
+      overall_note: >
+        Etalon bun pentru dualitate și tensiune fără colaps în armonizare simplă.
+
+  - id: alpha-007
+    source: local_engine_simulated
+    direction: Stain Residue / Delayed Recall
+    mode: study_lattice
+    contamination_mode: stain
+    thought: >
+      Acum mă gândesc la ceva care nu mai e central, dar lasă urme persistente și întunecă
+      lent câmpul vizual al gândului.
+    fragments:
+      - urme persistente
+      - reziduu
+      - întunecare lentă
+      - memorie întârziată
+    keywords:
+      - reziduu
+      - urmă
+      - întârziere
+      - memorie
+      - pată
+    evaluation:
+      sense:
+        score: 0.78
+        note: Foarte bun la nivel de memorie activă și revenire simbolică.
+      structure:
+        score: 0.58
+        note: Structura rămâne suficientă, dar nu e punctul forte al exemplului.
+      attention:
+        score: 0.49
+        note: Atenția este mai puțin dirijată și mai mult contaminată lent.
+      typographic_intelligence:
+        score: 0.69
+        note: Tipografia funcționează bine ca urme și sediment.
+      contamination_readability:
+        score: 0.83
+        note: Stain-ul este foarte recognoscibil prin persistență și reziduu.
+      system_identity:
+        score: 0.84
+        note: Exemplu puternic pentru logica atlas / memorie activă.
+      overall_note: >
+        Etalon foarte bun pentru contaminare de tip stain și pentru dimensiunea mnemonică a sistemului.
+
+  - id: alpha-008
+    source: local_engine_simulated
+    direction: Echo Loop / Attention Return
+    mode: balanced_orbit
+    contamination_mode: echo
+    thought: >
+      Acum mă gândesc la un câmp care revine asupra lui însuși, iar jurnalul face să se
+      întoarcă același motiv ca un ecou de atenție.
+    fragments:
+      - revenire
+      - același motiv
+      - ecou
+      - atenție întoarsă
+    keywords:
+      - ecou
+      - revenire
+      - motiv
+      - buclă
+      - atenție
+    evaluation:
+      sense:
+        score: 0.66
+        note: Sens bun, dar mai mult prin repetiție decât prin noutate.
+      structure:
+        score: 0.71
+        note: Bucla și reluarea organizează foarte bine câmpul.
+      attention:
+        score: 0.76
+        note: Exemplu bun pentru recurență și revenire a focusului.
+      typographic_intelligence:
+        score: 0.68
+        note: Repetiția e productivă și nu cade încă în simplă ornamentație.
+      contamination_readability:
+        score: 0.81
+        note: Echo-ul este clar lizibil și foarte util pentru comparație.
+      system_identity:
+        score: 0.77
+        note: Bun exemplu de output MindSlice orientat pe attention architecture.
+      overall_note: >
+        Etalon bun pentru moduri de revenire și pentru compoziția atenției prin recurență.

@@ -231,7 +231,7 @@ function buildPrompt(snapshotMode: boolean, current: ThoughtState) {
     `Palette: ${current.palette.join(", ")}.`,
     `Materials: ${current.materials.join(", ")}.`,
     `Motion: ${current.motion}.`,
-    `Triad alignment: art ${current.triad.art.score.toFixed(2)} · ${current.triad.art.label}, design ${current.triad.design.score.toFixed(2)} · ${current.triad.design.label}, business ${current.triad.business.score.toFixed(2)} · ${current.triad.business.label}.`,
+    `Visual thought evaluation: sense ${current.triad.art.score.toFixed(2)} · ${current.triad.art.label}, structure ${current.triad.design.score.toFixed(2)} · ${current.triad.design.label}, attention ${current.triad.business.score.toFixed(2)} · ${current.triad.business.label}.`,
     "Visual behavior: hand-drawn conceptual map, density gradients, text fragments converging toward a dominant anchor, visible tension zones, imperfect spacing, controlled chaos, no decorative polish.",
     `Keywords: ${current.keywords.join(", ")}.`,
     "Output style: sophisticated post-generative art direction, museum-grade conceptual aesthetics, layered typography, warm paper texture, subtle ink bleed, high compositional intelligence.",
@@ -960,7 +960,7 @@ export default function Home() {
           <p className={styles.eyebrow}>MindSlice Next Prototype 01</p>
           <h1 className={styles.heroTitle}>Artist AI live care gândește artă în timp real.</h1>
           <p className={`${styles.lede} ${styles.heroLede}`}>
-            Sistemul rulează prin triada art, design, business și transformă
+            Sistemul rulează prin triada sense, structure, attention și transformă
             gândirea curentă într-un câmp vizual viu, procedural.
           </p>
         </div>
@@ -1139,11 +1139,11 @@ export default function Home() {
               </div>
               <div className={styles.alphaDebugColumns}>
                 <article className={styles.alphaDebugCard}>
-                  <span>Triad</span>
+                  <span>Visual Thought Evaluation</span>
                   <ul>
-                    <li>art: {current.triad.art.score.toFixed(2)} · {current.triad.art.label}</li>
-                    <li>design: {current.triad.design.score.toFixed(2)} · {current.triad.design.label}</li>
-                    <li>business: {current.triad.business.score.toFixed(2)} · {current.triad.business.label}</li>
+                    <li>sense: {current.triad.art.score.toFixed(2)} · {current.triad.art.label}</li>
+                    <li>structure: {current.triad.design.score.toFixed(2)} · {current.triad.design.label}</li>
+                    <li>attention: {current.triad.business.score.toFixed(2)} · {current.triad.business.label}</li>
                   </ul>
                 </article>
                 <article className={styles.alphaDebugCard}>
@@ -1610,15 +1610,15 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
 
             <section className={`${styles.panelBlock} ${styles.metricsGrid}`}>
               <article>
-                <span>Art</span>
+                <span>Sense</span>
                 <strong>{current.triad.art.score.toFixed(2)} · {current.triad.art.label}</strong>
               </article>
               <article>
-                <span>Design</span>
+                <span>Structure</span>
                 <strong>{current.triad.design.score.toFixed(2)} · {current.triad.design.label}</strong>
               </article>
               <article>
-                <span>Business</span>
+                <span>Attention</span>
                 <strong>{current.triad.business.score.toFixed(2)} · {current.triad.business.label}</strong>
               </article>
             </section>

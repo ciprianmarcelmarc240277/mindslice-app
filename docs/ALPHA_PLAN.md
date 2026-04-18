@@ -219,4 +219,9 @@ Pasii imediati pentru repo sunt:
 1. consolidarea `api/slices` ca motor principal al feliei de gandire
 2. rafinarea scenei tipografice live
 3. clarificarea relatiei dintre jurnal si contaminare
-4. pastrarea costului low-cost si evitarea complexitatii premature
+4. definirea unei rubrici de evaluare pentru construirea gandului ca output vizual
+5. pastrarea costului low-cost si evitarea complexitatii premature
+
+Document de lucru pentru evaluare:
+
+- [VISUAL_THOUGHT_EVALUATION_RUBRIC.md](./VISUAL_THOUGHT_EVALUATION_RUBRIC.md)
