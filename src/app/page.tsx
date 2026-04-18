@@ -1,7 +1,6 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 
@@ -257,6 +256,7 @@ export default function Home() {
     ? referenceImageUrls[imageIndex % referenceImageUrls.length]
     : null;
   const publishedPosts = blogPosts.filter((entry) => entry.status === "published");
+  const liveInfluenceMode = interference?.influenceMode ?? null;
 
   useEffect(() => {
     let ignore = false;
@@ -962,18 +962,29 @@ export default function Home() {
 
         {viewMode === "live" ? (
           <>
-            <div className={styles.statusBar}>
+            <section className={styles.liveCuratorNote}>
               <div>
+                <p className={styles.eyebrow}>Curated Live Field</p>
+                <h2>Scena în care gândirea devine tipografie activă</h2>
+              </div>
+              <p>
+                Câmpul live expune fragmente, ecouri și deviații în timp real. Jurnalul nu stă
+                separat de scenă: îl bruiază, îl îndoaie și îi mută centrul de greutate.
+              </p>
+            </section>
+
+            <div className={styles.statusBar}>
+              <div className={styles.statusCard}>
                 <span className={styles.statusLabel}>Stare curentă</span>
                 <strong className={styles.statusValue}>
                   {isActive ? "artistul gândește live" : "în așteptare"}
                 </strong>
               </div>
-              <div>
+              <div className={styles.statusCard}>
                 <span className={styles.statusLabel}>Sursa thinking</span>
                 <strong className={styles.statusValue}>{engineMode}</strong>
               </div>
-              <div>
+              <div className={styles.statusCard}>
                 <span className={styles.statusLabel}>Direcție</span>
                 <strong key={current.direction} className={styles.statusValue}>
                   {current.direction}
@@ -983,21 +994,44 @@ export default function Home() {
 
             <div className={styles.canvasCard}>
               <div className={styles.visualStage}>
-                {currentImageUrl ? (
-                  <Image
-                    src={currentImageUrl}
-                    alt={current.thought}
-                    className={styles.referenceImage}
-                    fill
-                    sizes="(max-width: 900px) 100vw, 68vw"
-                    unoptimized
-                  />
-                ) : (
-                  <div className={styles.visualFallback}>
-                    <strong>{current.direction}</strong>
-                    <span>Nicio imagine disponibilă încă.</span>
+                <div
+                  className={`${styles.textStage} ${
+                    liveInfluenceMode ? styles[`textStage${liveInfluenceMode}`] : ""
+                  }`}
+                >
+                  <div className={styles.textFieldBackdrop} />
+                  <div className={styles.textConstellation} aria-hidden="true">
+                    {current.fragments.map((fragment, index) => (
+                      <span
+                        key={`${current.direction}-fragment-${fragment}`}
+                        className={`${styles.floatingFragment} ${styles[`fragment${index + 1}`]} ${
+                          liveInfluenceMode ? styles[`floatingFragment${liveInfluenceMode}`] : ""
+                        }`}
+                      >
+                        {fragment}
+                      </span>
+                    ))}
+                    {current.keywords.slice(0, 6).map((keyword, index) => (
+                      <span
+                        key={`${current.direction}-keyword-${keyword}`}
+                        className={`${styles.keywordParticle} ${styles[`keyword${index + 1}`]} ${
+                          liveInfluenceMode ? styles[`keywordParticle${liveInfluenceMode}`] : ""
+                        }`}
+                      >
+                        {keyword}
+                      </span>
+                    ))}
                   </div>
-                )}
+                  <div
+                    className={`${styles.textStageCenter} ${
+                      liveInfluenceMode ? styles[`textStageCenter${liveInfluenceMode}`] : ""
+                    }`}
+                  >
+                    <span className={styles.overlayLabel}>Din fișierul Slices</span>
+                    <strong>{current.direction}</strong>
+                    <p>{current.fragments.join(" · ")}</p>
+                  </div>
+                </div>
               </div>
               <div className={styles.cornerSignature}>
                 <strong>O felie de gândire</strong>
