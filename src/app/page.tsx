@@ -1182,6 +1182,214 @@ export default function Home() {
             </p>
           </section>
         ) : null}
+
+        <section className={styles.theorySection}>
+          <p className={styles.eyebrow}>Genealogie Artistică</p>
+          <h2>Din ce tradiții pare să vină MindSlice</h2>
+          <div className={styles.theoryBody}>
+            <p>
+              MindSlice vine dintr-o genealogie mixtă, situată la intersecția dintre artă
+              conceptuală, systems aesthetics, artă generativă, tipografie experimentală,
+              teoria textului, teoria interfeței și studiile despre atenție. Nu aparține unei
+              singure tradiții și nici nu poate fi citit doar ca proiect tehnologic. Mai
+              curând, el funcționează ca un sistem cultural în care gândirea, forma,
+              scriitura și distribuția atenției devin material artistic.
+            </p>
+            <p>
+              În primul rând, MindSlice se înscrie în linia artei conceptuale, unde ideea,
+              regula și instrucțiunea sunt mai importante decât obiectul finit. În acest
+              sens, genealogia lui atinge nume precum Marcel Duchamp, Sol LeWitt, Joseph
+              Kosuth și Lawrence Weiner. De aici vine convingerea că opera nu este doar ceea
+              ce se vede, ci și sistemul care face posibil ceea ce se vede.
+            </p>
+            <p>
+              În al doilea rând, proiectul aparține tradiției în care opera este înțeleasă
+              ca sistem viu, nu ca formă statică. Aici devin esențiali Jack Burnham, Roy
+              Ascott și Hans Haacke. Din această filiație vine ideea că arta poate funcționa
+              prin feedback, ecologii de relații, contaminare și transformare continuă.
+              MindSlice nu este construit ca un simplu obiect digital, ci ca o structură
+              activă, capabilă să fie influențată și reconfigurată de intervențiile
+              autorilor.
+            </p>
+            <p>
+              În raport cu arta generativă, MindSlice vine clar din această tradiție, dar o
+              depășește. El moștenește logica procesuală și algoritmică prezentă la Vera
+              Molnár, Manfred Mohr, Frieder Nake, Casey Reas și Ben Fry, dar nu rămâne la
+              nivelul generării formale. Proiectul mută accentul dinspre variație vizuală
+              spre memorie, sens, autorie distribuită și bruiaj conceptual. De aceea, el
+              poate fi descris mai precis ca un sistem post-generativ cognitiv.
+            </p>
+            <p>
+              O altă linie importantă este cea a tipografiei experimentale și a designului
+              înțeles ca structură a gândirii. MindSlice tratează textul nu ca simplu
+              conținut, ci ca material spațial, ca particulă cognitivă, ca arhitectură
+              vizibilă a sensului. În această direcție, genealogia lui poate fi pusă în
+              dialog cu Jan Tschichold, Josef Müller-Brockmann, Wolfgang Weingart, April
+              Greiman și Katherine McCoy. Nu pentru că le reproduce stilul, ci pentru că
+              împărtășește ideea că tipografia poate organiza, destabiliza și intensifica
+              gândirea.
+            </p>
+            <p>
+              Proiectul se apropie și de tradiția postmodernă și de teoriile deconstrucției,
+              în care sensul nu este stabil, vocea nu este unică, iar structura poate fi
+              fragmentată și recompusă. Aici devin relevante nume precum Jacques Derrida,
+              Roland Barthes și Michel Foucault. Din această filiație vine interesul pentru
+              pluralitatea sensului, pentru slăbirea autorului unic și pentru text ca câmp
+              de tensiuni și redistribuiri.
+            </p>
+            <p>
+              MindSlice aparține, în același timp, și unei genealogii a interfeței și a
+              mediului ca formă culturală. Nu este doar o lucrare, ci o interfață care
+              produce sens. În această zonă, proiectul poate fi gândit în raport cu Marshall
+              McLuhan, Vilém Flusser, Friedrich Kittler și Lev Manovich. De aici vine
+              înțelegerea mediului nu ca suport neutru, ci ca agent activ în producerea
+              experienței și a gândirii.
+            </p>
+            <p>
+              O filiație importantă este și cea a constelației, memoriei și atlasului.
+              MindSlice funcționează prin fragmente, relații, reapariții și structuri de
+              asociere, ceea ce îl apropie de Aby Warburg, Walter Benjamin și Michel de
+              Certeau. În această logică, sistemul nu produce doar ieșiri, ci și constelații
+              de sens, urme și reconfigurări ale memoriei.
+            </p>
+            <p>
+              În sfârșit, proiectul este profund contemporan prin axa sa BUSINESS ↔
+              ATTENTION. Aici el intră într-o altă genealogie, în care atenția devine nu
+              doar resursă economică, ci și regim estetic, mediu cultural și câmp de luptă
+              simbolică. În această direcție, pot fi invocați Jonathan Crary, Bernard
+              Stiegler și Yves Citton. MindSlice tratează atenția ca infrastructură
+              artistică: nu doar ceea ce vezi contează, ci și ceea ce persistă, ceea ce
+              revine, ceea ce captează și redistribuie focalizarea.
+            </p>
+            <p>
+              Din perspectiva unor practici contemporane apropiate ca logică, proiectul poate
+              fi pus în dialog cu Hito Steyerl, James Bridle, Trevor Paglen, Refik Anadol
+              sau Forensic Architecture. Nu pentru că ar face același lucru, ci pentru că
+              împărtășește interesul pentru sisteme, vizibilitate, informație, infrastructuri
+              ale percepției și forme culturale emergente.
+            </p>
+            <p>
+              În acest sens, MindSlice poate fi înțeles ca punctul de întâlnire dintre:
+              artă conceptuală, systems aesthetics, logică post-generativă, tipografie
+              experimentală, teoria textului și a deconstrucției, teoria interfeței și a
+              mediilor, gândirea atlasului și a memoriei, precum și studiile contemporane
+              despre atenție.
+            </p>
+            <p>
+              Prin această genealogie, MindSlice nu apare ca un simplu proiect „despre AI”,
+              ci ca o operă-sistem: un Artist AI care gândește live, poate fi contaminat de
+              autorii care publică în jurnal și transformă scriitura, structura și atenția
+              în material artistic activ.
+            </p>
+          </div>
+
+          <div className={styles.theoryBlocks}>
+            <article className={styles.theoryBlock}>
+              <span className={styles.blogMeta}>Arbore Sintetic</span>
+              <pre className={styles.theoryPre}>{`Duchamp / LeWitt / Kosuth
+        │
+        ├── ideea > obiectul
+        │
+Burnham / Ascott / Haacke
+        │
+        ├── sistem > lucrare fixă
+        │
+Molnár / Reas / Fry
+        │
+        ├── proces generativ > compoziție statică
+        │
+Weingart / McCoy / Greiman
+        │
+        ├── tipografie > ornament
+        │
+Derrida / Barthes / Foucault
+        │
+        ├── sens instabil / autor distribuit
+        │
+Warburg / Benjamin
+        │
+        ├── atlas / fragment / memorie activă
+        │
+Crary / Stiegler
+        │
+        ├── atenția ca mediu
+        │
+      MINDSLICE`}</pre>
+            </article>
+
+            <article className={styles.theoryBlock}>
+              <span className={styles.blogMeta}>Arbore Extins</span>
+              <pre className={styles.theoryPre}>{`MINDSLICE
+Artist AI care gândește live și poate fi contaminat de autorii care publică în jurnal
+│
+├── 1. ARTA CA IDEE / SISTEM
+│   ├── Marcel Duchamp
+│   ├── Sol LeWitt
+│   ├── Joseph Kosuth
+│   └── Lawrence Weiner
+│
+├── 2. OPERA CA SISTEM VIU
+│   ├── Jack Burnham
+│   ├── Roy Ascott
+│   └── Hans Haacke
+│
+├── 3. GENERATIV -> POST-GENERATIV
+│   ├── Vera Molnár
+│   ├── Manfred Mohr
+│   ├── Frieder Nake
+│   ├── Casey Reas
+│   └── Ben Fry
+│
+├── 4. TIPOGRAFIE CA STRUCTURĂ A GÂNDIRII
+│   ├── Jan Tschichold
+│   ├── Josef Müller-Brockmann
+│   ├── Wolfgang Weingart
+│   ├── April Greiman
+│   └── Katherine McCoy
+│
+├── 5. FRAGMENT / TEXT / DECONSTRUCȚIE
+│   ├── Jacques Derrida
+│   ├── Roland Barthes
+│   └── Michel Foucault
+│
+├── 6. INTERFAȚĂ / MEDIA / TEHNOLOGIE
+│   ├── Marshall McLuhan
+│   ├── Vilém Flusser
+│   ├── Friedrich Kittler
+│   └── Lev Manovich
+│
+├── 7. CONSTELAȚIE / MEMORIE / ATLAS
+│   ├── Aby Warburg
+│   ├── Walter Benjamin
+│   └── Michel de Certeau
+│
+├── 8. ATENȚIE CA REGIM ESTETIC
+│   ├── Jonathan Crary
+│   ├── Bernard Stiegler
+│   └── Yves Citton
+│
+└── 9. CONTEMPORANII APROPIAȚI CA LOGICĂ
+    ├── Hito Steyerl
+    ├── James Bridle
+    ├── Trevor Paglen
+    ├── Refik Anadol
+    └── Forensic Architecture`}</pre>
+            </article>
+
+            <article className={styles.theoryBlock}>
+              <span className={styles.blogMeta}>Formula</span>
+              <pre className={styles.theoryPre}>{`Conceptual Art
++ Systems Aesthetics
++ Post-Generative Logic
++ Experimental Typography
++ Deconstruction / Text Theory
++ Media Theory
++ Atlas / Memory Thinking
++ Attention Theory
+= MINDSLICE`}</pre>
+            </article>
+          </div>
+        </section>
       </section>
 
       <aside className={styles.controlPanel}>
