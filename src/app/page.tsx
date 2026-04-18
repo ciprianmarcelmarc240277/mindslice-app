@@ -5,9 +5,18 @@ import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 
 type Triad = {
-  art: string;
-  design: string;
-  business: string;
+  art: {
+    score: number;
+    label: string;
+  };
+  design: {
+    score: number;
+    label: string;
+  };
+  business: {
+    score: number;
+    label: string;
+  };
 };
 
 type VisualState = {
@@ -92,6 +101,16 @@ type UserProfile = {
 
 type ViewMode = "live" | "journal" | "archive";
 
+type EngineProfile = {
+  stage: "alpha";
+  generationStrategy: "slice_file_parser" | "slice_file_parser_plus_openai_refinement";
+  contaminationStrategy: "journal_contamination_overlay";
+  charterAxes: string[];
+  sceneConstraints: string[];
+  activeContaminationRule: string | null;
+  openaiStructuredGeneration: "inactive" | "active";
+};
+
 function formatQuotedPseudonym(value: string) {
   return `„${value}”`;
 }
@@ -111,7 +130,11 @@ const fallbackStateLibrary: ThoughtState[] = [
     palette: ["ivory", "charcoal", "ember", "steel"],
     materials: ["ink", "warm paper", "pencil dust", "glass"],
     motion: "radial drift with fracture pulses",
-    triad: { art: "ok", design: "ok", business: "refine" },
+    triad: {
+      art: { score: 0.74, label: "charged" },
+      design: { score: 0.71, label: "structured" },
+      business: { score: 0.44, label: "emergent" },
+    },
     visual: {
       background: "#f0e6d8",
       accent: "#b5452f",
@@ -142,7 +165,11 @@ const fallbackStateLibrary: ThoughtState[] = [
     palette: ["bone", "graphite", "signal red", "fog"],
     materials: ["screen glow", "paper grain", "soft steel"],
     motion: "slow directional sweeps with focus locks",
-    triad: { art: "ok", design: "ok", business: "ok" },
+    triad: {
+      art: { score: 0.62, label: "luminous" },
+      design: { score: 0.69, label: "anchored" },
+      business: { score: 0.78, label: "focused" },
+    },
     visual: {
       background: "#ebe3d7",
       accent: "#c85135",
@@ -170,7 +197,11 @@ const fallbackStateLibrary: ThoughtState[] = [
     palette: ["paper", "soot", "rust", "chalk"],
     materials: ["ink bleed", "graphite", "dust", "vellum"],
     motion: "circular pull with collisions and return paths",
-    triad: { art: "ok", design: "ok", business: "weak" },
+    triad: {
+      art: { score: 0.81, label: "charged" },
+      design: { score: 0.73, label: "structured" },
+      business: { score: 0.33, label: "diffuse" },
+    },
     visual: {
       background: "#efe7dc",
       accent: "#8d3929",
@@ -200,7 +231,7 @@ function buildPrompt(snapshotMode: boolean, current: ThoughtState) {
     `Palette: ${current.palette.join(", ")}.`,
     `Materials: ${current.materials.join(", ")}.`,
     `Motion: ${current.motion}.`,
-    `Triad alignment: art ${current.triad.art}, design ${current.triad.design}, business ${current.triad.business}.`,
+    `Triad alignment: art ${current.triad.art.score.toFixed(2)} · ${current.triad.art.label}, design ${current.triad.design.score.toFixed(2)} · ${current.triad.design.label}, business ${current.triad.business.score.toFixed(2)} · ${current.triad.business.label}.`,
     "Visual behavior: hand-drawn conceptual map, density gradients, text fragments converging toward a dominant anchor, visible tension zones, imperfect spacing, controlled chaos, no decorative polish.",
     `Keywords: ${current.keywords.join(", ")}.`,
     "Output style: sophisticated post-generative art direction, museum-grade conceptual aesthetics, layered typography, warm paper texture, subtle ink bleed, high compositional intelligence.",
@@ -215,6 +246,7 @@ export default function Home() {
   const [viewMode, setViewMode] = useState<ViewMode>("live");
   const [isActive, setIsActive] = useState(true);
   const [engineMode, setEngineMode] = useState("mock local");
+  const [engineProfile, setEngineProfile] = useState<EngineProfile | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [savedMoments, setSavedMoments] = useState<SavedMoment[]>([]);
   const [blogPosts, setBlogPosts] = useState<BlogPostDraft[]>([]);
@@ -271,6 +303,7 @@ export default function Home() {
         const payload = (await response.json()) as {
           slices?: ThoughtState[];
           engineMode?: string;
+          engineProfile?: EngineProfile;
         };
         const slices = Array.isArray(payload.slices) ? payload.slices : [];
         if (!slices.length || ignore) {
@@ -280,10 +313,12 @@ export default function Home() {
         setStateLibrary(slices);
         setCurrentIndex(0);
         setEngineMode(payload.engineMode || "Slices file");
+        setEngineProfile(payload.engineProfile || null);
       } catch {
         if (!ignore) {
           setStateLibrary(fallbackStateLibrary);
           setEngineMode("mock local");
+          setEngineProfile(null);
         }
       }
     }
@@ -992,6 +1027,147 @@ export default function Home() {
               </div>
             </div>
 
+            {engineProfile ? (
+              <section className={styles.engineProfilePanel}>
+                <div className={styles.engineProfileHeading}>
+                  <p className={styles.eyebrow}>Alpha Engine Profile</p>
+                  <h2>Motorul live se descrie singur</h2>
+                  <p>
+                    În alpha, păstrăm motorul inspectabil. Vrem să vedem clar după ce reguli
+                    funcționează și ce contaminare este activă în scenă.
+                  </p>
+                </div>
+                <div className={styles.engineProfileGrid}>
+                  <article>
+                    <span>Stage</span>
+                    <strong>{engineProfile.stage}</strong>
+                  </article>
+                  <article>
+                    <span>Generation</span>
+                    <strong>{engineProfile.generationStrategy}</strong>
+                  </article>
+                  <article>
+                    <span>Contamination</span>
+                    <strong>{engineProfile.contaminationStrategy}</strong>
+                  </article>
+                  <article>
+                    <span>OpenAI</span>
+                    <strong>
+                      {engineProfile.openaiStructuredGeneration === "active"
+                        ? "structured refinement active"
+                        : "local alpha engine"}
+                    </strong>
+                  </article>
+                </div>
+                <div className={styles.engineProfileColumns}>
+                  <article className={styles.engineProfileCard}>
+                    <span>Charter Axes</span>
+                    <ul>
+                      {engineProfile.charterAxes.map((axis) => (
+                        <li key={axis}>{axis}</li>
+                      ))}
+                    </ul>
+                  </article>
+                  <article className={styles.engineProfileCard}>
+                    <span>Scene Constraints</span>
+                    <ul>
+                      {engineProfile.sceneConstraints.map((constraint) => (
+                        <li key={constraint}>{constraint}</li>
+                      ))}
+                    </ul>
+                  </article>
+                  <article className={styles.engineProfileCard}>
+                    <span>Active Rule</span>
+                    <p>
+                      {engineProfile.activeContaminationRule ||
+                        "Fără regulă de contaminare activă. Sistemul rulează pe câmpul live de bază."}
+                    </p>
+                  </article>
+                </div>
+              </section>
+            ) : null}
+
+            <section className={styles.alphaDebugPanel}>
+              <div className={styles.alphaDebugHeading}>
+                <p className={styles.eyebrow}>Alpha Debug Panel</p>
+                <h2>Semnalele interne ale feliei curente</h2>
+                <p>
+                  Panoul acesta este strict pentru faza alpha: ne arată dacă motorul produce
+                  densitate, fractură, deriva și convergență într-un mod recognoscibil și
+                  coerent cu conceptul.
+                </p>
+              </div>
+              <div className={styles.alphaDebugGrid}>
+                <article>
+                  <span>Slice index</span>
+                  <strong>
+                    {currentIndex + 1} / {libraryLength}
+                  </strong>
+                </article>
+                <article>
+                  <span>Visual mode</span>
+                  <strong>{current.visual.mode}</strong>
+                </article>
+                <article>
+                  <span>Live influence</span>
+                  <strong>{liveInfluenceMode ?? "none"}</strong>
+                </article>
+                <article>
+                  <span>Density</span>
+                  <strong>{current.visual.density.toFixed(2)}</strong>
+                </article>
+                <article>
+                  <span>Wave</span>
+                  <strong>{current.visual.wave.toFixed(2)}</strong>
+                </article>
+                <article>
+                  <span>Fracture</span>
+                  <strong>{current.visual.fracture.toFixed(2)}</strong>
+                </article>
+                <article>
+                  <span>Drift</span>
+                  <strong>{current.visual.drift.toFixed(2)}</strong>
+                </article>
+                <article>
+                  <span>Convergence</span>
+                  <strong>{current.visual.convergence.toFixed(2)}</strong>
+                </article>
+                <article>
+                  <span>Motion</span>
+                  <strong>{current.motion}</strong>
+                </article>
+              </div>
+              <div className={styles.alphaDebugColumns}>
+                <article className={styles.alphaDebugCard}>
+                  <span>Triad</span>
+                  <ul>
+                    <li>art: {current.triad.art.score.toFixed(2)} · {current.triad.art.label}</li>
+                    <li>design: {current.triad.design.score.toFixed(2)} · {current.triad.design.label}</li>
+                    <li>business: {current.triad.business.score.toFixed(2)} · {current.triad.business.label}</li>
+                  </ul>
+                </article>
+                <article className={styles.alphaDebugCard}>
+                  <span>Palette & Materials</span>
+                  <ul>
+                    {current.palette.map((tone) => (
+                      <li key={`palette-${tone}`}>{tone}</li>
+                    ))}
+                    {current.materials.map((material) => (
+                      <li key={`material-${material}`}>{material}</li>
+                    ))}
+                  </ul>
+                </article>
+                <article className={styles.alphaDebugCard}>
+                  <span>Keywords</span>
+                  <ul>
+                    {current.keywords.map((keyword) => (
+                      <li key={keyword}>{keyword}</li>
+                    ))}
+                  </ul>
+                </article>
+              </div>
+            </section>
+
             <div className={styles.canvasCard}>
               <div className={styles.visualStage}>
                 <div
@@ -1435,15 +1611,15 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
             <section className={`${styles.panelBlock} ${styles.metricsGrid}`}>
               <article>
                 <span>Art</span>
-                <strong>{current.triad.art}</strong>
+                <strong>{current.triad.art.score.toFixed(2)} · {current.triad.art.label}</strong>
               </article>
               <article>
                 <span>Design</span>
-                <strong>{current.triad.design}</strong>
+                <strong>{current.triad.design.score.toFixed(2)} · {current.triad.design.label}</strong>
               </article>
               <article>
                 <span>Business</span>
-                <strong>{current.triad.business}</strong>
+                <strong>{current.triad.business.score.toFixed(2)} · {current.triad.business.label}</strong>
               </article>
             </section>
 

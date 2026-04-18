@@ -198,6 +198,149 @@
     var(--panel);
 }
 
+.engineProfilePanel {
+  margin-top: 18px;
+  border: 1px solid rgba(24, 20, 17, 0.08);
+  background: linear-gradient(180deg, rgba(255, 252, 247, 0.84), rgba(241, 232, 221, 0.9));
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+}
+
+.engineProfileHeading h2 {
+  margin: 6px 0 10px;
+  font-family: var(--display-font);
+  font-size: clamp(1.45rem, 2.1vw, 2.3rem);
+}
+
+.engineProfileHeading p:last-child {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 64ch;
+}
+
+.engineProfileGrid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.engineProfileGrid article,
+.engineProfileCard {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.46);
+  border: 1px solid rgba(24, 20, 17, 0.08);
+}
+
+.engineProfileGrid span,
+.engineProfileCard span {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.engineProfileGrid strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.98rem;
+}
+
+.engineProfileColumns {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1.1fr 1.1fr 1fr;
+  gap: 12px;
+}
+
+.engineProfileCard ul {
+  margin: 12px 0 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 8px;
+  color: var(--ink);
+  line-height: 1.55;
+}
+
+.engineProfileCard p {
+  margin: 12px 0 0;
+  color: var(--ink);
+  line-height: 1.6;
+}
+
+.alphaDebugPanel {
+  margin-top: 18px;
+  border: 1px dashed rgba(24, 20, 17, 0.16);
+  background: linear-gradient(180deg, rgba(246, 240, 232, 0.84), rgba(238, 229, 217, 0.9));
+  border-radius: 24px;
+  padding: 22px;
+}
+
+.alphaDebugHeading h2 {
+  margin: 6px 0 10px;
+  font-family: var(--display-font);
+  font-size: clamp(1.35rem, 2vw, 2.05rem);
+}
+
+.alphaDebugHeading p:last-child {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 66ch;
+}
+
+.alphaDebugGrid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.alphaDebugGrid article,
+.alphaDebugCard {
+  padding: 15px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(24, 20, 17, 0.08);
+}
+
+.alphaDebugGrid span,
+.alphaDebugCard span {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.alphaDebugGrid strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.96rem;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.alphaDebugColumns {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.alphaDebugCard ul {
+  margin: 12px 0 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 8px;
+  color: var(--ink);
+  line-height: 1.55;
+}
+
 .blogSection {
   margin-top: 20px;
   border: 1px solid var(--line);
@@ -1294,6 +1437,13 @@
   }
 
   .statusBar {
+    grid-template-columns: 1fr;
+  }
+
+  .engineProfileGrid,
+  .engineProfileColumns,
+  .alphaDebugGrid,
+  .alphaDebugColumns {
     grid-template-columns: 1fr;
   }
 
