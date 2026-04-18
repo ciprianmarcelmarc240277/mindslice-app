@@ -2,6 +2,11 @@ import { auth } from "@clerk/nextjs/server";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import {
+  contaminationModeRules,
+  liveThoughtSceneRules,
+  mindsliceSystemCore,
+} from "@/lib/mindslice/prompt-pack";
 
 const stopwords = new Set([
   "și",
@@ -125,6 +130,39 @@ function sentenceCase(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+function buildMindSliceKeywords(keywords: string[]) {
+  const prioritySet = new Set<string>(liveThoughtSceneRules.structuralKeywordPriority);
+  const prioritized = keywords.filter((keyword) => prioritySet.has(keyword));
+  const combined = [...prioritized, ...keywords];
+
+  liveThoughtSceneRules.fallbackKeywords.forEach((keyword) => {
+    if (!combined.includes(keyword)) {
+      combined.push(keyword);
+    }
+  });
+
+  return combined.slice(0, 8);
+}
+
+function buildFragments(lines: string[], keywords: string[]) {
+  const fragments: string[] = [];
+
+  lines.slice(0, 3).forEach((line) => {
+    if (!fragments.includes(line)) {
+      fragments.push(line);
+    }
+  });
+
+  keywords.slice(0, 3).forEach((keyword) => {
+    const structuralFragment = sentenceCase(keyword.replace(/-/g, " "));
+    if (!fragments.includes(structuralFragment)) {
+      fragments.push(structuralFragment);
+    }
+  });
+
+  return fragments.slice(0, 5);
+}
+
 function extractKeywords(lines: string[]) {
   const counts = new Map<string, number>();
 
@@ -140,9 +178,19 @@ function extractKeywords(lines: string[]) {
     .map(([token]) => token);
 }
 
-function buildThought(line: string) {
-  const normalized = line.charAt(0).toLowerCase() + line.slice(1);
-  return `Acum mă gândesc la ${normalized.replace(/[.]+$/, "")}.`;
+function buildThought(line: string, keywords: string[]) {
+  const normalized = line.charAt(0).toLowerCase() + line.slice(1).replace(/[.]+$/, "");
+  const dominantAnchor = keywords[0]?.replace(/-/g, " ") ?? "structură";
+  const peripheralTraces = keywords
+    .slice(1, 3)
+    .map((keyword) => keyword.replace(/-/g, " "))
+    .join(" și ");
+
+  if (peripheralTraces) {
+    return `Acum mă gândesc la ${normalized}, cu ${dominantAnchor} ca axă și ${peripheralTraces} rămase în periferie.`;
+  }
+
+  return `Acum mă gândesc la ${normalized}, cu ${dominantAnchor} ca axă dominantă.`;
 }
 
 function inferPalette(keywords: string[], density: number, fracture: number) {
@@ -324,9 +372,10 @@ function parseSliceBlock(block: string, index: number): SliceState | null {
   const drift = clamp(0.22 + avgIndent / 8, 0.25, 1.2);
   const convergence = clamp(0.45 + repetition * 0.35 + density * 0.08, 0.45, 0.95);
   const wave = clamp(0.35 + fracture * 0.7 + drift * 0.22, 0.35, 1.55);
-  const keywords = extractKeywords(uniqueLines);
-  const direction = keywords.length
-    ? titleCase(keywords.slice(0, 3).join(" / "))
+  const extractedKeywords = extractKeywords(uniqueLines);
+  const keywords = buildMindSliceKeywords(extractedKeywords);
+  const direction = extractedKeywords.length
+    ? titleCase(extractedKeywords.slice(0, 3).join(" / "))
     : `Slice ${index + 1}`;
   const palette = inferPalette(keywords, density, fracture);
   const materials = inferMaterials(keywords, fracture);
@@ -335,8 +384,8 @@ function parseSliceBlock(block: string, index: number): SliceState | null {
 
   return {
     direction,
-    thought: buildThought(uniqueLines[0]),
-    fragments: uniqueLines.slice(0, 4),
+    thought: buildThought(uniqueLines[0], keywords),
+    fragments: buildFragments(uniqueLines, keywords),
     mood: inferMood(density, repetition, fracture),
     palette,
     materials,
@@ -351,7 +400,7 @@ function parseSliceBlock(block: string, index: number): SliceState | null {
       drift,
       convergence,
     },
-    keywords: keywords.length ? keywords : ["gândire", "structură", "ritm"],
+    keywords,
   };
 }
 
@@ -399,6 +448,7 @@ function applyContamination(slice: SliceState, source: ContaminationSource, inde
   const pickedKeyword =
     contaminationKeywords[index % contaminationKeywords.length] ?? tokenize(source.title)[0] ?? "interferență";
   const pickedPhrase = sentenceCase(pickedKeyword.replace(/-/g, " "));
+  const modeRule = contaminationModeRules[source.influenceMode];
 
   const nextThoughtBase = slice.thought.replace(/[.]+$/, "");
   let thought = `${nextThoughtBase}.`;
@@ -409,7 +459,7 @@ function applyContamination(slice: SliceState, source: ContaminationSource, inde
 
   switch (source.influenceMode) {
     case "echo":
-      thought = `${nextThoughtBase}, iar jurnalul face să revină ${pickedPhrase.toLowerCase()} ca ecou activ.`;
+      thought = `${nextThoughtBase}, iar jurnalul face să revină ${pickedPhrase.toLowerCase()} ca ecou activ. ${modeRule}`;
       mood = `${slice.mood}, reverberant`;
       motion = `${slice.motion} with recursive returns`;
       triad.art = source.senseWeight >= 0.55 ? "charged" : triad.art;
@@ -417,20 +467,20 @@ function applyContamination(slice: SliceState, source: ContaminationSource, inde
       break;
     case "rupture":
       direction = `${slice.direction} / Ruptură ${pickedPhrase}`;
-      thought = `${nextThoughtBase}, dar jurnalul rupe direcția și introduce ${pickedPhrase.toLowerCase()}.`;
+      thought = `${nextThoughtBase}, dar jurnalul rupe direcția și introduce ${pickedPhrase.toLowerCase()}. ${modeRule}`;
       mood = `${slice.mood}, deviat`;
       motion = `${slice.motion} with abrupt fractures`;
       triad.design = "fractured";
       break;
     case "counterpoint":
-      thought = `${nextThoughtBase}, însă jurnalul opune ${pickedPhrase.toLowerCase()} ca tensiune secundară.`;
+      thought = `${nextThoughtBase}, însă jurnalul opune ${pickedPhrase.toLowerCase()} ca tensiune secundară. ${modeRule}`;
       mood = `${slice.mood}, tensionat`;
       motion = `${slice.motion} with counterpoint resistance`;
       triad.art = source.senseWeight >= 0.45 ? "tense" : triad.art;
       triad.design = source.structureWeight >= 0.45 ? "countered" : triad.design;
       break;
     case "stain":
-      thought = `${nextThoughtBase}, iar jurnalul lasă urme persistente de ${pickedPhrase.toLowerCase()}.`;
+      thought = `${nextThoughtBase}, iar jurnalul lasă urme persistente de ${pickedPhrase.toLowerCase()}. ${modeRule}`;
       mood = `${slice.mood}, pătat`;
       motion = `${slice.motion} with lingering residue`;
       triad.art = "stained";
@@ -438,7 +488,7 @@ function applyContamination(slice: SliceState, source: ContaminationSource, inde
       break;
     case "whisper":
     default:
-      thought = `${nextThoughtBase}, cu o abatere discretă spre ${pickedPhrase.toLowerCase()}.`;
+      thought = `${nextThoughtBase}, cu o abatere discretă spre ${pickedPhrase.toLowerCase()}. ${modeRule}`;
       mood = `${slice.mood}, contaminat fin`;
       motion = `${slice.motion} with soft interference`;
       triad.art = source.senseWeight >= 0.6 ? "lit" : triad.art;
@@ -456,7 +506,7 @@ function applyContamination(slice: SliceState, source: ContaminationSource, inde
     4,
   );
   const nextFragments = blendUnique(slice.fragments, [contaminationFragment, pickedPhrase], 5);
-  const nextKeywords = blendUnique(slice.keywords, contaminationKeywords, 8);
+  const nextKeywords = buildMindSliceKeywords(blendUnique(slice.keywords, contaminationKeywords, 8));
 
   return {
     ...slice,
@@ -549,8 +599,8 @@ export async function GET() {
     return Response.json({
       slices,
       engineMode: contamination
-        ? `Slices file + ${contamination.influenceMode} contamination`
-        : "Slices file",
+        ? `MindSlice live thought scene / ${contamination.influenceMode} contamination`
+        : `MindSlice live thought scene / ${mindsliceSystemCore.axes[1]}`,
     });
   } catch {
     return Response.json(fallback);

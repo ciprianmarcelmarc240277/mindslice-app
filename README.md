@@ -216,6 +216,18 @@ Conceptual Art
 5. contaminarea Artistului AI live pe baza postarilor publicate
 6. UI care arata clar sursa bruiajului
 
+## Alpha Plan
+
+Faza actuala a proiectului este:
+
+- `0-10 utilizatori`
+- `laborator personal / alpha`
+- cost tinta: `~$5 - $15 / luna`
+
+Documentul de lucru pentru aceasta faza este:
+
+- [ALPHA_PLAN.md](./docs/ALPHA_PLAN.md)
+
 ## Stack
 
 - Next.js 16
