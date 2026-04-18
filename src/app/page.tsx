@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./page.module.css";
 
 type Triad = {
@@ -58,6 +58,21 @@ type SavedMoment = {
   created_at: string;
 };
 
+type ThoughtMemoryEntry = {
+  id: string;
+  source_type: "live_slice" | "journal_contamination";
+  direction: string;
+  thought: string;
+  fragments: string[];
+  keywords: string[];
+  sense_score: number;
+  structure_score: number;
+  attention_score: number;
+  influence_mode: "whisper" | "echo" | "rupture" | "counterpoint" | "stain" | null;
+  memory_weight: number;
+  created_at: string;
+};
+
 type BlogPostDraft = {
   id: string;
   saved_moment_id: string | null;
@@ -110,6 +125,49 @@ type EngineProfile = {
   activeContaminationRule: string | null;
   openaiStructuredGeneration: "inactive" | "active";
 };
+
+const THOUGHT_OVERLAY_HOLD_MS = 8000;
+const THOUGHT_STAGE_REST_MS = 15000;
+
+function getTypewriterDelay(
+  character: string,
+  influenceMode: LiveInterference["influenceMode"] | null,
+) {
+  if (character === "," || character === ";") {
+    return influenceMode === "stain" ? 150 : 110;
+  }
+
+  if (character === "." || character === ":" || character === "!") {
+    return influenceMode === "rupture" ? 240 : 180;
+  }
+
+  if (influenceMode === "echo") {
+    return 28;
+  }
+
+  if (influenceMode === "rupture") {
+    return 16;
+  }
+
+  return 22;
+}
+
+function getThoughtDrawDuration(
+  text: string,
+  influenceMode: LiveInterference["influenceMode"] | null,
+) {
+  if (!text.length) {
+    return 0;
+  }
+
+  let duration = 160;
+
+  for (let index = 0; index < text.length - 1; index += 1) {
+    duration += getTypewriterDelay(text[index], influenceMode);
+  }
+
+  return duration;
+}
 
 function formatQuotedPseudonym(value: string) {
   return `„${value}”`;
@@ -238,6 +296,213 @@ function buildPrompt(snapshotMode: boolean, current: ThoughtState) {
   ].join("\n");
 }
 
+function getThoughtCenterAnchor(current: ThoughtState, currentIndex: number) {
+  const intersections = [
+    { left: "33.333%", top: "33.333%" },
+    { left: "66.666%", top: "33.333%" },
+    { left: "33.333%", top: "66.666%" },
+    { left: "66.666%", top: "66.666%" },
+  ] as const;
+
+  const seed = `${current.direction}|${current.thought}|${currentIndex}`;
+  let hash = 0;
+
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) % 2147483647;
+  }
+
+  return intersections[hash % intersections.length];
+}
+
+function splitThoughtIntoLines(text: string, seedSource: string) {
+  if (!text.trim()) {
+    return [];
+  }
+
+  let seed = 0;
+  for (let index = 0; index < seedSource.length; index += 1) {
+    seed = (seed * 33 + seedSource.charCodeAt(index)) % 2147483647;
+  }
+
+  const lineTargets = [
+    20 + (seed % 5),
+    28 + (seed % 4),
+    24 + ((seed >> 2) % 5),
+    30 + ((seed >> 3) % 4),
+  ];
+
+  const words = text.trim().split(/\s+/);
+  const lines: string[] = [];
+  let currentLine = "";
+  let targetIndex = 0;
+
+  words.forEach((word) => {
+    const maxChars = lineTargets[targetIndex % lineTargets.length];
+    const nextLine = currentLine ? `${currentLine} ${word}` : word;
+
+    if (nextLine.length <= maxChars || !currentLine) {
+      currentLine = nextLine;
+      return;
+    }
+
+    lines.push(currentLine);
+    currentLine = word;
+    targetIndex += 1;
+  });
+
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+
+  return lines;
+}
+
+function getFocalHaloStyles(
+  current: ThoughtState,
+  anchor: { left: string; top: string },
+  influenceMode: LiveInterference["influenceMode"] | null,
+) {
+  const fragmentFactor = Math.min(current.fragments.length, 5);
+  const keywordFactor = Math.min(current.keywords.length, 8);
+  const primaryWidth = 128 + current.triad.business.score * 68 + current.visual.convergence * 54;
+  const primaryHeight = 128 + current.triad.art.score * 54 + current.visual.wave * 22;
+  const secondaryWidth =
+    primaryWidth + 56 + current.visual.density * 24 + fragmentFactor * 6 + keywordFactor * 2;
+  const secondaryHeight =
+    primaryHeight + 44 + current.visual.drift * 26 + fragmentFactor * 4;
+  const offsetX = Math.round((current.visual.drift - 0.5) * 28);
+  const offsetY = Math.round((current.visual.wave - 0.7) * 18);
+  const secondaryOffsetX =
+    offsetX + Math.round((current.triad.design.score - 0.5) * 20) + (influenceMode === "counterpoint" ? 18 : 0);
+  const secondaryOffsetY =
+    offsetY + Math.round((current.visual.fracture - 0.4) * 16) + (influenceMode === "stain" ? 10 : 0);
+  const primaryRotation = `${Math.round((current.visual.fracture - 0.35) * 10)}deg`;
+  const secondaryRotation = `${Math.round((current.visual.drift - 0.45) * 12)}deg`;
+
+  return {
+    primary: {
+      left: anchor.left,
+      top: anchor.top,
+      width: `${primaryWidth}px`,
+      height: `${primaryHeight}px`,
+      marginLeft: `${offsetX}px`,
+      marginTop: `${offsetY}px`,
+      transform: `translate(-50%, -50%) rotate(${primaryRotation})`,
+    },
+    secondary: {
+      left: anchor.left,
+      top: anchor.top,
+      width: `${secondaryWidth}px`,
+      height: `${secondaryHeight}px`,
+      marginLeft: `${secondaryOffsetX}px`,
+      marginTop: `${secondaryOffsetY}px`,
+      transform: `translate(-50%, -50%) rotate(${secondaryRotation})`,
+    },
+  };
+}
+
+function getLeadingLineStyles(
+  current: ThoughtState,
+  anchor: { left: string; top: string },
+  influenceMode: LiveInterference["influenceMode"] | null,
+) {
+  const anchorX = Number(anchor.left.replace("%", ""));
+  const anchorY = Number(anchor.top.replace("%", ""));
+  const structurePull = current.triad.design.score;
+  const attentionPull = current.triad.business.score;
+  const artPull = current.triad.art.score;
+
+  const startPoints = [
+    {
+      x: 6 + current.visual.drift * 7,
+      y: 79 - current.visual.wave * 8,
+      reach: 0.94,
+    },
+    {
+      x: 92 - current.visual.convergence * 10,
+      y: 14 + current.visual.fracture * 18,
+      reach: 0.88,
+    },
+    {
+      x: 82 - attentionPull * 10,
+      y: 88 - structurePull * 14,
+      reach: 0.82,
+    },
+  ];
+
+  const modeScale =
+    influenceMode === "rupture"
+      ? 1.08
+      : influenceMode === "counterpoint"
+        ? 0.92
+        : influenceMode === "echo"
+          ? 0.98
+          : 1;
+
+  return startPoints.map((point, index) => {
+    const targetX =
+      anchorX +
+      (index === 1 ? (artPull - 0.5) * 6 : 0) +
+      (influenceMode === "counterpoint" && index === 2 ? -8 : 0);
+    const targetY =
+      anchorY +
+      (index === 0 ? (attentionPull - 0.5) * 5 : 0) +
+      (influenceMode === "stain" ? 3 : 0);
+    const dx = targetX - point.x;
+    const dy = targetY - point.y;
+    const length = Math.sqrt(dx * dx + dy * dy) * point.reach * modeScale;
+    const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+
+    return {
+      left: `${point.x}%`,
+      top: `${point.y}%`,
+      width: `${length}%`,
+      transform: `rotate(${angle}deg)`,
+      opacity: 0.6 + structurePull * 0.16 + (index === 1 ? artPull * 0.08 : 0),
+    };
+  });
+}
+
+function getNegativeSpaceStyles(
+  current: ThoughtState,
+  anchor: { left: string; top: string },
+  influenceMode: LiveInterference["influenceMode"] | null,
+) {
+  const anchorX = Number(anchor.left.replace("%", ""));
+  const anchorY = Number(anchor.top.replace("%", ""));
+  const centerOnLeft = anchorX < 50;
+  const centerOnTop = anchorY < 50;
+  const density = current.visual.density;
+  const structure = current.triad.design.score;
+  const attention = current.triad.business.score;
+  const fracture = current.visual.fracture;
+
+  const safeWidth = 14 + (1 - structure) * 10 + (1 - attention) * 6;
+  const safeHeight = 10 + (1 - density / 2) * 8 + (1 - fracture) * 4;
+  const secondaryWidth = safeWidth - 3 + current.visual.drift * 4;
+  const secondaryHeight = safeHeight - 1 + current.visual.wave * 3;
+
+  const primary = {
+    left: centerOnLeft ? "72%" : "7%",
+    top: centerOnTop ? "70%" : "8%",
+    width: `${Math.max(12, safeWidth)}%`,
+    height: `${Math.max(8, safeHeight)}%`,
+    transform: `rotate(${Math.round((current.visual.drift - 0.5) * 8)}deg)`,
+  };
+
+  const secondary = {
+    left: centerOnLeft ? "8%" : "70%",
+    top: centerOnTop ? "10%" : "74%",
+    width: `${Math.max(10, secondaryWidth)}%`,
+    height: `${Math.max(7, secondaryHeight)}%`,
+    transform: `rotate(${
+      Math.round((current.visual.fracture - 0.4) * 10) + (influenceMode === "counterpoint" ? -4 : 0)
+    }deg)`,
+  };
+
+  return { primary, secondary };
+}
+
 export default function Home() {
   const [stateLibrary, setStateLibrary] = useState<ThoughtState[]>(fallbackStateLibrary);
   const [referenceImageUrls, setReferenceImageUrls] = useState<string[]>([]);
@@ -249,6 +514,7 @@ export default function Home() {
   const [engineProfile, setEngineProfile] = useState<EngineProfile | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [savedMoments, setSavedMoments] = useState<SavedMoment[]>([]);
+  const [thoughtMemory, setThoughtMemory] = useState<ThoughtMemoryEntry[]>([]);
   const [blogPosts, setBlogPosts] = useState<BlogPostDraft[]>([]);
   const [activeDraftId, setActiveDraftId] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -277,10 +543,12 @@ export default function Home() {
   const [isSavingPseudonym, setIsSavingPseudonym] = useState(false);
   const [isEditingPseudonym, setIsEditingPseudonym] = useState(false);
   const [animatedThought, setAnimatedThought] = useState(fallbackStateLibrary[0].thought);
+  const [isThoughtOverlayVisible, setIsThoughtOverlayVisible] = useState(true);
   const [thoughtAnimationKey, setThoughtAnimationKey] = useState(0);
   const [promptOutput, setPromptOutput] = useState(() =>
     buildPrompt(false, fallbackStateLibrary[0]),
   );
+  const lastPersistedThoughtRef = useRef<string | null>(null);
   const { isSignedIn } = useAuth();
   const libraryLength = stateLibrary.length;
   const current = stateLibrary[currentIndex];
@@ -289,6 +557,19 @@ export default function Home() {
     : null;
   const publishedPosts = blogPosts.filter((entry) => entry.status === "published");
   const liveInfluenceMode = interference?.influenceMode ?? null;
+  const thoughtCenterAnchor = getThoughtCenterAnchor(current, currentIndex);
+  const thoughtCenterFragment = current.fragments[0] ?? current.keywords[0] ?? "anchor";
+  const focalHaloStyles = getFocalHaloStyles(current, thoughtCenterAnchor, liveInfluenceMode);
+  const leadingLineStyles = getLeadingLineStyles(current, thoughtCenterAnchor, liveInfluenceMode);
+  const negativeSpaceStyles = getNegativeSpaceStyles(
+    current,
+    thoughtCenterAnchor,
+    liveInfluenceMode,
+  );
+  const thoughtLines = splitThoughtIntoLines(
+    animatedThought,
+    `${current.direction}|${current.thought}|${currentIndex}`,
+  );
 
   useEffect(() => {
     let ignore = false;
@@ -382,33 +663,14 @@ export default function Home() {
 
   useEffect(() => {
     let cancelled = false;
-    let timeoutId: number | undefined;
+    const timeoutIds: number[] = [];
 
     setThoughtAnimationKey((previous) => previous + 1);
     setAnimatedThought("");
+    setIsThoughtOverlayVisible(true);
 
     const nextThought = current.thought;
-    const influenceMode = interference?.influenceMode;
-
-    const getDelay = (character: string) => {
-      if (character === "," || character === ";") {
-        return influenceMode === "stain" ? 150 : 110;
-      }
-
-      if (character === "." || character === ":" || character === "!") {
-        return influenceMode === "rupture" ? 240 : 180;
-      }
-
-      if (influenceMode === "echo") {
-        return 28;
-      }
-
-      if (influenceMode === "rupture") {
-        return 16;
-      }
-
-      return 22;
-    };
+    const influenceMode = interference?.influenceMode ?? null;
 
     const writeCharacter = (index: number) => {
       if (cancelled) {
@@ -418,28 +680,50 @@ export default function Home() {
       setAnimatedThought(nextThought.slice(0, index + 1));
 
       if (index >= nextThought.length - 1) {
+        const holdTimeoutId = window.setTimeout(() => eraseCharacter(nextThought.length - 1), THOUGHT_OVERLAY_HOLD_MS);
+        timeoutIds.push(holdTimeoutId);
         return;
       }
 
-      timeoutId = window.setTimeout(
+      const nextTimeoutId = window.setTimeout(
         () => writeCharacter(index + 1),
-        getDelay(nextThought[index]),
+        getTypewriterDelay(nextThought[index], influenceMode),
       );
+      timeoutIds.push(nextTimeoutId);
     };
 
-    timeoutId = window.setTimeout(() => writeCharacter(0), 160);
+    const eraseCharacter = (index: number) => {
+      if (cancelled) {
+        return;
+      }
+
+      setAnimatedThought(nextThought.slice(0, index));
+
+      if (index <= 0) {
+        setIsThoughtOverlayVisible(false);
+        return;
+      }
+
+      const nextTimeoutId = window.setTimeout(
+        () => eraseCharacter(index - 1),
+        getTypewriterDelay(nextThought[index - 1], influenceMode),
+      );
+      timeoutIds.push(nextTimeoutId);
+    };
+
+    const initialTimeoutId = window.setTimeout(() => writeCharacter(0), 160);
+    timeoutIds.push(initialTimeoutId);
 
     return () => {
       cancelled = true;
-      if (timeoutId) {
-        window.clearTimeout(timeoutId);
-      }
+      timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
     };
   }, [current.thought, interference?.influenceMode]);
 
   useEffect(() => {
     if (!isSignedIn) {
       setSavedMoments([]);
+      setThoughtMemory([]);
       setBlogPosts([]);
       setProfile(null);
       setAccountMessage("Conectează-te pentru a salva momente.");
@@ -484,6 +768,43 @@ export default function Home() {
       cancelled = true;
     };
   }, [isSignedIn]);
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      setThoughtMemory([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadThoughtMemory() {
+      try {
+        const response = await fetch("/api/thought-memory", { cache: "no-store" });
+        const payload = (await response.json()) as {
+          thoughtMemory?: ThoughtMemoryEntry[];
+          error?: string;
+        };
+
+        if (!response.ok) {
+          throw new Error(payload.error || "Nu am putut încărca memoria gândurilor.");
+        }
+
+        if (!cancelled) {
+          setThoughtMemory(Array.isArray(payload.thoughtMemory) ? payload.thoughtMemory : []);
+        }
+      } catch {
+        if (!cancelled) {
+          setThoughtMemory([]);
+        }
+      }
+    }
+
+    loadThoughtMemory();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn, currentIndex, liveInfluenceMode]);
 
   useEffect(() => {
     if (!isSignedIn) {
@@ -574,12 +895,17 @@ export default function Home() {
       return;
     }
 
-    const interval = window.setInterval(() => {
-      setCurrentIndex((previous) => (previous + 1) % libraryLength);
-    }, 5800);
+    const cycleDuration =
+      getThoughtDrawDuration(current.thought, liveInfluenceMode) * 2 +
+      THOUGHT_OVERLAY_HOLD_MS +
+      THOUGHT_STAGE_REST_MS;
 
-    return () => window.clearInterval(interval);
-  }, [isActive, libraryLength]);
+    const timeout = window.setTimeout(() => {
+      setCurrentIndex((previous) => (previous + 1) % libraryLength);
+    }, cycleDuration);
+
+    return () => window.clearTimeout(timeout);
+  }, [isActive, libraryLength, current.thought, liveInfluenceMode]);
 
   useEffect(() => {
     if (!isActive || referenceImageUrls.length <= 1) {
@@ -592,6 +918,46 @@ export default function Home() {
 
     return () => window.clearInterval(interval);
   }, [isActive, referenceImageUrls.length]);
+
+  useEffect(() => {
+    if (!isSignedIn || !isActive) {
+      return;
+    }
+
+    const fingerprint = [
+      current.direction,
+      current.thought,
+      currentIndex,
+      liveInfluenceMode ?? "none",
+    ].join("::");
+
+    if (lastPersistedThoughtRef.current === fingerprint) {
+      return;
+    }
+
+    lastPersistedThoughtRef.current = fingerprint;
+
+    void fetch("/api/thought-memory", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sourceType: liveInfluenceMode ? "journal_contamination" : "live_slice",
+        direction: current.direction,
+        thought: current.thought,
+        fragments: current.fragments,
+        keywords: current.keywords,
+        senseScore: current.triad.art.score,
+        structureScore: current.triad.design.score,
+        attentionScore: current.triad.business.score,
+        influenceMode: liveInfluenceMode,
+        memoryWeight: liveInfluenceMode ? 0.7 : 0.4,
+      }),
+    }).catch(() => {
+      // Alpha-safe: memoria nu trebuie să rupă scena live dacă persistarea eșuează.
+    });
+  }, [current, currentIndex, isActive, isSignedIn, liveInfluenceMode]);
 
   const handleSaveMoment = async () => {
     setPromptOutput(buildPrompt(true, current));
@@ -998,6 +1364,7 @@ export default function Home() {
         {viewMode === "live" ? (
           <>
             <section className={styles.liveCuratorNote}>
+              <span className={styles.panelMarker}>PANEL · Live Curator Note</span>
               <div>
                 <p className={styles.eyebrow}>Curated Live Field</p>
                 <h2>Scena în care gândirea devine tipografie activă</h2>
@@ -1009,6 +1376,7 @@ export default function Home() {
             </section>
 
             <div className={styles.statusBar}>
+              <span className={styles.panelMarker}>PANEL · Live Status Bar</span>
               <div className={styles.statusCard}>
                 <span className={styles.statusLabel}>Stare curentă</span>
                 <strong className={styles.statusValue}>
@@ -1029,6 +1397,7 @@ export default function Home() {
 
             {engineProfile ? (
               <section className={styles.engineProfilePanel}>
+                <span className={styles.panelMarker}>PANEL · Engine Profile</span>
                 <div className={styles.engineProfileHeading}>
                   <p className={styles.eyebrow}>Alpha Engine Profile</p>
                   <h2>Motorul live se descrie singur</h2>
@@ -1088,6 +1457,7 @@ export default function Home() {
             ) : null}
 
             <section className={styles.alphaDebugPanel}>
+              <span className={styles.panelMarker}>PANEL · Alpha Debug</span>
               <div className={styles.alphaDebugHeading}>
                 <p className={styles.eyebrow}>Alpha Debug Panel</p>
                 <h2>Semnalele interne ale feliei curente</h2>
@@ -1169,14 +1539,114 @@ export default function Home() {
             </section>
 
             <div className={styles.canvasCard}>
+              <span className={styles.panelMarker}>PANEL · Slice Canvas</span>
               <div className={styles.visualStage}>
                 <div
                   className={`${styles.textStage} ${
                     liveInfluenceMode ? styles[`textStage${liveInfluenceMode}`] : ""
                   }`}
                 >
+                  <div
+                    className={`${styles.compositionGuide} ${
+                      liveInfluenceMode ? styles[`compositionGuide${liveInfluenceMode}`] : ""
+                    }`}
+                    aria-hidden="true"
+                  >
+                    <span className={styles.layerMarker}>LAYER · Composition Guide</span>
+                    <span className={`${styles.thirdLine} ${styles.thirdVerticalOne}`} />
+                    <span className={`${styles.thirdLine} ${styles.thirdVerticalTwo}`} />
+                    <span className={`${styles.thirdLine} ${styles.thirdHorizontalOne}`} />
+                    <span className={`${styles.thirdLine} ${styles.thirdHorizontalTwo}`} />
+                    <span
+                      className={`${styles.guideLine} ${styles.leadingLineOne}`}
+                      style={leadingLineStyles[0]}
+                    />
+                    <span
+                      className={`${styles.guideLine} ${styles.leadingLineTwo}`}
+                      style={leadingLineStyles[1]}
+                    />
+                    <span
+                      className={`${styles.guideLine} ${styles.leadingLineThree}`}
+                      style={leadingLineStyles[2]}
+                    />
+                    <span
+                      className={`${styles.focalHalo} ${styles.focalHaloPrimary}`}
+                      style={focalHaloStyles.primary}
+                    >
+                      <span className={styles.focalHaloNumber}>1</span>
+                    </span>
+                    <span
+                      className={`${styles.focalHalo} ${styles.focalHaloSecondary}`}
+                      style={focalHaloStyles.secondary}
+                    >
+                      <span className={styles.focalHaloNumber}>2</span>
+                    </span>
+                    <span
+                      className={`${styles.spaceFrame} ${styles.negativeSpaceOne}`}
+                      style={negativeSpaceStyles.primary}
+                    />
+                    <span
+                      className={`${styles.spaceFrame} ${styles.negativeSpaceTwo}`}
+                      style={negativeSpaceStyles.secondary}
+                    />
+                    <span className={styles.guideLabelPrimary}>focus</span>
+                    <span className={styles.guideLabelSecondary}>thirds</span>
+                  </div>
+                  <div className={styles.compositionRules} aria-hidden="true">
+                    <span className={styles.compositionRulesTitle}>composition rules</span>
+                    <ul>
+                      <li>rule of thirds</li>
+                      <li>focal hierarchy</li>
+                      <li>leading lines</li>
+                      <li>negative space</li>
+                    </ul>
+                  </div>
+                  <div
+                    className={`${styles.relationField} ${
+                      liveInfluenceMode ? styles[`relationField${liveInfluenceMode}`] : ""
+                    }`}
+                    aria-hidden="true"
+                  >
+                    <span className={styles.layerMarker}>LAYER · Relation Field</span>
+                    <span className={`${styles.axisLine} ${styles.axisPrimary}`} />
+                    <span className={`${styles.axisLine} ${styles.axisSecondary}`} />
+                    <span className={`${styles.axisLine} ${styles.axisDiagonal}`} />
+                    <span className={`${styles.relationLine} ${styles.relationLineOne}`} />
+                    <span className={`${styles.relationLine} ${styles.relationLineTwo}`} />
+                    <span className={`${styles.relationLine} ${styles.relationLineThree}`} />
+                    <span className={`${styles.relationNode} ${styles.relationNodeOne}`} />
+                    <span className={`${styles.relationNode} ${styles.relationNodeTwo}`} />
+                    <span className={`${styles.relationNode} ${styles.relationNodeThree}`} />
+                    <span className={`${styles.relationNode} ${styles.relationNodeFour}`} />
+                    <span className={`${styles.relationNode} ${styles.relationNodeCenter}`} />
+                  </div>
                   <div className={styles.textFieldBackdrop} />
+                  <div
+                    className={`${styles.memoryField} ${
+                      liveInfluenceMode ? styles[`memoryField${liveInfluenceMode}`] : ""
+                    }`}
+                    aria-hidden="true"
+                  >
+                    <span className={styles.layerMarker}>LAYER · Memory Field</span>
+                    {current.fragments.slice(0, 4).map((fragment, index) => (
+                      <span
+                        key={`${current.direction}-memory-fragment-${fragment}`}
+                        className={`${styles.memoryFragment} ${styles[`memoryFragment${index + 1}`]}`}
+                      >
+                        {fragment}
+                      </span>
+                    ))}
+                    {current.keywords.slice(0, 3).map((keyword, index) => (
+                      <span
+                        key={`${current.direction}-memory-keyword-${keyword}`}
+                        className={`${styles.memoryTrace} ${styles[`memoryTrace${index + 1}`]}`}
+                      >
+                        {keyword}
+                      </span>
+                    ))}
+                  </div>
                   <div className={styles.textConstellation} aria-hidden="true">
+                    <span className={styles.layerMarker}>LAYER · Text Constellation</span>
                     {current.fragments.map((fragment, index) => (
                       <span
                         key={`${current.direction}-fragment-${fragment}`}
@@ -1202,10 +1672,12 @@ export default function Home() {
                     className={`${styles.textStageCenter} ${
                       liveInfluenceMode ? styles[`textStageCenter${liveInfluenceMode}`] : ""
                     }`}
+                    style={thoughtCenterAnchor}
                   >
+                    <span className={styles.centerLayerMarker}>LAYER · Thought Center</span>
                     <span className={styles.overlayLabel}>Din fișierul Slices</span>
                     <strong>{current.direction}</strong>
-                    <p>{current.fragments.join(" · ")}</p>
+                    <p>{thoughtCenterFragment}</p>
                   </div>
                 </div>
               </div>
@@ -1218,16 +1690,34 @@ export default function Home() {
                   interference ? styles.thoughtOverlayInterference : ""
                 }`}
               >
-                <span className={styles.overlayLabel}>Acum mă gândesc la</span>
-                <p key={thoughtAnimationKey} className={styles.typewriterText}>
-                  {animatedThought}
-                  <span className={styles.typewriterCaret} aria-hidden="true" />
-                </p>
+                {isThoughtOverlayVisible ? (
+                  <>
+                    <div className={styles.thoughtOverlayLabelPlate}>
+                      <span className={styles.overlayLabel}>Acum mă gândesc la</span>
+                    </div>
+                    <div key={thoughtAnimationKey} className={styles.thoughtOverlayTextStack}>
+                      {thoughtLines.map((line, index) => (
+                        <div
+                          key={`${thoughtAnimationKey}-${index}-${line}`}
+                          className={styles.thoughtOverlayTextPlate}
+                        >
+                          <p className={styles.typewriterText}>
+                            {line}
+                            {index === thoughtLines.length - 1 ? (
+                              <span className={styles.typewriterCaret} aria-hidden="true" />
+                            ) : null}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : null}
               </div>
             </div>
 
             {interference ? (
               <section className={styles.interferencePanel}>
+                <span className={styles.panelMarker}>PANEL · Live Interference</span>
                 <div className={styles.interferenceHeading}>
                   <p className={styles.eyebrow}>Interferență activă</p>
                   <h2>Jurnalul perturbă Artistul AI</h2>
@@ -1266,6 +1756,7 @@ export default function Home() {
         {viewMode === "journal" ? (
           <>
             <section className={styles.blogSection}>
+              <span className={styles.panelMarker}>PANEL · Journal Feed</span>
               <div className={styles.blogHeading}>
                 <p className={styles.eyebrow}>Blog</p>
                 <h2>Jurnalul gândirii</h2>
@@ -1316,6 +1807,7 @@ export default function Home() {
 
             {interference ? (
               <section className={styles.interferencePanel}>
+                <span className={styles.panelMarker}>PANEL · Journal Interference</span>
                 <div className={styles.interferenceHeading}>
                   <p className={styles.eyebrow}>Interferență activă</p>
                   <h2>Ultima contaminare publicată</h2>
@@ -1350,6 +1842,7 @@ export default function Home() {
 
         {viewMode === "archive" ? (
           <section className={styles.archiveIntro}>
+            <span className={styles.panelMarker}>PANEL · Archive Intro</span>
             <p className={styles.eyebrow}>Archive</p>
             <h2>Memoria activă a sistemului</h2>
             <p className={styles.blogIntro}>
@@ -1360,6 +1853,7 @@ export default function Home() {
         ) : null}
 
         <section className={styles.theorySection}>
+          <span className={styles.panelMarker}>PANEL · Theory Overview</span>
           <p className={styles.eyebrow}>Genealogie Artistică</p>
           <h2>Din ce tradiții pare să vină MindSlice</h2>
           <div className={styles.theoryBody}>
@@ -1572,6 +2066,7 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
         {viewMode === "live" ? (
           <>
             <section className={styles.panelBlock}>
+              <span className={styles.panelMarker}>PANEL · Live Controls</span>
               <h2>Control</h2>
               <div className={styles.buttonRow}>
                 <button
@@ -1609,6 +2104,7 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
             </section>
 
             <section className={`${styles.panelBlock} ${styles.metricsGrid}`}>
+              <span className={styles.panelMarker}>PANEL · Evaluation Metrics</span>
               <article>
                 <span>Sense</span>
                 <strong>{current.triad.art.score.toFixed(2)} · {current.triad.art.label}</strong>
@@ -1624,6 +2120,7 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
             </section>
 
             <section className={`${styles.panelBlock} ${styles.detailList}`}>
+              <span className={styles.panelMarker}>PANEL · Materials Detail</span>
               <div>
                 <span>Mood</span>
                 <strong>{current.mood}</strong>
@@ -1645,6 +2142,7 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
         ) : null}
 
         <section className={styles.panelBlock}>
+          <span className={styles.panelMarker}>PANEL · Account Profile</span>
           <h2>Cont</h2>
           <p className={styles.accountMessage}>{accountMessage}</p>
           {isSignedIn && profile ? (
@@ -1803,6 +2301,7 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
         {viewMode === "journal" ? (
           <>
             <section className={styles.panelBlock}>
+              <span className={styles.panelMarker}>PANEL · Journal Draft List</span>
               <h2>Drafturi jurnal</h2>
               <ul className={styles.savedList}>
                 {blogPosts.length ? (
@@ -1840,6 +2339,7 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
             </section>
 
             <section className={styles.panelBlock}>
+              <span className={styles.panelMarker}>PANEL · Draft Editor</span>
               <h2>Editor draft</h2>
               {activeDraftId ? (
                 <div className={styles.draftEditor}>
@@ -1981,6 +2481,7 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
         {viewMode === "archive" ? (
           <>
             <section className={styles.panelBlock}>
+              <span className={styles.panelMarker}>PANEL · History Log</span>
               <h2>Istoric scurt</h2>
               <ul className={styles.historyList}>
                 {history.map((entry, index) => (
@@ -1997,6 +2498,39 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
             </section>
 
             <section className={styles.panelBlock}>
+              <span className={styles.panelMarker}>PANEL · Thought Memory</span>
+              <h2>Memoria gândurilor</h2>
+              <ul className={styles.savedList}>
+                {thoughtMemory.length ? (
+                  thoughtMemory.map((entry) => (
+                    <li key={entry.id}>
+                      <span className={styles.historyTime}>
+                        {new Date(entry.created_at).toLocaleString("ro-RO", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                      <strong>{entry.direction}</strong>
+                      <p>{entry.thought}</p>
+                      <span className={styles.draftStatus}>
+                        {entry.source_type} · sense {entry.sense_score.toFixed(2)} · structure{" "}
+                        {entry.structure_score.toFixed(2)} · attention{" "}
+                        {entry.attention_score.toFixed(2)}
+                      </span>
+                    </li>
+                  ))
+                ) : (
+                  <li>
+                    <p>Memoria cognitivă este încă goală.</p>
+                  </li>
+                )}
+              </ul>
+            </section>
+
+            <section className={styles.panelBlock}>
+              <span className={styles.panelMarker}>PANEL · Saved Moments</span>
               <h2>Momente salvate</h2>
               <ul className={styles.savedList}>
                 {savedMoments.length ? (
@@ -2033,6 +2567,7 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
             </section>
 
             <section className={styles.panelBlock}>
+              <span className={styles.panelMarker}>PANEL · Prompt Output</span>
               <h2>Prompt final</h2>
               <textarea readOnly value={promptOutput} className={styles.promptOutput} />
             </section>

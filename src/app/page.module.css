@@ -41,6 +41,52 @@
   box-shadow: var(--shadow);
 }
 
+.panelMarker {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-bottom: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(24, 20, 17, 0.1);
+  background: rgba(255, 252, 247, 0.72);
+  color: rgba(24, 20, 17, 0.58);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.layerMarker,
+.centerLayerMarker {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(24, 20, 17, 0.08);
+  background: rgba(255, 252, 247, 0.5);
+  color: rgba(24, 20, 17, 0.34);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.layerMarker {
+  top: 12px;
+  left: 12px;
+}
+
+.centerLayerMarker {
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 .heroCopy {
   padding: 28px;
   border-radius: 28px 28px 20px 20px;
@@ -162,6 +208,7 @@
   background:
     linear-gradient(180deg, rgba(255, 252, 247, 0.82), rgba(245, 235, 224, 0.88)),
     var(--panel);
+  position: relative;
 }
 
 .statusBar strong {
@@ -196,6 +243,14 @@
   background:
     linear-gradient(180deg, rgba(255, 252, 247, 0.8), rgba(234, 222, 207, 0.88)),
     var(--panel);
+}
+
+.canvasCard > .panelMarker {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 5;
+  margin-bottom: 0;
 }
 
 .engineProfilePanel {
@@ -678,16 +733,536 @@
 .textFieldBackdrop {
   position: absolute;
   inset: 0;
+  z-index: 0;
   background-image:
     linear-gradient(rgba(24, 20, 17, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(24, 20, 17, 0.03) 1px, transparent 1px);
   background-size: 44px 44px;
-  opacity: 0.45;
+  opacity: 0.24;
+}
+
+.compositionGuide {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.78;
+}
+
+.thirdLine,
+.guideLine,
+.focalHalo,
+.spaceFrame,
+.guideLabelPrimary,
+.guideLabelSecondary {
+  position: absolute;
+  display: block;
+}
+
+.thirdLine {
+  background: rgba(24, 20, 17, 0.12);
+  box-shadow: 0 0 0 1px rgba(255, 252, 247, 0.18);
+}
+
+.guideLine {
+  height: 2px;
+  transform-origin: left center;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(181, 69, 47, 0.28), rgba(24, 20, 17, 0.08));
+  box-shadow:
+    0 0 0 1px rgba(255, 252, 247, 0.14),
+    0 0 16px rgba(181, 69, 47, 0.06);
+}
+
+.thirdVerticalOne {
+  top: 0;
+  left: 33.333%;
+  width: 2px;
+  height: 100%;
+}
+
+.thirdVerticalTwo {
+  top: 0;
+  left: 66.666%;
+  width: 2px;
+  height: 100%;
+}
+
+.thirdHorizontalOne {
+  top: 33.333%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+}
+
+.thirdHorizontalTwo {
+  top: 66.666%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+}
+
+.focalHalo {
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 2px solid rgba(220, 38, 38, 0.82);
+  background: rgba(220, 38, 38, 0.04);
+}
+
+.focalHaloNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: rgba(220, 38, 38, 0.92);
+  color: #fff8f8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 0 0 2px rgba(255, 250, 243, 0.72);
+}
+
+.spaceFrame {
+  border: 2px dashed rgba(34, 197, 94, 0.88);
+  border-radius: 18px;
+  background: rgba(34, 197, 94, 0.05);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 252, 247, 0.2),
+    0 0 18px rgba(34, 197, 94, 0.1);
+}
+
+.focalHaloPrimary {
+  opacity: 0.86;
+  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.16), 0 0 28px rgba(220, 38, 38, 0.2);
+}
+
+.focalHaloSecondary {
+  opacity: 0.46;
+  border-color: rgba(220, 38, 38, 0.46);
+}
+
+.leadingLineOne {
+  transform-origin: left center;
+}
+
+.leadingLineTwo {
+  transform-origin: left center;
+}
+
+.leadingLineThree {
+  transform-origin: left center;
+}
+
+.negativeSpaceOne {
+  transform-origin: center;
+}
+
+.negativeSpaceTwo {
+  transform-origin: center;
+}
+
+.guideLabelPrimary,
+.guideLabelSecondary {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  color: rgba(24, 20, 17, 0.34);
+}
+
+.guideLabelPrimary {
+  top: 10%;
+  right: 8%;
+}
+
+.guideLabelSecondary {
+  bottom: 9%;
+  left: 8%;
+}
+
+.compositionGuidewhisper {
+  opacity: 0.52;
+}
+
+.compositionGuidewhisper .guideLine,
+.compositionGuidewhisper .spaceFrame {
+  opacity: 0.72;
+}
+
+.compositionGuideecho .focalHaloPrimary {
+  box-shadow:
+    12px 0 0 rgba(24, 20, 17, 0.04),
+    0 0 28px rgba(220, 38, 38, 0.24);
+}
+
+.compositionGuideecho .guideLine {
+  box-shadow:
+    12px 0 0 rgba(24, 20, 17, 0.05),
+    0 0 18px rgba(181, 69, 47, 0.07);
+}
+
+.compositionGuiderupture .thirdVerticalOne,
+.compositionGuiderupture .thirdHorizontalOne {
+  transform: rotate(-2deg);
+}
+
+.compositionGuiderupture .thirdVerticalTwo,
+.compositionGuiderupture .thirdHorizontalTwo {
+  transform: rotate(2deg);
+}
+
+.compositionGuiderupture .negativeSpaceOne,
+.compositionGuiderupture .negativeSpaceTwo {
+  transform: rotate(-2deg);
+}
+
+.compositionGuidecounterpoint .focalHaloPrimary {
+  left: 35%;
+}
+
+.compositionGuidecounterpoint .focalHaloSecondary {
+  left: 67%;
+  width: min(30%, 14rem);
+  height: min(26%, 9rem);
+}
+
+.compositionGuidestain .thirdLine,
+.compositionGuidestain .focalHalo,
+.compositionGuidestain .guideLine,
+.compositionGuidestain .spaceFrame {
+  filter: blur(0.35px);
+}
+
+.compositionRules {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  z-index: 4;
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(24, 20, 17, 0.08);
+  background: rgba(255, 251, 246, 0.6);
+  backdrop-filter: blur(10px);
+  max-width: 17rem;
+}
+
+.compositionRulesTitle {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(24, 20, 17, 0.42);
+}
+
+.compositionRules ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+
+.compositionRules li {
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  color: rgba(24, 20, 17, 0.6);
+}
+
+.relationField {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.axisLine,
+.relationLine,
+.relationNode {
+  position: absolute;
+  display: block;
+}
+
+.axisLine,
+.relationLine {
+  transform-origin: left center;
+  border-radius: 999px;
+}
+
+.axisLine {
+  background: linear-gradient(90deg, rgba(24, 20, 17, 0.08), rgba(24, 20, 17, 0.02));
+}
+
+.relationLine {
+  background: linear-gradient(90deg, rgba(181, 69, 47, 0.18), rgba(24, 20, 17, 0.04));
+}
+
+.axisPrimary {
+  top: 49%;
+  left: 12%;
+  width: 76%;
+  height: 1px;
+}
+
+.axisSecondary {
+  top: 18%;
+  left: 48%;
+  width: 1px;
+  height: 62%;
+  background: linear-gradient(180deg, rgba(24, 20, 17, 0.08), rgba(24, 20, 17, 0.02));
+}
+
+.axisDiagonal {
+  top: 28%;
+  left: 21%;
+  width: 56%;
+  height: 1px;
+  transform: rotate(22deg);
+}
+
+.relationLineOne {
+  top: 31%;
+  left: 19%;
+  width: 32%;
+  height: 2px;
+  transform: rotate(18deg);
+}
+
+.relationLineTwo {
+  top: 58%;
+  left: 49%;
+  width: 24%;
+  height: 2px;
+  transform: rotate(-26deg);
+}
+
+.relationLineThree {
+  top: 62%;
+  left: 28%;
+  width: 20%;
+  height: 2px;
+  transform: rotate(-12deg);
+}
+
+.relationNode {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(24, 20, 17, 0.14);
+  background: rgba(255, 252, 247, 0.72);
+  box-shadow: 0 0 0 4px rgba(181, 69, 47, 0.04);
+}
+
+.relationNodeOne {
+  top: 30%;
+  left: 17%;
+}
+
+.relationNodeTwo {
+  top: 24%;
+  right: 19%;
+}
+
+.relationNodeThree {
+  bottom: 23%;
+  left: 26%;
+}
+
+.relationNodeFour {
+  bottom: 18%;
+  right: 20%;
+}
+
+.relationNodeCenter {
+  top: 49%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+  border-color: rgba(181, 69, 47, 0.24);
+  background: rgba(255, 248, 240, 0.9);
+  box-shadow:
+    0 0 0 6px rgba(181, 69, 47, 0.06),
+    0 0 24px rgba(181, 69, 47, 0.12);
+}
+
+.relationFieldwhisper {
+  opacity: 0.58;
+}
+
+.relationFieldecho .relationLine {
+  box-shadow: 8px 0 0 rgba(24, 20, 17, 0.05);
+}
+
+.relationFieldrupture .axisDiagonal,
+.relationFieldrupture .relationLineOne,
+.relationFieldrupture .relationLineTwo {
+  transform: rotate(34deg);
+}
+
+.relationFieldrupture .relationLineThree {
+  transform: rotate(-34deg);
+}
+
+.relationFieldcounterpoint .axisPrimary {
+  width: 36%;
+  left: 10%;
+}
+
+.relationFieldcounterpoint .axisSecondary {
+  left: 50%;
+}
+
+.relationFieldcounterpoint .axisDiagonal {
+  left: 55%;
+  width: 22%;
+  transform: rotate(-18deg);
+}
+
+.relationFieldcounterpoint .relationLineOne {
+  left: 14%;
+  width: 22%;
+}
+
+.relationFieldcounterpoint .relationLineTwo {
+  left: 58%;
+  width: 18%;
+}
+
+.relationFieldstain {
+  opacity: 0.72;
+}
+
+.relationFieldstain .relationLine,
+.relationFieldstain .axisLine {
+  filter: blur(0.35px);
+}
+
+.relationFieldstain .relationNode:not(.relationNodeCenter) {
+  box-shadow: 0 0 0 6px rgba(141, 57, 41, 0.06);
+}
+
+.memoryField {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.68;
+}
+
+.memoryFragment,
+.memoryTrace {
+  position: absolute;
+  display: block;
+  color: rgba(24, 20, 17, 0.18);
+  user-select: none;
+}
+
+.memoryFragment {
+  max-width: 18ch;
+  font-family: var(--display-font);
+  font-size: clamp(2rem, 3vw, 4rem);
+  line-height: 0.9;
+  letter-spacing: 0.03em;
+  filter: blur(0.45px);
+  text-transform: uppercase;
+}
+
+.memoryTrace {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(24, 20, 17, 0.22);
+  filter: blur(0.25px);
+}
+
+.memoryFragment1 {
+  top: 9%;
+  left: 18%;
+  transform: rotate(-8deg);
+}
+
+.memoryFragment2 {
+  top: 22%;
+  right: 12%;
+  transform: rotate(7deg);
+}
+
+.memoryFragment3 {
+  bottom: 24%;
+  left: 11%;
+  transform: rotate(-5deg);
+}
+
+.memoryFragment4 {
+  bottom: 11%;
+  right: 18%;
+  transform: rotate(9deg);
+}
+
+.memoryTrace1 {
+  top: 18%;
+  left: 48%;
+}
+
+.memoryTrace2 {
+  bottom: 30%;
+  left: 36%;
+}
+
+.memoryTrace3 {
+  bottom: 15%;
+  right: 29%;
+}
+
+.memoryFieldwhisper {
+  opacity: 0.42;
+}
+
+.memoryFieldecho .memoryFragment,
+.memoryFieldecho .memoryTrace {
+  text-shadow: 12px 0 0 rgba(24, 20, 17, 0.08);
+}
+
+.memoryFieldrupture .memoryFragment1,
+.memoryFieldrupture .memoryFragment3 {
+  transform: rotate(-14deg) translateY(-4px);
+}
+
+.memoryFieldrupture .memoryFragment2,
+.memoryFieldrupture .memoryFragment4 {
+  transform: rotate(14deg) translateY(6px);
+}
+
+.memoryFieldcounterpoint .memoryFragment1,
+.memoryFieldcounterpoint .memoryFragment3,
+.memoryFieldcounterpoint .memoryTrace2 {
+  left: 8%;
+}
+
+.memoryFieldcounterpoint .memoryFragment2,
+.memoryFieldcounterpoint .memoryFragment4,
+.memoryFieldcounterpoint .memoryTrace3 {
+  right: 10%;
+}
+
+.memoryFieldstain .memoryFragment,
+.memoryFieldstain .memoryTrace {
+  filter: blur(0.8px);
+  color: rgba(141, 57, 41, 0.16);
 }
 
 .textConstellation {
   position: absolute;
   inset: 0;
+  z-index: 2;
 }
 
 .floatingFragment,
@@ -756,62 +1331,62 @@
 }
 
 .fragment1 {
-  top: 12%;
-  left: 8%;
+  top: 16%;
+  left: 10%;
   animation: driftOne 9.5s infinite alternate;
 }
 
 .fragment2 {
-  top: 24%;
-  right: 10%;
+  top: 22%;
+  right: 12%;
   animation: driftTwo 11s infinite alternate;
 }
 
 .fragment3 {
-  bottom: 26%;
-  left: 12%;
+  bottom: 24%;
+  left: 13%;
   animation: driftThree 10.5s infinite alternate;
 }
 
 .fragment4 {
-  bottom: 16%;
-  right: 16%;
+  bottom: 14%;
+  right: 14%;
   animation: driftFour 12s infinite alternate;
 }
 
 .keyword1 {
-  top: 14%;
-  left: 46%;
+  top: 12%;
+  left: 34%;
   animation: shimmerOne 7s infinite alternate;
 }
 
 .keyword2 {
-  top: 36%;
-  left: 24%;
+  top: 33%;
+  left: 21%;
   animation: shimmerTwo 8s infinite alternate;
 }
 
 .keyword3 {
-  top: 42%;
-  right: 18%;
+  top: 34%;
+  right: 17%;
   animation: shimmerThree 8.5s infinite alternate;
 }
 
 .keyword4 {
-  bottom: 32%;
-  left: 40%;
+  bottom: 31%;
+  left: 52%;
   animation: shimmerOne 7.4s infinite alternate;
 }
 
 .keyword5 {
   bottom: 18%;
-  left: 20%;
+  left: 22%;
   animation: shimmerTwo 8.2s infinite alternate;
 }
 
 .keyword6 {
-  bottom: 12%;
-  right: 24%;
+  bottom: 14%;
+  right: 21%;
   animation: shimmerThree 7.8s infinite alternate;
 }
 
@@ -819,14 +1394,14 @@
 .textStagecounterpoint .fragment3,
 .textStagecounterpoint .keyword2,
 .textStagecounterpoint .keyword5 {
-  left: 9%;
+  left: 10%;
 }
 
 .textStagecounterpoint .fragment2,
 .textStagecounterpoint .fragment4,
 .textStagecounterpoint .keyword3,
 .textStagecounterpoint .keyword6 {
-  right: 9%;
+  right: 10%;
 }
 
 .textStagerupture .fragment1,
@@ -841,17 +1416,21 @@
 
 .textStageCenter {
   position: absolute;
-  inset: 50% auto auto 50%;
+  top: 33.333%;
+  left: 33.333%;
   transform: translate(-50%, -50%);
-  width: min(70%, 34rem);
+  width: clamp(10rem, 18vw, 14rem);
+  min-height: clamp(10rem, 18vw, 14rem);
   text-align: center;
   display: grid;
-  gap: 10px;
-  padding: 24px;
-  border-radius: 24px;
-  background: rgba(255, 251, 246, 0.58);
+  place-items: center;
+  gap: 6px;
+  padding: 18px;
+  border-radius: 999px;
+  background: rgba(255, 251, 246, 0.72);
   border: 1px solid rgba(24, 20, 17, 0.08);
   backdrop-filter: blur(8px);
+  z-index: 3;
   box-shadow:
     0 18px 40px rgba(24, 20, 17, 0.08),
     0 1px 0 rgba(255, 255, 255, 0.48) inset;
@@ -873,7 +1452,7 @@
 }
 
 .textStageCentercounterpoint {
-  width: min(78%, 42rem);
+  width: clamp(10rem, 18vw, 14rem);
 }
 
 .textStageCenterstain {
@@ -885,15 +1464,18 @@
 
 .textStageCenter strong {
   font-family: var(--display-font);
-  font-size: clamp(2rem, 3vw, 3.6rem);
-  line-height: 0.95;
+  font-size: clamp(1rem, 1.6vw, 1.4rem);
+  line-height: 1.05;
   color: var(--ink);
+  max-width: 10ch;
 }
 
 .textStageCenter p {
   margin: 0;
   color: var(--muted);
-  line-height: 1.6;
+  line-height: 1.35;
+  font-size: 0.82rem;
+  max-width: 12ch;
 }
 
 .cornerSignature {
@@ -930,16 +1512,45 @@
   bottom: 10px;
   width: fit-content;
   max-width: min(32ch, calc(100% - 48px));
-  padding: 18px 20px 20px;
-  border-radius: 18px;
-  background: rgba(17, 14, 10, 0.74);
+  display: grid;
+  gap: 6px;
   color: #f9f1e8;
-  border: 1px solid rgba(255, 255, 255, 0.12);
   z-index: 3;
 }
 
 .thoughtOverlayInterference {
   box-shadow: 0 0 0 1px rgba(255, 194, 168, 0.12), 0 0 28px rgba(181, 69, 47, 0.18);
+}
+
+.thoughtOverlayLabelPlate,
+.thoughtOverlayTextPlate {
+  width: fit-content;
+  max-width: 100%;
+  background: rgba(17, 14, 10, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 24px rgba(17, 14, 10, 0.16);
+}
+
+.thoughtOverlayLabelPlate {
+  padding: 8px 11px;
+  border-radius: 10px;
+  animation: textRiseIn 420ms ease both;
+}
+
+.thoughtOverlayTextStack {
+  display: grid;
+  gap: 5px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.thoughtOverlayTextPlate {
+  width: fit-content;
+  max-width: 100%;
+  padding: 10px 13px 11px;
+  border-radius: 14px;
+  animation: textRiseIn 520ms ease both;
+  overflow: hidden;
 }
 
 .overlayLabel {
@@ -951,15 +1562,14 @@
 }
 
 .thoughtOverlay p {
-  margin: 8px 0 0;
-  font-size: clamp(1.5rem, 2vw, 2.2rem);
-  line-height: 1.16;
+  margin: 0;
+  font-size: clamp(1.1rem, 1.55vw, 1.6rem);
+  line-height: 1.22;
   max-width: 100%;
 }
 
 .typewriterText {
-  min-height: 4.5lh;
-  animation: textRiseIn 520ms ease both;
+  min-height: 1lh;
 }
 
 .typewriterCaret {
