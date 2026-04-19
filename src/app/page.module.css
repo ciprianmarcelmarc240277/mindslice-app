@@ -22,13 +22,13 @@
 .ambientLeft {
   top: -8rem;
   left: -6rem;
-  background: rgba(255, 255, 255, 0.55);
+  background: transparent;
 }
 
 .ambientRight {
   right: -4rem;
   bottom: -8rem;
-  background: rgba(181, 69, 47, 0.14);
+  background: transparent;
 }
 
 .heroCopy,
@@ -36,9 +36,9 @@
 .statusBar,
 .canvasCard {
   border: 1px solid var(--line);
-  background: var(--panel);
+  background: #ffffff;
   backdrop-filter: blur(12px);
-  box-shadow: var(--shadow);
+  box-shadow: none;
 }
 
 .panelMarker {
@@ -173,10 +173,8 @@
   padding: 22px 24px;
   border-radius: 24px;
   border: 1px solid rgba(24, 20, 17, 0.08);
-  background:
-    linear-gradient(135deg, rgba(255, 252, 247, 0.86), rgba(241, 231, 219, 0.92)),
-    var(--panel);
-  box-shadow: var(--shadow);
+  background: #ffffff;
+  box-shadow: none;
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
   gap: 24px;
@@ -205,9 +203,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
-  background:
-    linear-gradient(180deg, rgba(255, 252, 247, 0.82), rgba(245, 235, 224, 0.88)),
-    var(--panel);
+  background: #ffffff;
   position: relative;
 }
 
@@ -240,9 +236,7 @@
   overflow: hidden;
   position: relative;
   min-height: 68vh;
-  background:
-    linear-gradient(180deg, rgba(255, 252, 247, 0.8), rgba(234, 222, 207, 0.88)),
-    var(--panel);
+  background: #ffffff;
 }
 
 .canvasCard > .panelMarker {
@@ -256,10 +250,10 @@
 .engineProfilePanel {
   margin-top: 18px;
   border: 1px solid rgba(24, 20, 17, 0.08);
-  background: linear-gradient(180deg, rgba(255, 252, 247, 0.84), rgba(241, 232, 221, 0.9));
+  background: #ffffff;
   border-radius: 24px;
   padding: 22px;
-  box-shadow: var(--shadow);
+  box-shadow: none;
 }
 
 .engineProfileHeading h2 {
@@ -330,7 +324,7 @@
 .alphaDebugPanel {
   margin-top: 18px;
   border: 1px dashed rgba(24, 20, 17, 0.16);
-  background: linear-gradient(180deg, rgba(246, 240, 232, 0.84), rgba(238, 229, 217, 0.9));
+  background: #ffffff;
   border-radius: 24px;
   padding: 22px;
 }
@@ -399,9 +393,9 @@
 .blogSection {
   margin-top: 20px;
   border: 1px solid var(--line);
-  background: var(--panel);
+  background: #ffffff;
   backdrop-filter: blur(12px);
-  box-shadow: var(--shadow);
+  box-shadow: none;
   border-radius: 28px;
   padding: 24px;
 }
@@ -409,9 +403,9 @@
 .interferencePanel {
   margin-top: 20px;
   border: 1px solid rgba(181, 69, 47, 0.24);
-  background: linear-gradient(180deg, rgba(255, 247, 240, 0.88), rgba(248, 236, 226, 0.92));
+  background: #ffffff;
   backdrop-filter: blur(12px);
-  box-shadow: var(--shadow);
+  box-shadow: none;
   border-radius: 28px;
   padding: 24px;
 }
@@ -431,7 +425,7 @@
 .interferenceGrid {
   margin-top: 18px;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -509,6 +503,101 @@
   color: var(--ink);
 }
 
+.blogByline {
+  margin: 0 0 10px;
+  font-size: 0.88rem;
+  color: var(--muted) !important;
+}
+
+.interiorChatComposer {
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.interiorChatInput {
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  padding: 16px;
+  font: inherit;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--ink);
+}
+
+.interiorChatList {
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.interiorChatMessage {
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(24, 20, 17, 0.08);
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.interiorChatMessageOwn {
+  border-color: rgba(181, 69, 47, 0.22);
+}
+
+.interiorChatMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.interiorChatMetaActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.interiorChatMeta strong {
+  font-size: 0.96rem;
+}
+
+.interiorChatMeta span {
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.interiorChatMessage p {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.interiorChatAddressing {
+  margin: 0 0 8px !important;
+  font-size: 0.86rem;
+  color: var(--muted) !important;
+}
+
+.followButton {
+  appearance: none;
+  border: 1px solid rgba(24, 20, 17, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.followButton:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
 .blogCard strong {
   display: block;
   margin-top: 14px;
@@ -526,9 +615,9 @@
 .archiveIntro {
   margin-top: 20px;
   border: 1px solid var(--line);
-  background: var(--panel);
+  background: #ffffff;
   backdrop-filter: blur(12px);
-  box-shadow: var(--shadow);
+  box-shadow: none;
   border-radius: 28px;
   padding: 24px;
 }
@@ -542,11 +631,9 @@
 .theorySection {
   margin-top: 24px;
   border: 1px solid var(--line);
-  background:
-    linear-gradient(180deg, rgba(255, 252, 247, 0.88), rgba(241, 231, 219, 0.94)),
-    var(--panel);
+  background: #ffffff;
   backdrop-filter: blur(12px);
-  box-shadow: var(--shadow);
+  box-shadow: none;
   border-radius: 28px;
   padding: 28px;
 }
@@ -658,25 +745,13 @@
   display: block;
   width: 100%;
   height: 68vh;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 248, 237, 0.85),
-      rgba(231, 220, 203, 0.95)
-    ),
-    linear-gradient(90deg, rgba(24, 20, 17, 0.02), rgba(24, 20, 17, 0));
+  background: #ffffff;
 }
 
 .visualStage {
   width: 100%;
   height: 68vh;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 248, 237, 0.85),
-      rgba(231, 220, 203, 0.95)
-    ),
-    linear-gradient(90deg, rgba(24, 20, 17, 0.02), rgba(24, 20, 17, 0));
+  background: #ffffff;
   display: grid;
   place-items: center;
 }
@@ -686,10 +761,7 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(181, 69, 47, 0.12), transparent 26%),
-    radial-gradient(circle at 78% 30%, rgba(24, 20, 17, 0.08), transparent 22%),
-    linear-gradient(180deg, rgba(255, 248, 237, 0.82), rgba(231, 220, 203, 0.92));
+  background: #ffffff;
 }
 
 .textStage::after {
@@ -706,28 +778,19 @@
 }
 
 .textStageecho {
-  background:
-    radial-gradient(circle at 20% 20%, rgba(181, 69, 47, 0.16), transparent 28%),
-    radial-gradient(circle at 78% 30%, rgba(24, 20, 17, 0.1), transparent 24%),
-    linear-gradient(180deg, rgba(255, 248, 237, 0.84), rgba(228, 217, 199, 0.96));
+  background: #ffffff;
 }
 
 .textStagerupture {
-  background:
-    linear-gradient(128deg, rgba(255, 248, 237, 0.82) 0 48%, rgba(214, 193, 175, 0.72) 48% 50%, rgba(255, 248, 237, 0.82) 50% 100%),
-    linear-gradient(180deg, rgba(255, 248, 237, 0.82), rgba(231, 220, 203, 0.92));
+  background: #ffffff;
 }
 
 .textStagecounterpoint {
-  background:
-    linear-gradient(90deg, rgba(252, 245, 236, 0.92) 0 49.5%, rgba(205, 184, 167, 0.46) 49.5% 50.5%, rgba(246, 238, 227, 0.92) 50.5% 100%);
+  background: #ffffff;
 }
 
 .textStagestain {
-  background:
-    radial-gradient(circle at 24% 24%, rgba(141, 57, 41, 0.18), transparent 20%),
-    radial-gradient(circle at 68% 68%, rgba(24, 20, 17, 0.12), transparent 28%),
-    linear-gradient(180deg, rgba(242, 232, 220, 0.94), rgba(225, 210, 192, 0.98));
+  background: #ffffff;
 }
 
 .textFieldBackdrop {
@@ -735,8 +798,8 @@
   inset: 0;
   z-index: 0;
   background-image:
-    linear-gradient(rgba(24, 20, 17, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(24, 20, 17, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(24, 20, 17, 0) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(24, 20, 17, 0) 1px, transparent 1px);
   background-size: 44px 44px;
   opacity: 0.24;
 }
@@ -768,7 +831,7 @@
   height: 2px;
   transform-origin: left center;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(181, 69, 47, 0.28), rgba(24, 20, 17, 0.08));
+  background: linear-gradient(90deg, rgba(181, 69, 47, 0), rgba(24, 20, 17, 0));
   box-shadow:
     0 0 0 1px rgba(255, 252, 247, 0.14),
     0 0 16px rgba(181, 69, 47, 0.06);
@@ -996,11 +1059,11 @@
 }
 
 .axisLine {
-  background: linear-gradient(90deg, rgba(24, 20, 17, 0.08), rgba(24, 20, 17, 0.02));
+  background: linear-gradient(90deg, rgba(24, 20, 17, 0), rgba(24, 20, 17, 0));
 }
 
 .relationLine {
-  background: linear-gradient(90deg, rgba(181, 69, 47, 0.18), rgba(24, 20, 17, 0.04));
+  background: linear-gradient(90deg, rgba(181, 69, 47, 0), rgba(24, 20, 17, 0));
 }
 
 .axisPrimary {
@@ -1015,7 +1078,7 @@
   left: 48%;
   width: 1px;
   height: 62%;
-  background: linear-gradient(180deg, rgba(24, 20, 17, 0.08), rgba(24, 20, 17, 0.02));
+  background: linear-gradient(180deg, rgba(24, 20, 17, 0), rgba(24, 20, 17, 0));
 }
 
 .axisDiagonal {
@@ -1755,6 +1818,11 @@
   cursor: default;
 }
 
+.inlineStatusValue {
+  font-size: 0.9rem !important;
+  color: var(--muted);
+}
+
 .historyList {
   list-style: none;
   padding: 0;
@@ -1837,6 +1905,20 @@
   letter-spacing: 0.12em;
   font-size: 0.72rem;
   color: var(--muted);
+}
+
+.draftFlag {
+  display: inline-block;
+  margin-top: 8px;
+  margin-left: 10px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(181, 69, 47, 0.18);
+  background: rgba(255, 249, 242, 1);
+  color: rgba(181, 69, 47, 0.88);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.66rem;
 }
 
 .draftEditor {

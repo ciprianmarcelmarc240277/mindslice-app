@@ -9,11 +9,9 @@
 .hero,
 .block {
   border: 1px solid var(--line);
-  background:
-    linear-gradient(180deg, rgba(255, 252, 247, 0.88), rgba(241, 231, 219, 0.94)),
-    var(--panel);
+  background: #ffffff;
   backdrop-filter: blur(12px);
-  box-shadow: var(--shadow);
+  box-shadow: none;
   border-radius: 28px;
   padding: 28px;
 }

@@ -31,6 +31,28 @@ function buildDraftContent(direction: string, thought: string, prompt: string) {
   ].join("\n");
 }
 
+async function getAuthorPseudonym(supabase: ReturnType<typeof createServerSupabaseClient>, userId: string) {
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("pseudonym")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return profile?.pseudonym ?? null;
+}
+
+function withAuthorPseudonym<T extends Record<string, unknown>>(blogPost: T, pseudonym: string | null) {
+  return {
+    ...blogPost,
+    author_user_id: blogPost.user_id,
+    author_pseudonym: pseudonym,
+  };
+}
+
 export async function GET() {
   const { userId } = await auth();
 
@@ -48,9 +70,21 @@ export async function GET() {
     );
   }
 
+  let authorPseudonym: string | null = null;
+  try {
+    authorPseudonym = await getAuthorPseudonym(supabase, userId);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Nu am putut încărca pseudonimul." },
+      { status: 500 },
+    );
+  }
+
   const { data: blogPosts, error } = await supabase
     .from("blog_posts")
-    .select("id, saved_moment_id, title, excerpt, content, sense_weight, structure_weight, attention_weight, influence_mode, is_contaminant, status, cover_image_url, published_at, created_at, updated_at")
+    .select(
+      "id, user_id, saved_moment_id, title, excerpt, content, sense_weight, structure_weight, attention_weight, influence_mode, is_contaminant, is_debut_submission, is_debut_selected, is_debut_published, status, cover_image_url, published_at, created_at, updated_at",
+    )
     .eq("user_id", userId)
     .order("updated_at", { ascending: false })
     .limit(12);
@@ -59,7 +93,9 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ blogPosts: blogPosts ?? [] });
+  return NextResponse.json({
+    blogPosts: (blogPosts ?? []).map((entry) => withAuthorPseudonym(entry, authorPseudonym)),
+  });
 }
 
 export async function POST(request: Request) {
@@ -90,9 +126,21 @@ export async function POST(request: Request) {
     );
   }
 
+  let authorPseudonym: string | null = null;
+  try {
+    authorPseudonym = await getAuthorPseudonym(supabase, userId);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Nu am putut încărca pseudonimul." },
+      { status: 500 },
+    );
+  }
+
   const { data: existingDraft, error: existingDraftError } = await supabase
     .from("blog_posts")
-    .select("id, saved_moment_id, title, excerpt, content, sense_weight, structure_weight, attention_weight, influence_mode, is_contaminant, status, cover_image_url, published_at, created_at, updated_at")
+    .select(
+      "id, user_id, saved_moment_id, title, excerpt, content, sense_weight, structure_weight, attention_weight, influence_mode, is_contaminant, is_debut_submission, is_debut_selected, is_debut_published, status, cover_image_url, published_at, created_at, updated_at",
+    )
     .eq("user_id", userId)
     .eq("saved_moment_id", payload.savedMomentId)
     .limit(1)
@@ -103,7 +151,10 @@ export async function POST(request: Request) {
   }
 
   if (existingDraft) {
-    return NextResponse.json({ blogPost: existingDraft, reused: true });
+    return NextResponse.json({
+      blogPost: withAuthorPseudonym(existingDraft, authorPseudonym),
+      reused: true,
+    });
   }
 
   const { data: savedMoment, error: savedMomentError } = await supabase
@@ -135,14 +186,20 @@ export async function POST(request: Request) {
       attention_weight: 0.3,
       influence_mode: DEFAULT_INFLUENCE_MODE,
       is_contaminant: true,
+      is_debut_submission: false,
       status: "draft",
     })
-    .select("id, saved_moment_id, title, excerpt, content, sense_weight, structure_weight, attention_weight, influence_mode, is_contaminant, status, cover_image_url, published_at, created_at, updated_at")
+    .select(
+      "id, user_id, saved_moment_id, title, excerpt, content, sense_weight, structure_weight, attention_weight, influence_mode, is_contaminant, is_debut_submission, is_debut_selected, is_debut_published, status, cover_image_url, published_at, created_at, updated_at",
+    )
     .single();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ blogPost }, { status: 201 });
+  return NextResponse.json(
+    { blogPost: withAuthorPseudonym(blogPost, authorPseudonym) },
+    { status: 201 },
+  );
 }

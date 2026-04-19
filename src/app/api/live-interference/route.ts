@@ -49,10 +49,18 @@ export async function GET() {
     return NextResponse.json({ interference: null });
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("pseudonym")
+    .eq("user_id", userId)
+    .maybeSingle();
+
   return NextResponse.json({
     interference: {
       sourceId: blogPost.id,
+      authorUserId: userId,
       title: blogPost.title,
+      authorPseudonym: profile?.pseudonym ?? null,
       excerpt: blogPost.excerpt,
       senseWeight: Number(blogPost.sense_weight ?? 0),
       structureWeight: Number(blogPost.structure_weight ?? 0),

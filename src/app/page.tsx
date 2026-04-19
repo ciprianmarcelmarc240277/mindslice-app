@@ -75,7 +75,9 @@ type ThoughtMemoryEntry = {
 
 type BlogPostDraft = {
   id: string;
+  author_user_id?: string;
   saved_moment_id: string | null;
+  author_pseudonym?: string | null;
   title: string;
   excerpt: string | null;
   content: string;
@@ -84,6 +86,9 @@ type BlogPostDraft = {
   attention_weight: number;
   influence_mode: "whisper" | "echo" | "rupture" | "counterpoint" | "stain";
   is_contaminant: boolean;
+  is_debut_submission?: boolean;
+  is_debut_selected?: boolean;
+  is_debut_published?: boolean;
   status: "draft" | "published";
   cover_image_url: string | null;
   published_at: string | null;
@@ -93,7 +98,9 @@ type BlogPostDraft = {
 
 type LiveInterference = {
   sourceId: string;
+  authorUserId?: string;
   title: string;
+  authorPseudonym?: string | null;
   excerpt: string | null;
   senseWeight: number;
   structureWeight: number;
@@ -101,6 +108,19 @@ type LiveInterference = {
   influenceMode: "whisper" | "echo" | "rupture" | "counterpoint" | "stain";
   note: string;
   publishedAt: string;
+};
+
+type InteriorChatMessage = {
+  id: string;
+  author_user_id: string;
+  message: string;
+  message_body?: string;
+  created_at: string;
+  author_pseudonym: string | null;
+  is_current_user: boolean;
+  address_mode?: "all" | "direct" | "legacy";
+  address_label?: string | null;
+  target_pseudonym?: string | null;
 };
 
 type AddressForm = "domnule" | "doamnă" | "domnișoară";
@@ -111,7 +131,27 @@ type UserProfile = {
   pseudonym?: string | null;
   email?: string | null;
   avatar_url?: string | null;
+  name_declaration_accepted?: boolean | null;
+  subscription_status?: "inactive" | "active" | "past_due" | "canceled" | null;
+  subscription_expires_at?: string | null;
   address_form?: AddressForm | null;
+  bio?: string | null;
+  artist_statement?: string | null;
+  debut_status?: "aspirant" | "in_program" | "selected" | "published" | "alumni" | null;
+};
+
+type AdminSubscriptionProfile = {
+  user_id: string;
+  pseudonym: string | null;
+  subscription_status: "inactive" | "active" | "past_due" | "canceled";
+  subscription_expires_at: string | null;
+};
+
+type AdminSubscriptionOption = {
+  user_id: string;
+  pseudonym: string | null;
+  subscription_status: "inactive" | "active" | "past_due" | "canceled";
+  subscription_expires_at: string | null;
 };
 
 type ViewMode = "live" | "journal" | "archive";
@@ -128,6 +168,40 @@ type EngineProfile = {
 
 const THOUGHT_OVERLAY_HOLD_MS = 8000;
 const THOUGHT_STAGE_REST_MS = 15000;
+
+function formatDebutStatusLabel(
+  value: UserProfile["debut_status"] | null | undefined,
+) {
+  switch (value) {
+    case "in_program":
+      return "în program";
+    case "selected":
+      return "selectat";
+    case "published":
+      return "publicat";
+    case "alumni":
+      return "alumni";
+    case "aspirant":
+    default:
+      return "aspirant";
+  }
+}
+
+function formatSubscriptionStatusLabel(
+  value: UserProfile["subscription_status"] | null | undefined,
+) {
+  switch (value) {
+    case "active":
+      return "activ";
+    case "past_due":
+      return "restanță";
+    case "canceled":
+      return "anulat";
+    case "inactive":
+    default:
+      return "inactiv";
+  }
+}
 
 function getTypewriterDelay(
   character: string,
@@ -171,6 +245,18 @@ function getThoughtDrawDuration(
 
 function formatQuotedPseudonym(value: string) {
   return `„${value}”`;
+}
+
+function formatPublicAuthor(pseudonym: string | null | undefined) {
+  return pseudonym?.trim() ? formatQuotedPseudonym(pseudonym.trim()) : "Pseudonim nesetat";
+}
+
+function normalizeDisplayName(value: string) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function isValidFamilyAndGivenName(value: string) {
+  return /^\p{L}+(?:[ '-]\p{L}+){0,2},\s\p{L}+(?:[ '-]\p{L}+){0,2}$/u.test(value);
 }
 
 const fallbackStateLibrary: ThoughtState[] = [
@@ -372,12 +458,16 @@ function getFocalHaloStyles(
     primaryHeight + 44 + current.visual.drift * 26 + fragmentFactor * 4;
   const offsetX = Math.round((current.visual.drift - 0.5) * 28);
   const offsetY = Math.round((current.visual.wave - 0.7) * 18);
-  const secondaryOffsetX =
-    offsetX + Math.round((current.triad.design.score - 0.5) * 20) + (influenceMode === "counterpoint" ? 18 : 0);
-  const secondaryOffsetY =
-    offsetY + Math.round((current.visual.fracture - 0.4) * 16) + (influenceMode === "stain" ? 10 : 0);
   const primaryRotation = `${Math.round((current.visual.fracture - 0.35) * 10)}deg`;
-  const secondaryRotation = `${Math.round((current.visual.drift - 0.45) * 12)}deg`;
+  const secondaryRotation = `${Math.round((current.visual.drift - 0.45) * 12 + (current.triad.design.score - 0.5) * 10)}deg`;
+  const secondaryLeft = anchor.left === "33.333%" ? "84%" : "16%";
+  const secondaryTop = anchor.top === "33.333%" ? "84%" : "16%";
+  const secondaryOffsetX =
+    Math.round((current.visual.drift - 0.5) * 16) +
+    (influenceMode === "counterpoint" ? 10 : 0);
+  const secondaryOffsetY =
+    Math.round((current.visual.wave - 0.7) * 12) +
+    (influenceMode === "stain" ? 8 : 0);
 
   return {
     primary: {
@@ -390,8 +480,8 @@ function getFocalHaloStyles(
       transform: `translate(-50%, -50%) rotate(${primaryRotation})`,
     },
     secondary: {
-      left: anchor.left,
-      top: anchor.top,
+      left: secondaryLeft,
+      top: secondaryTop,
       width: `${secondaryWidth}px`,
       height: `${secondaryHeight}px`,
       marginLeft: `${secondaryOffsetX}px`,
@@ -534,6 +624,11 @@ export default function Home() {
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isPublishingDraft, setIsPublishingDraft] = useState(false);
   const [interference, setInterference] = useState<LiveInterference | null>(null);
+  const [interiorChatMessages, setInteriorChatMessages] = useState<InteriorChatMessage[]>([]);
+  const [interiorChatInput, setInteriorChatInput] = useState("");
+  const [isSendingInteriorChatMessage, setIsSendingInteriorChatMessage] = useState(false);
+  const [followedUserIds, setFollowedUserIds] = useState<string[]>([]);
+  const [followActionUserId, setFollowActionUserId] = useState<string | null>(null);
   const [isSavingAddressForm, setIsSavingAddressForm] = useState(false);
   const [isEditingAddressForm, setIsEditingAddressForm] = useState(false);
   const [displayNameInput, setDisplayNameInput] = useState("");
@@ -542,6 +637,28 @@ export default function Home() {
   const [pseudonymInput, setPseudonymInput] = useState("");
   const [isSavingPseudonym, setIsSavingPseudonym] = useState(false);
   const [isEditingPseudonym, setIsEditingPseudonym] = useState(false);
+  const [bioInput, setBioInput] = useState("");
+  const [bioSaveState, setBioSaveState] = useState<"idle" | "saved">("idle");
+  const [isSavingBio, setIsSavingBio] = useState(false);
+  const [isSavingNameDeclaration, setIsSavingNameDeclaration] = useState(false);
+  const [artistStatementInput, setArtistStatementInput] = useState("");
+  const [debutStatusInput, setDebutStatusInput] = useState<
+    "aspirant" | "in_program" | "selected" | "published" | "alumni"
+  >("aspirant");
+  const [isSavingDebutProgram, setIsSavingDebutProgram] = useState(false);
+  const [isDebutSubmissionInput, setIsDebutSubmissionInput] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminSubscriptionOptions, setAdminSubscriptionOptions] = useState<
+    AdminSubscriptionOption[]
+  >([]);
+  const [adminTargetPseudonymInput, setAdminTargetPseudonymInput] = useState("");
+  const [adminSubscriptionStatusInput, setAdminSubscriptionStatusInput] = useState<
+    "inactive" | "active" | "past_due" | "canceled"
+  >("inactive");
+  const [isSavingAdminSubscription, setIsSavingAdminSubscription] = useState(false);
+  const [adminSubscriptionResult, setAdminSubscriptionResult] =
+    useState<AdminSubscriptionProfile | null>(null);
+  const [hasLoadedUserState, setHasLoadedUserState] = useState(false);
   const [animatedThought, setAnimatedThought] = useState(fallbackStateLibrary[0].thought);
   const [isThoughtOverlayVisible, setIsThoughtOverlayVisible] = useState(true);
   const [thoughtAnimationKey, setThoughtAnimationKey] = useState(0);
@@ -557,6 +674,27 @@ export default function Home() {
     : null;
   const publishedPosts = blogPosts.filter((entry) => entry.status === "published");
   const liveInfluenceMode = interference?.influenceMode ?? null;
+  const normalizedDisplayNameInput = normalizeDisplayName(displayNameInput);
+  const hasDisplayNameInput = normalizedDisplayNameInput.length > 0;
+  const canSaveDisplayName = isValidFamilyAndGivenName(normalizedDisplayNameInput);
+  const normalizedProfileDisplayName = normalizeDisplayName(profile?.display_name ?? "");
+  const normalizedBioInput = bioInput.trim();
+  const normalizedArtistStatementInput = artistStatementInput.trim();
+  const hasAcceptedNameDeclaration = Boolean(profile?.name_declaration_accepted);
+  const hasPseudonym = Boolean(profile?.pseudonym?.trim());
+  const hasActiveSubscription = profile?.subscription_status === "active";
+  const hasRequiredDisplayName =
+    !isSignedIn ||
+    (Boolean(normalizedProfileDisplayName) &&
+      isValidFamilyAndGivenName(normalizedProfileDisplayName));
+  const hasProfileAccess =
+    !isSignedIn || (hasRequiredDisplayName && hasAcceptedNameDeclaration);
+  const isApplicationLocked = isSignedIn && hasLoadedUserState && !hasProfileAccess;
+  const currentDebutStatus = profile?.debut_status ?? "aspirant";
+  const hasDebutProgramChanges =
+    normalizedArtistStatementInput !== (profile?.artist_statement ?? "").trim() ||
+    debutStatusInput !== currentDebutStatus;
+  const hasBioChanges = normalizedBioInput !== (profile?.bio ?? "").trim();
   const thoughtCenterAnchor = getThoughtCenterAnchor(current, currentIndex);
   const thoughtCenterFragment = current.fragments[0] ?? current.keywords[0] ?? "anchor";
   const focalHaloStyles = getFocalHaloStyles(current, thoughtCenterAnchor, liveInfluenceMode);
@@ -722,15 +860,18 @@ export default function Home() {
 
   useEffect(() => {
     if (!isSignedIn) {
+      setHasLoadedUserState(true);
       setSavedMoments([]);
       setThoughtMemory([]);
       setBlogPosts([]);
       setProfile(null);
+      setIsAdmin(false);
       setAccountMessage("Conectează-te pentru a salva momente.");
       return;
     }
 
     let cancelled = false;
+    setHasLoadedUserState(false);
 
     async function loadUserState() {
       try {
@@ -739,6 +880,7 @@ export default function Home() {
           profile?: UserProfile;
           savedMoments?: SavedMoment[];
           blogPosts?: BlogPostDraft[];
+          isAdmin?: boolean;
           error?: string;
         };
 
@@ -748,16 +890,30 @@ export default function Home() {
 
         if (!cancelled) {
           setProfile(payload.profile ?? null);
+          setIsAdmin(Boolean(payload.isAdmin));
           setDisplayNameInput(payload.profile?.display_name ?? "");
           setPseudonymInput(payload.profile?.pseudonym ?? "");
+          setBioInput(payload.profile?.bio ?? "");
+          setBioSaveState("idle");
+          setArtistStatementInput(payload.profile?.artist_statement ?? "");
+          setDebutStatusInput(payload.profile?.debut_status ?? "aspirant");
           setSavedMoments(Array.isArray(payload.savedMoments) ? payload.savedMoments : []);
-          setAccountMessage("Momentele tale salvate sunt sincronizate cu Supabase.");
+          setAccountMessage(
+            payload.profile?.display_name &&
+              isValidFamilyAndGivenName(normalizeDisplayName(payload.profile.display_name)) &&
+              payload.profile?.name_declaration_accepted
+              ? "Momentele tale salvate sunt sincronizate cu Supabase."
+              : 'Setează numele în formatul "Nume de familie, Prenume" și bifează declarația din PANEL · Account Profile pentru a intra în aplicație.',
+          );
+          setHasLoadedUserState(true);
         }
       } catch (error) {
         if (!cancelled) {
+          setIsAdmin(false);
           setAccountMessage(
             error instanceof Error ? error.message : "Nu am putut încărca datele utilizatorului.",
           );
+          setHasLoadedUserState(true);
         }
       }
     }
@@ -766,6 +922,122 @@ export default function Home() {
 
     return () => {
       cancelled = true;
+    };
+  }, [isSignedIn]);
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      setFollowedUserIds([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadFollows() {
+      try {
+        const response = await fetch("/api/pseudonym-follows", { cache: "no-store" });
+        const payload = (await response.json()) as {
+          followedUserIds?: string[];
+          error?: string;
+        };
+
+        if (!response.ok) {
+          throw new Error(payload.error || "Nu am putut încărca relațiile de follow.");
+        }
+
+        if (!cancelled) {
+          setFollowedUserIds(Array.isArray(payload.followedUserIds) ? payload.followedUserIds : []);
+        }
+      } catch {
+        if (!cancelled) {
+          setFollowedUserIds([]);
+        }
+      }
+    }
+
+    loadFollows();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn]);
+
+  useEffect(() => {
+    if (!isSignedIn || !isAdmin) {
+      setAdminSubscriptionOptions([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadAdminSubscriptionOptions() {
+      try {
+        const response = await fetch("/api/admin/subscriptions", { cache: "no-store" });
+        const payload = (await response.json()) as {
+          profiles?: AdminSubscriptionOption[];
+          error?: string;
+        };
+
+        if (!response.ok) {
+          throw new Error(payload.error || "Nu am putut încărca lista de pseudonime.");
+        }
+
+        if (!cancelled) {
+          setAdminSubscriptionOptions(Array.isArray(payload.profiles) ? payload.profiles : []);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setAdminSubscriptionOptions([]);
+          setAccountMessage(
+            error instanceof Error ? error.message : "Nu am putut încărca lista de pseudonime.",
+          );
+        }
+      }
+    }
+
+    loadAdminSubscriptionOptions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin, isSignedIn]);
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      setInteriorChatMessages([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadInteriorChat() {
+      try {
+        const response = await fetch("/api/interior-chat", { cache: "no-store" });
+        const payload = (await response.json()) as {
+          messages?: InteriorChatMessage[];
+          error?: string;
+        };
+
+        if (!response.ok) {
+          throw new Error(payload.error || "Nu am putut încărca chatul interior.");
+        }
+
+        if (!cancelled) {
+          setInteriorChatMessages(Array.isArray(payload.messages) ? payload.messages : []);
+        }
+      } catch {
+        if (!cancelled) {
+          setInteriorChatMessages([]);
+        }
+      }
+    }
+
+    loadInteriorChat();
+    const interval = window.setInterval(loadInteriorChat, 12000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
     };
   }, [isSignedIn]);
 
@@ -888,6 +1160,7 @@ export default function Home() {
     setAttentionWeightInput(String(activeDraft.attention_weight ?? 0));
     setInfluenceModeInput(activeDraft.influence_mode);
     setIsContaminantInput(activeDraft.is_contaminant);
+    setIsDebutSubmissionInput(Boolean(activeDraft.is_debut_submission));
   }, [activeDraftId, blogPosts]);
 
   useEffect(() => {
@@ -920,7 +1193,7 @@ export default function Home() {
   }, [isActive, referenceImageUrls.length]);
 
   useEffect(() => {
-    if (!isSignedIn || !isActive) {
+    if (!isSignedIn || !isActive || !hasProfileAccess) {
       return;
     }
 
@@ -957,13 +1230,29 @@ export default function Home() {
     }).catch(() => {
       // Alpha-safe: memoria nu trebuie să rupă scena live dacă persistarea eșuează.
     });
-  }, [current, currentIndex, isActive, isSignedIn, liveInfluenceMode]);
+  }, [current, currentIndex, hasProfileAccess, isActive, isSignedIn, liveInfluenceMode]);
 
   const handleSaveMoment = async () => {
     setPromptOutput(buildPrompt(true, current));
 
     if (!isSignedIn) {
       setAccountMessage("Autentifică-te ca să poți salva momente în contul tău.");
+      setSaveState("error");
+      return;
+    }
+
+    if (!hasRequiredDisplayName) {
+      setAccountMessage(
+        'Setează mai întâi numele în formatul "Nume de familie, Prenume" în PANEL · Account Profile ca să poți intra în aplicație.',
+      );
+      setSaveState("error");
+      return;
+    }
+
+    if (!hasAcceptedNameDeclaration) {
+      setAccountMessage(
+        "Bifează declarația din PANEL · Account Profile ca să poți intra în aplicație.",
+      );
       setSaveState("error");
       return;
     }
@@ -1009,6 +1298,13 @@ export default function Home() {
       return;
     }
 
+    if (!hasProfileAccess) {
+      setAccountMessage(
+        "Completează numele și declarația din PANEL · Account Profile ca să poți continua.",
+      );
+      return;
+    }
+
     setDraftingMomentId(savedMomentId);
 
     try {
@@ -1035,6 +1331,7 @@ export default function Home() {
         return [payload.blogPost!, ...next];
       });
       setActiveDraftId(payload.blogPost.id);
+      setViewMode("journal");
       setDraftTitleInput(payload.blogPost.title);
       setDraftExcerptInput(payload.blogPost.excerpt ?? "");
       setDraftContentInput(payload.blogPost.content);
@@ -1043,6 +1340,7 @@ export default function Home() {
       setAttentionWeightInput(String(payload.blogPost.attention_weight ?? 0));
       setInfluenceModeInput(payload.blogPost.influence_mode);
       setIsContaminantInput(payload.blogPost.is_contaminant);
+      setIsDebutSubmissionInput(Boolean(payload.blogPost.is_debut_submission));
 
       setAccountMessage(
         payload.reused
@@ -1063,11 +1361,31 @@ export default function Home() {
     setDraftTitleInput(draft.title);
     setDraftExcerptInput(draft.excerpt ?? "");
     setDraftContentInput(draft.content);
+    setSenseWeightInput(String(draft.sense_weight ?? 0));
+    setStructureWeightInput(String(draft.structure_weight ?? 0));
+    setAttentionWeightInput(String(draft.attention_weight ?? 0));
+    setInfluenceModeInput(draft.influence_mode);
+    setIsContaminantInput(draft.is_contaminant);
+    setIsDebutSubmissionInput(Boolean(draft.is_debut_submission));
   };
 
   const handleSaveDraft = async () => {
     if (!activeDraftId) {
       setAccountMessage("Selectează mai întâi un draft.");
+      return;
+    }
+
+    if (!hasProfileAccess) {
+      setAccountMessage(
+        "Completează numele și declarația din PANEL · Account Profile ca să poți continua.",
+      );
+      return;
+    }
+
+    if (isDebutSubmissionInput && !hasActiveSubscription) {
+      setAccountMessage(
+        "Debut submission este disponibil doar cu abonament lunar activ.",
+      );
       return;
     }
 
@@ -1088,6 +1406,7 @@ export default function Home() {
           attentionWeight: Number(attentionWeightInput),
           influenceMode: influenceModeInput,
           isContaminant: isContaminantInput,
+          isDebutSubmission: isDebutSubmissionInput,
         }),
       });
 
@@ -1116,6 +1435,20 @@ export default function Home() {
   const handlePublishDraft = async () => {
     if (!activeDraftId) {
       setAccountMessage("Selectează mai întâi un draft.");
+      return;
+    }
+
+    if (!hasProfileAccess) {
+      setAccountMessage(
+        "Completează numele și declarația din PANEL · Account Profile ca să poți continua.",
+      );
+      return;
+    }
+
+    if (!profile?.pseudonym?.trim()) {
+      setAccountMessage(
+        "Setează mai întâi pseudonimul în PANEL · Account Profile. Tot ce publici apare sub pseudonim.",
+      );
       return;
     }
 
@@ -1207,7 +1540,7 @@ export default function Home() {
   };
 
   const handleDisplayNameSave = async () => {
-    const nextDisplayName = displayNameInput.trim();
+    const nextDisplayName = normalizedDisplayNameInput;
 
     if (!isSignedIn) {
       setAccountMessage("Autentifică-te ca să-ți poți seta numele afișat.");
@@ -1216,6 +1549,13 @@ export default function Home() {
 
     if (!nextDisplayName) {
       setAccountMessage("Numele afișat nu poate fi gol.");
+      return;
+    }
+
+    if (!isValidFamilyAndGivenName(nextDisplayName)) {
+      setAccountMessage(
+        'Folosește formatul "Nume de familie, Prenume", fără alias sau alte entități.',
+      );
       return;
     }
 
@@ -1251,7 +1591,11 @@ export default function Home() {
           },
         }),
       );
-      setAccountMessage("Numele afișat a fost actualizat.");
+      setAccountMessage(
+        payload.profile.name_declaration_accepted
+          ? "Numele a fost actualizat. Accesul în aplicație este activ."
+          : "Numele a fost actualizat. Mai trebuie să bifezi declarația de nume pentru a activa accesul.",
+      );
     } catch (error) {
       setAccountMessage(
         error instanceof Error ? error.message : "Nu am putut actualiza numele afișat.",
@@ -1316,6 +1660,336 @@ export default function Home() {
     }
   };
 
+  const handleBioSave = async () => {
+    if (!isSignedIn) {
+      setAccountMessage("Autentifică-te ca să-ți poți seta bio-ul.");
+      return;
+    }
+
+    if (!hasProfileAccess) {
+      setAccountMessage(
+        "Completează numele și declarația din PANEL · Account Profile ca să poți continua.",
+      );
+      return;
+    }
+
+    setIsSavingBio(true);
+    setBioSaveState("idle");
+
+    try {
+      const response = await fetch("/api/user-state", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ bio: normalizedBioInput }),
+      });
+
+      const payload = (await response.json()) as {
+        profile?: UserProfile;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.profile) {
+        throw new Error(payload.error || "Nu am putut actualiza bio-ul.");
+      }
+
+      setProfile(payload.profile);
+      setBioInput(payload.profile.bio ?? "");
+      setBioSaveState("saved");
+      setAccountMessage("Bio-ul a fost actualizat.");
+    } catch (error) {
+      setAccountMessage(error instanceof Error ? error.message : "Nu am putut actualiza bio-ul.");
+    } finally {
+      setIsSavingBio(false);
+    }
+  };
+
+  const handleNameDeclarationChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const nextAccepted = event.target.checked;
+
+    if (!isSignedIn) {
+      setAccountMessage("Autentifică-te ca să poți declara numele real.");
+      return;
+    }
+
+    setProfile((previous) =>
+      previous
+        ? { ...previous, name_declaration_accepted: nextAccepted }
+        : { user_id: "current", name_declaration_accepted: nextAccepted },
+    );
+    setIsSavingNameDeclaration(true);
+
+    try {
+      const response = await fetch("/api/user-state", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ nameDeclarationAccepted: nextAccepted }),
+      });
+
+      const payload = (await response.json()) as {
+        profile?: UserProfile;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.profile) {
+        throw new Error(payload.error || "Nu am putut salva declarația de nume.");
+      }
+
+      setProfile(payload.profile);
+      window.dispatchEvent(
+        new CustomEvent("profile-updated", {
+          detail: {
+            addressForm: payload.profile.address_form ?? "domnule",
+            displayName: payload.profile.display_name ?? profile?.display_name ?? displayNameInput,
+            pseudonym: payload.profile.pseudonym ?? profile?.pseudonym ?? pseudonymInput,
+          },
+        }),
+      );
+      setAccountMessage(
+        nextAccepted
+          ? "Declarația de nume a fost salvată."
+          : "Declarația de nume a fost retrasă. Accesul rămâne blocat.",
+      );
+    } catch (error) {
+      setProfile((previous) =>
+        previous
+          ? { ...previous, name_declaration_accepted: !nextAccepted }
+          : previous,
+      );
+      setAccountMessage(
+        error instanceof Error ? error.message : "Nu am putut salva declarația de nume.",
+      );
+    } finally {
+      setIsSavingNameDeclaration(false);
+    }
+  };
+
+  const handleDebutProgramSave = async () => {
+    if (!isSignedIn) {
+      setAccountMessage("Autentifică-te ca să poți seta programul de debut artistic.");
+      return;
+    }
+
+    if (!hasProfileAccess) {
+      setAccountMessage(
+        "Completează numele și declarația din PANEL · Account Profile ca să poți continua.",
+      );
+      return;
+    }
+
+    if (!hasActiveSubscription) {
+      setAccountMessage(
+        "Programul de debut artistic este disponibil doar cu abonament lunar activ.",
+      );
+      return;
+    }
+
+    setIsSavingDebutProgram(true);
+
+    try {
+      const response = await fetch("/api/user-state", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          artistStatement: normalizedArtistStatementInput,
+          debutStatus: debutStatusInput,
+        }),
+      });
+
+      const payload = (await response.json()) as {
+        profile?: UserProfile;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.profile) {
+        throw new Error(payload.error || "Nu am putut salva programul de debut artistic.");
+      }
+
+      setProfile(payload.profile);
+      setArtistStatementInput(payload.profile.artist_statement ?? "");
+      setDebutStatusInput(payload.profile.debut_status ?? "aspirant");
+      setAccountMessage("Programul de debut artistic a fost actualizat.");
+    } catch (error) {
+      setAccountMessage(
+        error instanceof Error
+          ? error.message
+          : "Nu am putut salva programul de debut artistic.",
+      );
+    } finally {
+      setIsSavingDebutProgram(false);
+    }
+  };
+
+  const handleAdminSubscriptionSave = async () => {
+    const targetPseudonym = adminTargetPseudonymInput.trim();
+
+    if (!isSignedIn || !isAdmin) {
+      setAccountMessage("Doar un admin poate modifica manual abonamentele.");
+      return;
+    }
+
+    if (!targetPseudonym) {
+      setAccountMessage("Introdu pseudonimul pentru care vrei să schimbi abonamentul.");
+      return;
+    }
+
+    setIsSavingAdminSubscription(true);
+
+    try {
+      const response = await fetch("/api/admin/subscriptions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          targetPseudonym,
+          subscriptionStatus: adminSubscriptionStatusInput,
+        }),
+      });
+
+      const payload = (await response.json()) as {
+        profile?: AdminSubscriptionProfile;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.profile) {
+        throw new Error(payload.error || "Nu am putut actualiza abonamentul.");
+      }
+
+      setAdminSubscriptionResult(payload.profile);
+      setAdminSubscriptionOptions((previous) =>
+        previous.map((entry) =>
+          entry.user_id === payload.profile?.user_id ? payload.profile : entry,
+        ),
+      );
+      setAccountMessage("Abonamentul a fost actualizat manual de admin.");
+
+      if (payload.profile.user_id === profile?.user_id) {
+        setProfile((previous) =>
+          previous
+            ? {
+                ...previous,
+                subscription_status: payload.profile?.subscription_status,
+                subscription_expires_at: payload.profile?.subscription_expires_at,
+              }
+            : previous,
+        );
+      }
+    } catch (error) {
+      setAccountMessage(
+        error instanceof Error ? error.message : "Nu am putut actualiza abonamentul.",
+      );
+    } finally {
+      setIsSavingAdminSubscription(false);
+    }
+  };
+
+  const handleInteriorChatSend = async () => {
+    const nextMessage = interiorChatInput.trim();
+
+    if (!isSignedIn) {
+      setAccountMessage("Autentifică-te ca să poți intra în chatul interior.");
+      return;
+    }
+
+    if (!hasProfileAccess) {
+      setAccountMessage(
+        "Completează numele și declarația din PANEL · Account Profile ca să poți continua.",
+      );
+      return;
+    }
+
+    if (!hasPseudonym) {
+      setAccountMessage(
+        "Setează mai întâi pseudonimul în PANEL · Account Profile. Chatul interior funcționează doar sub pseudonim.",
+      );
+      return;
+    }
+
+    if (!nextMessage) {
+      setAccountMessage("Mesajul din chat nu poate fi gol.");
+      return;
+    }
+
+    setIsSendingInteriorChatMessage(true);
+
+    try {
+      const response = await fetch("/api/interior-chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: nextMessage }),
+      });
+
+      const payload = (await response.json()) as {
+        message?: InteriorChatMessage;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.message) {
+        throw new Error(payload.error || "Nu am putut trimite mesajul în chat.");
+      }
+
+      setInteriorChatMessages((previous) => [payload.message!, ...previous].slice(0, 40));
+      setInteriorChatInput("");
+      setAccountMessage("Mesajul a fost trimis în chatul interior.");
+    } catch (error) {
+      setAccountMessage(
+        error instanceof Error ? error.message : "Nu am putut trimite mesajul în chat.",
+      );
+    } finally {
+      setIsSendingInteriorChatMessage(false);
+    }
+  };
+
+  const handleFollowToggle = async (targetUserId: string, shouldFollow: boolean) => {
+    if (!isSignedIn) {
+      setAccountMessage("Autentifică-te ca să poți urmări un pseudonim.");
+      return;
+    }
+
+    setFollowActionUserId(targetUserId);
+
+    try {
+      const response = await fetch("/api/pseudonym-follows", {
+        method: shouldFollow ? "POST" : "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ targetUserId }),
+      });
+
+      const payload = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Nu am putut actualiza relația de follow.");
+      }
+
+      setFollowedUserIds((previous) =>
+        shouldFollow
+          ? Array.from(new Set([...previous, targetUserId]))
+          : previous.filter((entry) => entry !== targetUserId),
+      );
+      setAccountMessage(
+        shouldFollow ? "Pseudonimul este acum urmărit." : "Follow-ul a fost retras.",
+      );
+    } catch (error) {
+      setAccountMessage(
+        error instanceof Error ? error.message : "Nu am putut actualiza relația de follow.",
+      );
+    } finally {
+      setFollowActionUserId(null);
+    }
+  };
+
   return (
     <main className={styles.page}>
       <div className={styles.ambientLeft} />
@@ -1361,7 +2035,18 @@ export default function Home() {
           </button>
         </div>
 
-        {viewMode === "live" ? (
+        {isApplicationLocked ? (
+          <section className={styles.panelBlock}>
+            <span className={styles.panelMarker}>PANEL · Access Gate</span>
+            <p className={styles.eyebrow}>Access Locked</p>
+            <h2>Accesul în aplicație rămâne blocat până setezi numele.</h2>
+            <p className={styles.blogIntro}>
+              În `PANEL · Account Profile`, câmpul `Nume` trebuie să fie în formatul `Nume de
+              familie, Prenume`, fără pseudonim sau alte entități, și trebuie să bifezi
+              declarația că acesta este numele tău real.
+            </p>
+          </section>
+        ) : viewMode === "live" ? (
           <>
             <section className={styles.liveCuratorNote}>
               <span className={styles.panelMarker}>PANEL · Live Curator Note</span>
@@ -1729,6 +2414,29 @@ export default function Home() {
                     <strong>{interference.title}</strong>
                   </article>
                   <article>
+                    <span>Sub pseudonim</span>
+                    <strong>{formatPublicAuthor(interference.authorPseudonym)}</strong>
+                    {interference.authorUserId && profile?.user_id !== interference.authorUserId ? (
+                      <button
+                        type="button"
+                        className={styles.followButton}
+                        onClick={() =>
+                          handleFollowToggle(
+                            interference.authorUserId!,
+                            !followedUserIds.includes(interference.authorUserId!),
+                          )
+                        }
+                        disabled={followActionUserId === interference.authorUserId}
+                      >
+                        {followActionUserId === interference.authorUserId
+                          ? "..."
+                          : followedUserIds.includes(interference.authorUserId)
+                            ? "Unfollow"
+                            : "Follow"}
+                      </button>
+                    ) : null}
+                  </article>
+                  <article>
                     <span>Mode</span>
                     <strong>{interference.influenceMode}</strong>
                   </article>
@@ -1755,6 +2463,111 @@ export default function Home() {
 
         {viewMode === "journal" ? (
           <>
+            <section className={styles.panelBlock}>
+              <span className={styles.panelMarker}>PANEL · Interior Group Chat</span>
+              <div className={styles.blogHeading}>
+                <p className={styles.eyebrow}>Interior Chat</p>
+                <h2>Discuția interioară comună</h2>
+                <p className={styles.blogIntro}>
+                  Un singur grup pentru toți cei din aplicație. Fiecare mesaj apare sub
+                  pseudonim.
+                </p>
+              </div>
+              <div className={styles.interiorChatComposer}>
+                <textarea
+                  value={interiorChatInput}
+                  onChange={(event) => setInteriorChatInput(event.target.value)}
+                  className={styles.interiorChatInput}
+                  placeholder="@all salut tuturor / @pseudonim mesaj direct"
+                  disabled={isSendingInteriorChatMessage || !hasPseudonym}
+                />
+                <div className={styles.accountActionRow}>
+                  <button
+                    type="button"
+                    className={styles.accountButton}
+                    onClick={handleInteriorChatSend}
+                    disabled={
+                      isSendingInteriorChatMessage ||
+                      !hasPseudonym ||
+                      !interiorChatInput.trim()
+                    }
+                  >
+                    {isSendingInteriorChatMessage ? "Se trimite..." : "Trimite în grup"}
+                  </button>
+                </div>
+                {!hasPseudonym ? (
+                  <p className={styles.accountHint}>
+                    Setează pseudonimul în `PANEL · Account Profile` ca să poți scrie în chat.
+                  </p>
+                ) : (
+                  <p className={styles.accountHint}>
+                    Folosește `@all` pentru mesaj către toți sau `@pseudonim` pentru o adresare
+                    directă.
+                  </p>
+                )}
+              </div>
+              <div className={styles.interiorChatList}>
+                {interiorChatMessages.length ? (
+                  interiorChatMessages.map((entry) => (
+                    <article
+                      key={entry.id}
+                      className={`${styles.interiorChatMessage} ${
+                        entry.is_current_user ? styles.interiorChatMessageOwn : ""
+                      }`}
+                    >
+                      <div className={styles.interiorChatMeta}>
+                        <strong>{formatPublicAuthor(entry.author_pseudonym)}</strong>
+                        <div className={styles.interiorChatMetaActions}>
+                          {profile?.user_id !== entry.author_user_id ? (
+                            <button
+                              type="button"
+                              className={styles.followButton}
+                              onClick={() =>
+                                handleFollowToggle(
+                                  entry.author_user_id,
+                                  !followedUserIds.includes(entry.author_user_id),
+                                )
+                              }
+                              disabled={followActionUserId === entry.author_user_id}
+                            >
+                              {followActionUserId === entry.author_user_id
+                                ? "..."
+                                : followedUserIds.includes(entry.author_user_id)
+                                  ? "Unfollow"
+                                  : "Follow"}
+                            </button>
+                          ) : null}
+                          <span>
+                            {new Date(entry.created_at).toLocaleString("ro-RO", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                      {entry.address_label ? (
+                        <p className={styles.interiorChatAddressing}>
+                          <strong>{entry.address_label}</strong>
+                          {entry.target_pseudonym
+                            ? ` · către ${formatPublicAuthor(entry.target_pseudonym)}`
+                            : entry.address_mode === "all"
+                              ? " · pentru toți"
+                              : ""}
+                        </p>
+                      ) : null}
+                      <p>{entry.message_body ?? entry.message}</p>
+                    </article>
+                  ))
+                ) : (
+                  <p className={styles.blogIntro}>
+                    Niciun mesaj încă. Primul mesaj va deschide grupul interior.
+                  </p>
+                )}
+              </div>
+            </section>
+
             <section className={styles.blogSection}>
               <span className={styles.panelMarker}>PANEL · Journal Feed</span>
               <div className={styles.blogHeading}>
@@ -1780,6 +2593,28 @@ export default function Home() {
                           : entry.status}
                       </span>
                       <h3>{entry.title}</h3>
+                      <p className={styles.blogByline}>
+                        Sub pseudonim {formatPublicAuthor(entry.author_pseudonym)}
+                      </p>
+                      {entry.author_user_id && profile?.user_id !== entry.author_user_id ? (
+                        <button
+                          type="button"
+                          className={styles.followButton}
+                          onClick={() =>
+                            handleFollowToggle(
+                              entry.author_user_id!,
+                              !followedUserIds.includes(entry.author_user_id!),
+                            )
+                          }
+                          disabled={followActionUserId === entry.author_user_id}
+                        >
+                          {followActionUserId === entry.author_user_id
+                            ? "..."
+                            : followedUserIds.includes(entry.author_user_id!)
+                              ? "Unfollow"
+                              : "Follow"}
+                        </button>
+                      ) : null}
                       <p>{entry.excerpt || "Publicație fără excerpt încă."}</p>
                       <strong>
                         {entry.influence_mode} · sense {entry.sense_weight.toFixed(2)} · structure{" "}
@@ -1840,7 +2675,7 @@ export default function Home() {
           </>
         ) : null}
 
-        {viewMode === "archive" ? (
+        {viewMode === "archive" && !isApplicationLocked ? (
           <section className={styles.archiveIntro}>
             <span className={styles.panelMarker}>PANEL · Archive Intro</span>
             <p className={styles.eyebrow}>Archive</p>
@@ -1852,6 +2687,7 @@ export default function Home() {
           </section>
         ) : null}
 
+        {!isApplicationLocked ? (
         <section className={styles.theorySection}>
           <span className={styles.panelMarker}>PANEL · Theory Overview</span>
           <p className={styles.eyebrow}>Genealogie Artistică</p>
@@ -2060,10 +2896,11 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
             </article>
           </div>
         </section>
+        ) : null}
       </section>
 
       <aside className={styles.controlPanel}>
-        {viewMode === "live" ? (
+        {viewMode === "live" && !isApplicationLocked ? (
           <>
             <section className={styles.panelBlock}>
               <span className={styles.panelMarker}>PANEL · Live Controls</span>
@@ -2159,15 +2996,30 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
                         onChange={(event) => setDisplayNameInput(event.target.value)}
                         disabled={isSavingDisplayName}
                         className={styles.accountInput}
-                        placeholder="Ex: Marc, Ciprian-Marcel"
+                        placeholder="Ex: Ionescu, Andrei"
                       />
-                      <p className={styles.accountHint}>Format obligatoriu: `Nume, Prenume`.</p>
+                      <p className={styles.accountHint}>
+                        Format obligatoriu: `Nume de familie, Prenume`, fără alias sau alte
+                        entități.
+                      </p>
+                      {!hasDisplayNameInput ? (
+                        <p className={styles.accountHint}>
+                          Dacă ștergi numele, butonul de salvare rămâne inactiv până introduci din
+                          nou `Nume de familie, Prenume`.
+                        </p>
+                      ) : null}
+                      {hasDisplayNameInput && !canSaveDisplayName ? (
+                        <p className={styles.accountHint}>
+                          Salvarea rămâne blocată până când scrii exact cu virgulă:
+                          `Nume de familie, Prenume`.
+                        </p>
+                      ) : null}
                       <div className={styles.accountActionRow}>
                         <button
                           type="button"
                           className={styles.accountButton}
                           onClick={handleDisplayNameSave}
-                          disabled={isSavingDisplayName}
+                          disabled={isSavingDisplayName || !hasDisplayNameInput || !canSaveDisplayName}
                         >
                           {isSavingDisplayName ? "Se salvează..." : "Salvează"}
                         </button>
@@ -2256,6 +3108,40 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
                 </div>
               </div>
               <div className={styles.accountProfileItem}>
+                <span>Bio</span>
+                <div className={styles.accountInlineEditor}>
+                  <textarea
+                    id="profile-bio"
+                    value={bioInput}
+                    onChange={(event) => {
+                      setBioInput(event.target.value);
+                      setBioSaveState("idle");
+                    }}
+                    className={styles.editorExcerpt}
+                    placeholder="Scrie pe scurt cine ești, din ce zonă vii și ce practică urmărești."
+                    disabled={isSavingBio}
+                  />
+                  <p className={styles.accountHint}>
+                    `Bio` este prezentarea ta publică scurtă. `Artist statement` rămâne separat și
+                    ține de poziția ta artistică în programul de debut.
+                  </p>
+                  <div className={styles.accountActionRow}>
+                    <button
+                      type="button"
+                      className={styles.accountButton}
+                      onClick={handleBioSave}
+                      disabled={isSavingBio || !hasBioChanges}
+                    >
+                      {isSavingBio
+                        ? "Se salvează..."
+                        : bioSaveState === "saved"
+                          ? "Bio salvat"
+                          : "Salvează bio"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className={styles.accountProfileItem}>
                 <span>Formula de adresare dorită</span>
                 {isEditingAddressForm ? (
                   <div className={styles.accountInlineEditor}>
@@ -2294,11 +3180,176 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
                   </div>
                 )}
               </div>
+              <div className={styles.accountProfileItem}>
+                <span>Declarație de nume</span>
+                <div className={styles.accountInlineEditor}>
+                  <label className={styles.checkboxRow}>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(profile.name_declaration_accepted)}
+                      onChange={handleNameDeclarationChange}
+                      disabled={isSavingNameDeclaration}
+                    />
+                    <span>
+                      Declar că acesta este numele meu real: `Nume de familie, Prenume`.
+                    </span>
+                  </label>
+                  <p className={styles.accountHint}>
+                    Accesul în aplicație rămâne blocat până când numele este valid și această
+                    declarație este bifată.
+                  </p>
+                </div>
+              </div>
+              <div className={styles.accountProfileItem}>
+                <span>Program de debut artistic</span>
+                <div className={styles.accountInlineEditor}>
+                  <strong className={styles.inlineStatusValue}>
+                    Abonament lunar: {formatSubscriptionStatusLabel(profile.subscription_status)}
+                  </strong>
+                  {!hasActiveSubscription ? (
+                    <p className={styles.accountHint}>
+                      Intrarea în program este blocată până când abonamentul lunar devine activ.
+                    </p>
+                  ) : null}
+                  <label className={styles.editorLabel} htmlFor="debut-status">
+                    Debut status
+                  </label>
+                  <select
+                    id="debut-status"
+                    value={debutStatusInput}
+                    onChange={(event) =>
+                      setDebutStatusInput(
+                        event.target.value as
+                          | "aspirant"
+                          | "in_program"
+                          | "selected"
+                          | "published"
+                          | "alumni",
+                      )
+                    }
+                    disabled={isSavingDebutProgram || !hasActiveSubscription}
+                    className={styles.accountSelect}
+                  >
+                    <option value="aspirant">aspirant</option>
+                    <option value="in_program">în program</option>
+                    <option value="selected">selectat</option>
+                    <option value="published">publicat</option>
+                    <option value="alumni">alumni</option>
+                  </select>
+                  <label className={styles.editorLabel} htmlFor="artist-statement">
+                    Artist statement
+                  </label>
+                  <textarea
+                    id="artist-statement"
+                    value={artistStatementInput}
+                    onChange={(event) => setArtistStatementInput(event.target.value)}
+                    className={styles.editorExcerpt}
+                    placeholder="Scrie direcția ta artistică, poziția ta și felul în care vrei să intri în MindSlice."
+                    disabled={isSavingDebutProgram || !hasActiveSubscription}
+                  />
+                  <p className={styles.accountHint}>
+                    Acest bloc fixează versiunea minimă pentru programul de debut artistic:
+                    statutul și statement-ul tău curent.
+                  </p>
+                  <div className={styles.accountActionRow}>
+                    <button
+                      type="button"
+                      className={styles.accountButton}
+                      onClick={handleDebutProgramSave}
+                      disabled={
+                        isSavingDebutProgram ||
+                        !hasDebutProgramChanges ||
+                        !hasActiveSubscription
+                      }
+                    >
+                      {isSavingDebutProgram ? "Se salvează..." : "Salvează programul"}
+                    </button>
+                    <strong className={styles.inlineStatusValue}>
+                      Statut curent: {formatDebutStatusLabel(currentDebutStatus)}
+                    </strong>
+                  </div>
+                </div>
+              </div>
+              {isAdmin ? (
+                <div className={styles.accountProfileItem}>
+                  <span>Admin manual subscription toggle</span>
+                  <div className={styles.accountInlineEditor}>
+                    <label className={styles.editorLabel} htmlFor="admin-target-pseudonym">
+                      Pseudonim țintă
+                    </label>
+                    <select
+                      id="admin-target-pseudonym"
+                      value={adminTargetPseudonymInput}
+                      onChange={(event) => setAdminTargetPseudonymInput(event.target.value)}
+                      className={styles.accountSelect}
+                      disabled={isSavingAdminSubscription}
+                    >
+                      <option value="">Selectează un pseudonim existent</option>
+                      {adminSubscriptionOptions.map((entry) => (
+                        <option key={entry.user_id} value={entry.pseudonym ?? ""}>
+                          {entry.pseudonym} · {formatSubscriptionStatusLabel(entry.subscription_status)}
+                        </option>
+                      ))}
+                    </select>
+                    <label className={styles.editorLabel} htmlFor="admin-subscription-status">
+                      Subscription status
+                    </label>
+                    <select
+                      id="admin-subscription-status"
+                      value={adminSubscriptionStatusInput}
+                      onChange={(event) =>
+                        setAdminSubscriptionStatusInput(
+                          event.target.value as
+                            | "inactive"
+                            | "active"
+                            | "past_due"
+                            | "canceled",
+                        )
+                      }
+                      className={styles.accountSelect}
+                      disabled={isSavingAdminSubscription}
+                    >
+                      <option value="inactive">inactive</option>
+                      <option value="active">active</option>
+                      <option value="past_due">past_due</option>
+                      <option value="canceled">canceled</option>
+                    </select>
+                    <p className={styles.accountHint}>
+                      Când alegi `active`, sistemul mută automat expirarea la `+30 zile`.
+                    </p>
+                    {adminSubscriptionResult ? (
+                      <p className={styles.accountHint}>
+                        Ultimul update: {adminSubscriptionResult.pseudonym || "fără pseudonim"} ·{" "}
+                        {formatSubscriptionStatusLabel(
+                          adminSubscriptionResult.subscription_status,
+                        )}
+                        {adminSubscriptionResult.subscription_expires_at
+                          ? ` · expiră ${new Date(
+                              adminSubscriptionResult.subscription_expires_at,
+                            ).toLocaleDateString("ro-RO")}`
+                          : ""}
+                      </p>
+                    ) : null}
+                    <div className={styles.accountActionRow}>
+                      <button
+                        type="button"
+                        className={styles.accountButton}
+                        onClick={handleAdminSubscriptionSave}
+                        disabled={isSavingAdminSubscription || !adminTargetPseudonymInput.trim()}
+                      >
+                        {isSavingAdminSubscription
+                          ? "Se actualizează..."
+                          : "Actualizează abonamentul"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
             </div>
           ) : null}
         </section>
 
-        {viewMode === "journal" ? (
+        {viewMode === "journal" && !isApplicationLocked ? (
           <>
             <section className={styles.panelBlock}>
               <span className={styles.panelMarker}>PANEL · Journal Draft List</span>
@@ -2321,6 +3372,9 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
                       <strong>{entry.title}</strong>
                       <p>{entry.excerpt || "Draft de jurnal fără excerpt încă."}</p>
                       <span className={styles.draftStatus}>{entry.status}</span>
+                      {entry.is_debut_submission ? (
+                        <span className={styles.draftFlag}>debut submission</span>
+                      ) : null}
                       <button
                         type="button"
                         className={styles.savedAction}
@@ -2450,6 +3504,20 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
                     />
                     <span>Postarea poate contamina Artistul AI live</span>
                   </label>
+                  <label className={styles.checkboxRow}>
+                    <input
+                      type="checkbox"
+                      checked={isDebutSubmissionInput}
+                      onChange={(event) => setIsDebutSubmissionInput(event.target.checked)}
+                      disabled={!hasActiveSubscription}
+                    />
+                    <span>Marchează postarea ca debut submission</span>
+                  </label>
+                  {!hasActiveSubscription ? (
+                    <p className={styles.accountHint}>
+                      Debut submission este disponibil doar cu abonament lunar activ.
+                    </p>
+                  ) : null}
                   <div className={styles.accountActionRow}>
                     <button
                       type="button"

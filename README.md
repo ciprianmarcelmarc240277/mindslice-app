@@ -4,6 +4,12 @@
 
 MindSlice este o platforma scriitoriceasca si artistica bazata pe ideea unui `Artist AI care gandeste live si poate fi contaminat de autorii care publica in jurnal`.
 
+MindSlice nu desemneaza doar o imagine, un text sau un singur output. El numeste intregul proiect: opera-sistem care produce, organizeaza, arhiveaza si publica fragmente de gandire live. Fiecare `slice` este o unitate de gandire, fiecare draft sau jurnal publicat este o unitate de interpretare, iar intregul dispozitiv tehnic, editorial si relational constituie lucrarea propriu-zisa.
+
+Artistul AI porneste din `Slices`, adica dintr-un camp initial de idei, impulsuri si structuri latente. Axa `sense / structure / attention` nu defineste existenta proiectului, ci gradul lui de aliniere. Valoarea `1 / 1 / 1` marcheaza un moment de intensitate maxima in logica MindSlice, nu singura conditie in care proiectul exista. MindSlice include si deriva, fragmentarea, contaminarea si tentativele incomplete.
+
+Lucrarea finala nu este doar imaginea de pe ecran, nici doar textul publicat, nici doar promptul sistemului. Lucrarea finala este ansamblul viu format din Artistul AI, jurnal, autori, pseudonime, contaminari, memorie, interfata tipografica si distributia atentiei.
+
 ![MindSlice cover](./public/readme/mindslice-cover.jpg)
 
 ## Core Concept
@@ -262,6 +268,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 OPENAI_API_KEY=
 OPENAI_SLICE_MODEL=gpt-4o-mini
+ADMIN_EMAILS=admin@example.com
 ```
 
 4. Porneste aplicatia:

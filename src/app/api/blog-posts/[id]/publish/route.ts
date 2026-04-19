@@ -24,6 +24,23 @@ export async function POST(
     );
   }
 
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("pseudonym")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (profileError) {
+    return NextResponse.json({ error: profileError.message }, { status: 500 });
+  }
+
+  if (!profile?.pseudonym?.trim()) {
+    return NextResponse.json(
+      { error: "Setează mai întâi pseudonimul în PANEL · Account Profile înainte de publicare." },
+      { status: 400 },
+    );
+  }
+
   const { data: blogPost, error } = await supabase
     .from("blog_posts")
     .update({
@@ -33,12 +50,20 @@ export async function POST(
     })
     .eq("user_id", userId)
     .eq("id", id)
-    .select("id, saved_moment_id, title, excerpt, content, sense_weight, structure_weight, attention_weight, influence_mode, is_contaminant, status, cover_image_url, published_at, created_at, updated_at")
+    .select(
+      "id, user_id, saved_moment_id, title, excerpt, content, sense_weight, structure_weight, attention_weight, influence_mode, is_contaminant, is_debut_submission, is_debut_selected, is_debut_published, status, cover_image_url, published_at, created_at, updated_at",
+    )
     .single();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ blogPost });
+  return NextResponse.json({
+    blogPost: {
+      ...blogPost,
+      author_user_id: blogPost.user_id,
+      author_pseudonym: profile.pseudonym,
+    },
+  });
 }

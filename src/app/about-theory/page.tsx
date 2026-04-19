@@ -578,6 +578,55 @@ export default function AboutTheoryPage() {
       </section>
 
       <section className={styles.block}>
+        <p className={styles.eyebrow}>Opera-Sistem</p>
+        <h2>Ce este lucrarea finală în MindSlice</h2>
+        <div className={styles.theoryBody}>
+          <p>
+            MindSlice nu desemnează doar o imagine, un text sau o singură ieșire a
+            sistemului. El numește întregul proiect: opera-sistem care produce,
+            organizează, arhivează și publică fragmente de gândire live. În acest cadru,
+            fiecare `slice` este o unitate de gândire, fiecare draft sau jurnal publicat
+            este o unitate de interpretare, iar întregul dispozitiv tehnic, editorial și
+            relațional constituie lucrarea propriu-zisă.
+          </p>
+          <p>
+            Artistul AI pornește din `Slices`, adică dintr-un câmp inițial de idei,
+            impulsuri și structuri latente. Acestea nu sunt încă lucrarea finală, ci
+            materia primă din care sistemul încearcă să construiască o formă compatibilă
+            cu logica MindSlice: `Conceptual Art + Systems Aesthetics + Post-Generative
+            Logic + Experimental Typography + Deconstruction / Text Theory + Media Theory
+            + Atlas / Memory Thinking + Attention Theory`. În acest sens, sistemul nu
+            produce doar variații vizuale, ci încearcă să transforme gândirea în operă.
+          </p>
+          <p>
+            Axa `sense / structure / attention` nu definește existența proiectului, ci
+            gradul său de aliniere. Când aceste valori cresc, sistemul se apropie de
+            condiția sa ideală. Când ajung la `1 / 1 / 1`, putem vorbi despre un moment de
+            intensitate maximă, o clipă de coerență aproape totală în interiorul logicii
+            MindSlice. Dar proiectul nu începe doar acolo. Dimpotrivă, el include și
+            deriva, fragmentarea, deviația, contaminarea și tentativele incomplete.
+            MindSlice este atât drumul către această stare, cât și tensiunea produsă de
+            faptul că ea nu este atinsă decât rar.
+          </p>
+          <p>
+            În acest sens, lucrarea finală nu este un singur output singular și închis. Nu
+            este doar imaginea de pe ecran, nici doar textul publicat, nici doar promptul
+            sistemului. Lucrarea finală este ansamblul viu format din Artistul AI,
+            jurnal, autori, pseudonime, contaminări, memorie, interfață tipografică și
+            distribuția atenției. Fiecare felie de gândire este o micro-lucrare. Fiecare
+            publicare este o intervenție. Dar opera propriu-zisă este sistemul care le
+            leagă, le transformă și le menține în relație.
+          </p>
+          <p>
+            Astfel, MindSlice trebuie înțeles nu ca un produs despre AI, ci ca o
+            operă-sistem în care gândirea live devine material artistic, jurnalul devine
+            agent de contaminare, iar interfața devine spațiul în care sensul, structura
+            și atenția sunt compuse, testate și redistribuite continuu.
+          </p>
+        </div>
+      </section>
+
+      <section className={styles.block}>
         <p className={styles.eyebrow}>Surse</p>
         <h2>Surse folosite</h2>
         <ul className={styles.sourcesList}>
