@@ -273,3 +273,336 @@ create index if not exists concepts_user_id_stage_updated_at_idx
 
 create index if not exists concept_artifacts_concept_id_created_at_idx
   on public.concept_artifacts (concept_id, created_at desc);
+
+alter table public.profiles enable row level security;
+alter table public.saved_moments enable row level security;
+alter table public.favorites enable row level security;
+alter table public.blog_posts enable row level security;
+alter table public.user_settings enable row level security;
+alter table public.thought_memory enable row level security;
+alter table public.interior_chat_messages enable row level security;
+alter table public.pseudonym_follows enable row level security;
+alter table public.collections enable row level security;
+alter table public.concepts enable row level security;
+alter table public.concept_artifacts enable row level security;
+
+drop policy if exists "profiles_owner_read" on public.profiles;
+create policy "profiles_owner_read"
+  on public.profiles
+  for select
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "profiles_owner_insert" on public.profiles;
+create policy "profiles_owner_insert"
+  on public.profiles
+  for insert
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "profiles_owner_update" on public.profiles;
+create policy "profiles_owner_update"
+  on public.profiles
+  for update
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''))
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "profiles_owner_delete" on public.profiles;
+create policy "profiles_owner_delete"
+  on public.profiles
+  for delete
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "profiles_authenticated_directory_read" on public.profiles;
+create policy "profiles_authenticated_directory_read"
+  on public.profiles
+  for select
+  using (auth.role() = 'authenticated');
+
+drop policy if exists "saved_moments_owner_read" on public.saved_moments;
+create policy "saved_moments_owner_read"
+  on public.saved_moments
+  for select
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "saved_moments_owner_insert" on public.saved_moments;
+create policy "saved_moments_owner_insert"
+  on public.saved_moments
+  for insert
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "saved_moments_owner_update" on public.saved_moments;
+create policy "saved_moments_owner_update"
+  on public.saved_moments
+  for update
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''))
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "saved_moments_owner_delete" on public.saved_moments;
+create policy "saved_moments_owner_delete"
+  on public.saved_moments
+  for delete
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "favorites_owner_read" on public.favorites;
+create policy "favorites_owner_read"
+  on public.favorites
+  for select
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "favorites_owner_insert" on public.favorites;
+create policy "favorites_owner_insert"
+  on public.favorites
+  for insert
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "favorites_owner_delete" on public.favorites;
+create policy "favorites_owner_delete"
+  on public.favorites
+  for delete
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "blog_posts_owner_read" on public.blog_posts;
+create policy "blog_posts_owner_read"
+  on public.blog_posts
+  for select
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "blog_posts_owner_insert" on public.blog_posts;
+create policy "blog_posts_owner_insert"
+  on public.blog_posts
+  for insert
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "blog_posts_owner_update" on public.blog_posts;
+create policy "blog_posts_owner_update"
+  on public.blog_posts
+  for update
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''))
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "blog_posts_owner_delete" on public.blog_posts;
+create policy "blog_posts_owner_delete"
+  on public.blog_posts
+  for delete
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "user_settings_owner_read" on public.user_settings;
+create policy "user_settings_owner_read"
+  on public.user_settings
+  for select
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "user_settings_owner_insert" on public.user_settings;
+create policy "user_settings_owner_insert"
+  on public.user_settings
+  for insert
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "user_settings_owner_update" on public.user_settings;
+create policy "user_settings_owner_update"
+  on public.user_settings
+  for update
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''))
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "user_settings_owner_delete" on public.user_settings;
+create policy "user_settings_owner_delete"
+  on public.user_settings
+  for delete
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "thought_memory_owner_read" on public.thought_memory;
+create policy "thought_memory_owner_read"
+  on public.thought_memory
+  for select
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "thought_memory_owner_insert" on public.thought_memory;
+create policy "thought_memory_owner_insert"
+  on public.thought_memory
+  for insert
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "thought_memory_owner_update" on public.thought_memory;
+create policy "thought_memory_owner_update"
+  on public.thought_memory
+  for update
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''))
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "thought_memory_owner_delete" on public.thought_memory;
+create policy "thought_memory_owner_delete"
+  on public.thought_memory
+  for delete
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "interior_chat_authenticated_read" on public.interior_chat_messages;
+create policy "interior_chat_authenticated_read"
+  on public.interior_chat_messages
+  for select
+  using (auth.role() = 'authenticated');
+
+drop policy if exists "interior_chat_owner_insert" on public.interior_chat_messages;
+create policy "interior_chat_owner_insert"
+  on public.interior_chat_messages
+  for insert
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "interior_chat_owner_update" on public.interior_chat_messages;
+create policy "interior_chat_owner_update"
+  on public.interior_chat_messages
+  for update
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''))
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "interior_chat_owner_delete" on public.interior_chat_messages;
+create policy "interior_chat_owner_delete"
+  on public.interior_chat_messages
+  for delete
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "pseudonym_follows_owner_read" on public.pseudonym_follows;
+create policy "pseudonym_follows_owner_read"
+  on public.pseudonym_follows
+  for select
+  using (follower_user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "pseudonym_follows_owner_insert" on public.pseudonym_follows;
+create policy "pseudonym_follows_owner_insert"
+  on public.pseudonym_follows
+  for insert
+  with check (follower_user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "pseudonym_follows_owner_delete" on public.pseudonym_follows;
+create policy "pseudonym_follows_owner_delete"
+  on public.pseudonym_follows
+  for delete
+  using (follower_user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "collections_owner_read" on public.collections;
+create policy "collections_owner_read"
+  on public.collections
+  for select
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "collections_owner_insert" on public.collections;
+create policy "collections_owner_insert"
+  on public.collections
+  for insert
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "collections_owner_update" on public.collections;
+create policy "collections_owner_update"
+  on public.collections
+  for update
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''))
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "collections_owner_delete" on public.collections;
+create policy "collections_owner_delete"
+  on public.collections
+  for delete
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "concepts_public_read_promoted" on public.concepts;
+create policy "concepts_public_read_promoted"
+  on public.concepts
+  for select
+  using (stage in ('resolved', 'canonical'));
+
+drop policy if exists "concepts_owner_read" on public.concepts;
+create policy "concepts_owner_read"
+  on public.concepts
+  for select
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "concepts_owner_insert" on public.concepts;
+create policy "concepts_owner_insert"
+  on public.concepts
+  for insert
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "concepts_owner_update" on public.concepts;
+create policy "concepts_owner_update"
+  on public.concepts
+  for update
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''))
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "concepts_owner_delete" on public.concepts;
+create policy "concepts_owner_delete"
+  on public.concepts
+  for delete
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "concept_artifacts_public_read_promoted" on public.concept_artifacts;
+create policy "concept_artifacts_public_read_promoted"
+  on public.concept_artifacts
+  for select
+  using (
+    exists (
+      select 1
+      from public.concepts
+      where public.concepts.id = concept_artifacts.concept_id
+        and public.concepts.stage in ('resolved', 'canonical')
+    )
+  );
+
+drop policy if exists "concept_artifacts_owner_read" on public.concept_artifacts;
+create policy "concept_artifacts_owner_read"
+  on public.concept_artifacts
+  for select
+  using (
+    exists (
+      select 1
+      from public.concepts
+      where public.concepts.id = concept_artifacts.concept_id
+        and public.concepts.user_id = coalesce(auth.jwt() ->> 'sub', '')
+    )
+  );
+
+drop policy if exists "concept_artifacts_owner_insert" on public.concept_artifacts;
+create policy "concept_artifacts_owner_insert"
+  on public.concept_artifacts
+  for insert
+  with check (
+    exists (
+      select 1
+      from public.concepts
+      where public.concepts.id = concept_artifacts.concept_id
+        and public.concepts.user_id = coalesce(auth.jwt() ->> 'sub', '')
+    )
+  );
+
+drop policy if exists "concept_artifacts_owner_update" on public.concept_artifacts;
+create policy "concept_artifacts_owner_update"
+  on public.concept_artifacts
+  for update
+  using (
+    exists (
+      select 1
+      from public.concepts
+      where public.concepts.id = concept_artifacts.concept_id
+        and public.concepts.user_id = coalesce(auth.jwt() ->> 'sub', '')
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from public.concepts
+      where public.concepts.id = concept_artifacts.concept_id
+        and public.concepts.user_id = coalesce(auth.jwt() ->> 'sub', '')
+    )
+  );
+
+drop policy if exists "concept_artifacts_owner_delete" on public.concept_artifacts;
+create policy "concept_artifacts_owner_delete"
+  on public.concept_artifacts
+  for delete
+  using (
+    exists (
+      select 1
+      from public.concepts
+      where public.concepts.id = concept_artifacts.concept_id
+        and public.concepts.user_id = coalesce(auth.jwt() ->> 'sub', '')
+    )
+  );
