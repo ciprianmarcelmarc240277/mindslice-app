@@ -74,8 +74,20 @@ export async function GET() {
       if (refinedResult) {
         return Response.json(refinedResult);
       }
-    } catch {
-      return Response.json(baseResult);
+    } catch (error) {
+      const fallbackResult = {
+        ...baseResult,
+        engineMode: `${baseResult.engineMode} / local fallback`,
+        engineProfile: {
+          ...baseResult.engineProfile,
+          activeContaminationRule:
+            error instanceof Error
+              ? `OpenAI fallback: ${error.message}`
+              : "OpenAI fallback: unknown refinement error",
+        },
+      };
+
+      return Response.json(fallbackResult);
     }
 
     return Response.json(baseResult);

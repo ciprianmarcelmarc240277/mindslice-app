@@ -1,3 +1,8 @@
+import type {
+  EngineProfile,
+  InfluenceMode,
+  ThoughtState,
+} from "@/lib/mindslice/mindslice-types";
 import {
   contaminationModeRules,
   liveThoughtSceneRules,
@@ -31,7 +36,7 @@ const stopwords = new Set([
   "continuu",
 ]);
 
-export type InfluenceMode = "whisper" | "echo" | "rupture" | "counterpoint" | "stain";
+export type { EngineProfile, InfluenceMode } from "@/lib/mindslice/mindslice-types";
 
 export type ContaminationSource = {
   title: string;
@@ -43,51 +48,7 @@ export type ContaminationSource = {
   influenceMode: InfluenceMode;
 };
 
-export type SliceState = {
-  direction: string;
-  thought: string;
-  fragments: string[];
-  mood: string;
-  palette: string[];
-  materials: string[];
-  motion: string;
-  triad: {
-    art: {
-      score: number;
-      label: string;
-    };
-    design: {
-      score: number;
-      label: string;
-    };
-    business: {
-      score: number;
-      label: string;
-    };
-  };
-  visual: {
-    background: string;
-    accent: string;
-    ink: string;
-    mode: string;
-    density: number;
-    wave: number;
-    fracture: number;
-    drift: number;
-    convergence: number;
-  };
-  keywords: string[];
-};
-
-export type EngineProfile = {
-  stage: "alpha";
-  generationStrategy: "slice_file_parser" | "slice_file_parser_plus_openai_refinement";
-  contaminationStrategy: "journal_contamination_overlay";
-  charterAxes: readonly string[];
-  sceneConstraints: readonly string[];
-  activeContaminationRule: string | null;
-  openaiStructuredGeneration: "inactive" | "active";
-};
+export type SliceState = ThoughtState;
 
 export type SliceEngineResult = {
   slices: SliceState[];

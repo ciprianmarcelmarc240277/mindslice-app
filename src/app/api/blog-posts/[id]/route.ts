@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 type UpdateBlogPostPayload = {
   title?: string;
   excerpt?: string;
+  sourceText?: string;
   content?: string;
   senseWeight?: number;
   structureWeight?: number;
@@ -41,7 +42,9 @@ export async function PATCH(
 
   const nextTitle = payload.title?.trim();
   const nextExcerpt = payload.excerpt?.trim();
-  const nextContent = payload.content?.trim();
+  const nextSourceText = payload.sourceText?.trim();
+  const nextContent =
+    payload.content === undefined ? undefined : payload.content.trim();
   const nextSenseWeight =
     payload.senseWeight === undefined ? undefined : clampWeight(payload.senseWeight);
   const nextStructureWeight =
@@ -50,9 +53,9 @@ export async function PATCH(
     payload.attentionWeight === undefined ? undefined : clampWeight(payload.attentionWeight);
   const nextInfluenceMode = payload.influenceMode;
 
-  if (!nextTitle || !nextContent) {
+  if (!nextTitle) {
     return NextResponse.json(
-      { error: "title si content sunt obligatorii." },
+      { error: "title este obligatoriu." },
       { status: 400 },
     );
   }
@@ -99,7 +102,8 @@ export async function PATCH(
     .update({
       title: nextTitle,
       excerpt: nextExcerpt || null,
-      content: nextContent,
+      ...(nextSourceText !== undefined ? { source_text: nextSourceText || null } : {}),
+      ...(nextContent !== undefined ? { content: nextContent } : {}),
       ...(nextSenseWeight !== undefined ? { sense_weight: nextSenseWeight } : {}),
       ...(nextStructureWeight !== undefined ? { structure_weight: nextStructureWeight } : {}),
       ...(nextAttentionWeight !== undefined ? { attention_weight: nextAttentionWeight } : {}),
@@ -113,7 +117,7 @@ export async function PATCH(
     .eq("user_id", userId)
     .eq("id", id)
     .select(
-      "id, user_id, saved_moment_id, title, excerpt, content, sense_weight, structure_weight, attention_weight, influence_mode, is_contaminant, is_debut_submission, is_debut_selected, is_debut_published, status, cover_image_url, published_at, created_at, updated_at",
+      "id, user_id, saved_moment_id, title, excerpt, source_text, content, ai_response_text, ai_response_generated_at, sense_weight, structure_weight, attention_weight, influence_mode, is_contaminant, is_debut_submission, is_debut_selected, is_debut_published, status, cover_image_url, published_at, created_at, updated_at",
     )
     .single();
 

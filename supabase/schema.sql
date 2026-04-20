@@ -94,7 +94,10 @@ create table if not exists public.blog_posts (
   saved_moment_id uuid references public.saved_moments(id) on delete set null,
   title text not null,
   excerpt text,
+  source_text text,
   content text not null,
+  ai_response_text text,
+  ai_response_generated_at timestamptz,
   cover_image_url text,
   is_debut_submission boolean not null default false,
   is_debut_selected boolean not null default false,
@@ -109,6 +112,15 @@ create table if not exists public.blog_posts (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.blog_posts
+  add column if not exists source_text text;
+
+alter table public.blog_posts
+  add column if not exists ai_response_text text;
+
+alter table public.blog_posts
+  add column if not exists ai_response_generated_at timestamptz;
 
 alter table public.blog_posts
   add column if not exists is_debut_submission boolean not null default false;
@@ -190,6 +202,48 @@ create table if not exists public.collections (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.concepts (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null references public.profiles(user_id) on delete cascade,
+  concept_key text not null,
+  source_idea_id text not null,
+  title text not null,
+  one_line_definition text,
+  thesis text not null,
+  tension text,
+  resolution_claim text,
+  stage text not null
+    check (stage in ('emergent', 'forming', 'stabilizing', 'resolved', 'canonical')),
+  resolution_status text not null
+    check (resolution_status in ('unresolved', 'partially_resolved', 'resolved', 'contested')),
+  semantic_score numeric not null default 0,
+  visual_score numeric not null default 0,
+  cross_modal_score numeric not null default 0,
+  contamination_score numeric not null default 0,
+  author_alignment_score numeric not null default 0,
+  overall_score numeric not null default 0,
+  is_canonical boolean not null default false,
+  promoted_at timestamptz,
+  concept_state jsonb not null default '{}'::jsonb,
+  validation_result jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint concepts_user_concept_key_unique unique (user_id, concept_key)
+);
+
+create table if not exists public.concept_artifacts (
+  id uuid primary key default gen_random_uuid(),
+  concept_id uuid not null references public.concepts(id) on delete cascade,
+  artifact_type text not null
+    check (artifact_type in ('text', 'visual_snapshot', 'graph_state', 'prompt', 'hybrid')),
+  content_text text,
+  content_json jsonb,
+  image_url text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint concept_artifacts_concept_type_unique unique (concept_id, artifact_type)
+);
+
 create index if not exists saved_moments_user_id_created_at_idx
   on public.saved_moments (user_id, created_at desc);
 
@@ -210,3 +264,12 @@ create index if not exists pseudonym_follows_follower_created_at_idx
 
 create index if not exists collections_user_id_created_at_idx
   on public.collections (user_id, created_at desc);
+
+create index if not exists concepts_user_id_created_at_idx
+  on public.concepts (user_id, created_at desc);
+
+create index if not exists concepts_user_id_stage_updated_at_idx
+  on public.concepts (user_id, stage, updated_at desc);
+
+create index if not exists concept_artifacts_concept_id_created_at_idx
+  on public.concept_artifacts (concept_id, created_at desc);

@@ -1,8 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import type { InfluenceMode } from "@/lib/mindslice/mindslice-types";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-
-type InfluenceMode = "whisper" | "echo" | "rupture" | "counterpoint" | "stain";
 
 function buildInterferenceNote(influenceMode: InfluenceMode) {
   switch (influenceMode) {
@@ -36,7 +35,7 @@ export async function GET() {
 
   const { data: blogPost, error } = await supabase
     .from("blog_posts")
-    .select("id, title, excerpt, sense_weight, structure_weight, attention_weight, influence_mode, published_at, updated_at")
+    .select("id, title, excerpt, ai_response_text, ai_response_generated_at, sense_weight, structure_weight, attention_weight, influence_mode, published_at, updated_at")
     .eq("user_id", userId)
     .eq("status", "published")
     .eq("is_contaminant", true)
@@ -62,6 +61,8 @@ export async function GET() {
       title: blogPost.title,
       authorPseudonym: profile?.pseudonym ?? null,
       excerpt: blogPost.excerpt,
+      aiResponseText: blogPost.ai_response_text ?? null,
+      aiResponseGeneratedAt: blogPost.ai_response_generated_at ?? null,
       senseWeight: Number(blogPost.sense_weight ?? 0),
       structureWeight: Number(blogPost.structure_weight ?? 0),
       attentionWeight: Number(blogPost.attention_weight ?? 0),

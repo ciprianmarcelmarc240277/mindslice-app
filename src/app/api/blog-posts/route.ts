@@ -16,18 +16,15 @@ function buildDraftExcerpt(thought: string) {
   return thought.trim().slice(0, 220);
 }
 
-function buildDraftContent(direction: string, thought: string, prompt: string) {
+function buildDraftContent(direction: string, thought: string) {
   return [
-    `Directie: ${direction}`,
+    `Direcție: ${direction}`,
     "",
-    "Fragment de gandire live:",
+    "Fragment de gândire live:",
     thought,
     "",
-    "Prompt generat:",
-    prompt,
-    "",
-    "Nota editoriala:",
-    "Dezvolta acest moment intr-o intrare de jurnal care poate contamina Artistul AI live.",
+    "Nota editorială:",
+    "Dezvoltă acest moment într-o intrare de jurnal care poate contamina Artistul AI live(post-generative art).",
   ].join("\n");
 }
 
@@ -83,7 +80,7 @@ export async function GET() {
   const { data: blogPosts, error } = await supabase
     .from("blog_posts")
     .select(
-      "id, user_id, saved_moment_id, title, excerpt, content, sense_weight, structure_weight, attention_weight, influence_mode, is_contaminant, is_debut_submission, is_debut_selected, is_debut_published, status, cover_image_url, published_at, created_at, updated_at",
+      "id, user_id, saved_moment_id, title, excerpt, source_text, content, ai_response_text, ai_response_generated_at, sense_weight, structure_weight, attention_weight, influence_mode, is_contaminant, is_debut_submission, is_debut_selected, is_debut_published, status, cover_image_url, published_at, created_at, updated_at",
     )
     .eq("user_id", userId)
     .order("updated_at", { ascending: false })
@@ -139,7 +136,7 @@ export async function POST(request: Request) {
   const { data: existingDraft, error: existingDraftError } = await supabase
     .from("blog_posts")
     .select(
-      "id, user_id, saved_moment_id, title, excerpt, content, sense_weight, structure_weight, attention_weight, influence_mode, is_contaminant, is_debut_submission, is_debut_selected, is_debut_published, status, cover_image_url, published_at, created_at, updated_at",
+      "id, user_id, saved_moment_id, title, excerpt, source_text, content, ai_response_text, ai_response_generated_at, sense_weight, structure_weight, attention_weight, influence_mode, is_contaminant, is_debut_submission, is_debut_selected, is_debut_published, status, cover_image_url, published_at, created_at, updated_at",
     )
     .eq("user_id", userId)
     .eq("saved_moment_id", payload.savedMomentId)
@@ -179,7 +176,8 @@ export async function POST(request: Request) {
       saved_moment_id: savedMoment.id,
       title: buildDraftTitle(savedMoment.direction),
       excerpt: buildDraftExcerpt(savedMoment.thought),
-      content: buildDraftContent(savedMoment.direction, savedMoment.thought, savedMoment.prompt),
+      source_text: buildDraftContent(savedMoment.direction, savedMoment.thought),
+      content: "",
       cover_image_url: savedMoment.image_url,
       sense_weight: 0.4,
       structure_weight: 0.3,
@@ -190,7 +188,7 @@ export async function POST(request: Request) {
       status: "draft",
     })
     .select(
-      "id, user_id, saved_moment_id, title, excerpt, content, sense_weight, structure_weight, attention_weight, influence_mode, is_contaminant, is_debut_submission, is_debut_selected, is_debut_published, status, cover_image_url, published_at, created_at, updated_at",
+      "id, user_id, saved_moment_id, title, excerpt, source_text, content, ai_response_text, ai_response_generated_at, sense_weight, structure_weight, attention_weight, influence_mode, is_contaminant, is_debut_submission, is_debut_selected, is_debut_published, status, cover_image_url, published_at, created_at, updated_at",
     )
     .single();
 

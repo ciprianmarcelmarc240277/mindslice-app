@@ -10,8 +10,7 @@ import {
   useUser,
 } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
-
-type AddressForm = "domnule" | "doamnă" | "domnișoară";
+import type { AddressForm } from "@/lib/mindslice/mindslice-types";
 
 type UserProfilePayload = {
   profile?: {

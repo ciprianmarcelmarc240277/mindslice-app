@@ -35,16 +35,9 @@ export async function POST(
     return NextResponse.json({ error: profileError.message }, { status: 500 });
   }
 
-  if (!profile?.pseudonym?.trim()) {
-    return NextResponse.json(
-      { error: "Setează mai întâi pseudonimul în PANEL · Account Profile înainte de publicare." },
-      { status: 400 },
-    );
-  }
-
   const { data: blogPost, error: fetchBlogPostError } = await supabase
     .from("blog_posts")
-    .select("title, content, influence_mode")
+    .select("title, content, influence_mode, status")
     .eq("user_id", userId)
     .eq("id", id)
     .maybeSingle();
@@ -53,9 +46,20 @@ export async function POST(
     return NextResponse.json({ error: fetchBlogPostError.message }, { status: 500 });
   }
 
-  if (!blogPost?.content?.trim()) {
+  if (!blogPost) {
+    return NextResponse.json({ error: "Postarea nu a fost găsită." }, { status: 404 });
+  }
+
+  if (blogPost.status !== "published") {
     return NextResponse.json(
-      { error: "Completează mai întâi textul editorial final înainte de publicare." },
+      { error: "Răspunsul AI poate fi regenerat doar pentru postări publicate." },
+      { status: 400 },
+    );
+  }
+
+  if (!blogPost.content?.trim()) {
+    return NextResponse.json(
+      { error: "Postarea nu are text editorial final pentru răspunsul AI." },
       { status: 400 },
     );
   }
@@ -71,13 +75,18 @@ export async function POST(
       | "stain",
   });
 
-  const { data: publishedBlogPost, error: publishError } = await supabase
+  if (!aiResponseText) {
+    return NextResponse.json(
+      { error: "Artistul AI nu a reușit să genereze un răspuns nou acum." },
+      { status: 502 },
+    );
+  }
+
+  const { data: updatedBlogPost, error: updateError } = await supabase
     .from("blog_posts")
     .update({
-      status: "published",
-      published_at: new Date().toISOString(),
       ai_response_text: aiResponseText,
-      ai_response_generated_at: aiResponseText ? new Date().toISOString() : null,
+      ai_response_generated_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
     .eq("user_id", userId)
@@ -87,15 +96,15 @@ export async function POST(
     )
     .single();
 
-  if (publishError) {
-    return NextResponse.json({ error: publishError.message }, { status: 500 });
+  if (updateError) {
+    return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
   return NextResponse.json({
     blogPost: {
-      ...publishedBlogPost,
-      author_user_id: publishedBlogPost.user_id,
-      author_pseudonym: profile.pseudonym,
+      ...updatedBlogPost,
+      author_user_id: updatedBlogPost.user_id,
+      author_pseudonym: profile?.pseudonym ?? null,
     },
   });
 }
