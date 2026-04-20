@@ -7,38 +7,37 @@ import {
   readConceptMemory,
   writeConceptMemory,
 } from "@/lib/mindslice/concept-memory-storage";
-import { promoteConceptCandidate } from "@/lib/mindslice/concept-promotion-system";
 import type {
-  ConceptCandidate,
   ConceptMemoryEntry,
+  ConceptPoolEntry,
   ConceptPromotionResult,
-  ConceptValidationResult,
 } from "@/lib/mindslice/mindslice-types";
 
 type UseConceptMemorySystemOptions = {
   isSignedIn: boolean;
   isActive: boolean;
-  conceptCandidate: ConceptCandidate;
-  conceptValidation: ConceptValidationResult;
+  activePoolEntry: ConceptPoolEntry | null;
 };
 
 function buildFingerprint(
-  conceptCandidate: ConceptCandidate,
-  conceptValidation: ConceptValidationResult,
+  activePoolEntry: ConceptPoolEntry | null,
 ) {
+  if (!activePoolEntry) {
+    return "no-active-pool-entry";
+  }
+
   return [
-    conceptCandidate.id,
-    conceptCandidate.stage,
-    conceptValidation.resolutionStatus,
-    conceptValidation.isValidConcept ? "valid" : "not-valid",
+    activePoolEntry.id,
+    activePoolEntry.concept.stage,
+    activePoolEntry.validation.resolutionStatus,
+    activePoolEntry.validation.isValidConcept ? "valid" : "not-valid",
   ].join("::");
 }
 
 export function useConceptMemorySystem({
   isSignedIn,
   isActive,
-  conceptCandidate,
-  conceptValidation,
+  activePoolEntry,
 }: UseConceptMemorySystemOptions) {
   const [conceptMemory, setConceptMemory] = useState<ConceptMemoryEntry[]>(() => readConceptMemory());
   const lastStoredFingerprintRef = useRef<string | null>(null);
@@ -108,30 +107,25 @@ export function useConceptMemorySystem({
       return;
     }
 
-    const fingerprint = buildFingerprint(conceptCandidate, conceptValidation);
+    if (!activePoolEntry) {
+      return;
+    }
+
+    const fingerprint = buildFingerprint(activePoolEntry);
     if (lastStoredFingerprintRef.current === fingerprint) {
       return;
     }
 
     const previous = readConceptMemory();
-    const promotion = promoteConceptCandidate(
-      conceptCandidate,
-      conceptValidation,
-      previous,
-    );
-
-    if (!promotion.canPromoteToResolved || !promotion.passesSystemLaw) {
-      return;
-    }
 
     lastStoredFingerprintRef.current = fingerprint;
 
-    const promotedConcept = promotion.promotedConcept;
+    const promotedConcept = activePoolEntry.concept;
     const now = new Date().toISOString();
     const nextEntry: ConceptMemoryEntry = {
       id: promotedConcept.id,
       concept: promotedConcept,
-      validation: conceptValidation,
+      validation: activePoolEntry.validation,
       storedAt: previous.find((entry) => entry.id === promotedConcept.id)?.storedAt ?? now,
       lastSeenAt: now,
     };
@@ -150,7 +144,7 @@ export function useConceptMemorySystem({
       },
       body: JSON.stringify({
         concept: promotedConcept,
-        validation: conceptValidation,
+        validation: activePoolEntry.validation,
       }),
     })
       .then(async (response) => {
@@ -176,7 +170,7 @@ export function useConceptMemorySystem({
       .catch(() => {
         // Alpha-safe: local concept memory remains available if backend persistence fails.
       });
-  }, [conceptCandidate, conceptValidation, isActive, isSignedIn]);
+  }, [activePoolEntry, isActive, isSignedIn]);
 
   const visibleConceptMemory = useMemo(
     () => (isSignedIn ? conceptMemory : []),
@@ -188,12 +182,12 @@ export function useConceptMemorySystem({
     [visibleConceptMemory],
   );
   const latestPromotion = useMemo<ConceptPromotionResult | null>(() => {
-    if (!isSignedIn) {
+    if (!isSignedIn || !activePoolEntry) {
       return null;
     }
 
-    return promoteConceptCandidate(conceptCandidate, conceptValidation, visibleConceptMemory);
-  }, [conceptCandidate, conceptValidation, isSignedIn, visibleConceptMemory]);
+    return activePoolEntry.promotion;
+  }, [activePoolEntry, isSignedIn]);
 
   return {
     conceptMemory: visibleConceptMemory,

@@ -1,3 +1,4 @@
+import { buildConceptOutput } from "@/lib/mindslice/concept-output-system";
 import type { ThoughtSceneEngineState } from "@/lib/mindslice/thought-scene-engine";
 import type {
   ConceptCandidate,
@@ -308,6 +309,29 @@ export function buildConceptCandidate(
         `note ${interference.note}`,
       ]
     : ["base field only", "no external contamination", "author challenge still internal"];
+  const coreTitle = buildTitle(current);
+  const oneLineDefinition = buildOneLineDefinition(current, dominantFragments, dominantKeywords);
+  const thesis = buildThesis(current);
+  const tension = buildTension(current, interference);
+  const resolutionClaim = buildResolutionClaim(current, interference, stage);
+  const expression = {
+    textSignature: dominantFragments.join(" / "),
+    visualSignature: buildVisualIdentityDraft(current, thoughtScene),
+    compositionMode: thoughtScene.world.contamination.active ? "contaminated_field" : "base_field",
+    typographyMode: current.visual.mode,
+    motionMode: current.motion,
+    dominantFragments,
+    dominantKeywords,
+  } as const;
+  const output = buildConceptOutput({
+    current,
+    stage,
+    expression,
+    thesis,
+    tension,
+    resolutionClaim,
+    interference,
+  });
 
   const conceptStateDraft: ConceptState = {
     id: `concept:${slugify(current.direction)}:${currentIndex + 1}`,
@@ -322,22 +346,15 @@ export function buildConceptCandidate(
       contaminationEventIds: interference ? [`contamination:${interference.sourceId}`] : [],
     },
     core: {
-      title: buildTitle(current),
-      oneLineDefinition: buildOneLineDefinition(current, dominantFragments, dominantKeywords),
-      thesis: buildThesis(current),
-      tension: buildTension(current, interference),
-      resolutionClaim: buildResolutionClaim(current, interference, stage),
+      title: coreTitle,
+      oneLineDefinition,
+      thesis,
+      tension,
+      resolutionClaim,
       keywords: dominantKeywords,
     },
-    expression: {
-      textSignature: dominantFragments.join(" / "),
-      visualSignature: buildVisualIdentityDraft(current, thoughtScene),
-      compositionMode: thoughtScene.world.contamination.active ? "contaminated_field" : "base_field",
-      typographyMode: current.visual.mode,
-      motionMode: current.motion,
-      dominantFragments,
-      dominantKeywords,
-    },
+    expression,
+    output,
     contamination,
     validation: {
       semanticCoherence: confidence.semantic,

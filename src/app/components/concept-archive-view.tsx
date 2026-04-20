@@ -26,6 +26,10 @@ function matchesArchiveSearch(entry: ConceptMemoryEntry, query: string) {
     entry.concept.core.tension,
     entry.concept.core.resolutionClaim,
     entry.concept.expression.visualSignature,
+    entry.concept.output?.textArtifact.publicText,
+    entry.concept.output?.textArtifact.curatorText,
+    entry.concept.output?.visualArtifact.summary,
+    entry.concept.output?.visualArtifact.compositionBrief,
     ...entry.concept.core.keywords,
     ...entry.concept.expression.dominantFragments,
     ...(entry.concept.provenance.sourceAuthorPseudonyms ?? []),
@@ -221,10 +225,15 @@ export function ConceptArchiveView(props: ConceptArchiveViewProps) {
                     Influențat de: {(entry.concept.provenance.sourceAuthorPseudonyms ?? []).join(", ")}
                   </p>
                 ) : null}
-                <p className={styles.blogContentPreview}>{entry.concept.core.thesis}</p>
+                <p className={styles.blogContentPreview}>
+                  {entry.concept.output?.textArtifact.publicText ?? entry.concept.core.thesis}
+                </p>
                 <div className={styles.conceptArchiveSignature}>
                   <span className={styles.blogAiResponseLabel}>Concept Signature</span>
-                  <p>{entry.concept.expression.visualSignature}</p>
+                  <p>
+                    {entry.concept.output?.visualArtifact.summary ??
+                      entry.concept.expression.visualSignature}
+                  </p>
                 </div>
                 <div className={styles.conceptArchiveKeywords}>
                   {entry.concept.core.keywords.slice(0, 4).map((keyword) => (

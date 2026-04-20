@@ -219,6 +219,21 @@ export type ConceptExpression = {
   dominantKeywords: string[];
 };
 
+export type ConceptOutput = {
+  textArtifact: {
+    title: string;
+    curatorText: string;
+    publicText: string;
+    prompt: string;
+  };
+  visualArtifact: {
+    title: string;
+    summary: string;
+    compositionBrief: string;
+    visualPrompt: string;
+  };
+};
+
 export type ConceptContaminationProfile = {
   acceptedInfluences: string[];
   rejectedInfluences: string[];
@@ -250,6 +265,7 @@ export type ConceptState = {
   provenance: ConceptProvenance;
   core: ConceptCore;
   expression: ConceptExpression;
+  output: ConceptOutput;
   contamination: ConceptContaminationProfile;
   validation: ConceptValidation;
   confidence: ConceptConfidence;
@@ -321,6 +337,29 @@ export type ConceptMemoryEntry = {
   lastSeenAt: string;
 };
 
+export type ConceptPoolEntry = {
+  id: string;
+  concept: ConceptState;
+  validation: ConceptValidationResult;
+  promotion: ConceptPromotionResult;
+  pooledAt: string;
+  lastSeenAt: string;
+  source: "main_loop" | "active_runtime";
+};
+
+export type CanonEntry = {
+  id: string;
+  concept: ConceptState;
+  validation: ConceptValidationResult;
+  canonizedAt: string;
+  lastActivatedAt: string;
+  lineage: {
+    siblingCanonIds: string[];
+    sourceIdeaCanonCount: number;
+  };
+  influenceWeight: number;
+};
+
 export type ConceptArtifact = {
   id: string;
   concept_id: string;
@@ -388,6 +427,24 @@ export type ProcessIdeaResult = {
   notes: string[];
 };
 
+export type IdeaLoopEntryResult = {
+  ideaIndex: number;
+  ideaDirection: string;
+  isActiveIdea: boolean;
+  process: ProcessIdeaResult;
+};
+
+export type IdeaSetMainLoopResult = {
+  totalIdeas: number;
+  activeIdeaIndex: number;
+  activeResult: ProcessIdeaResult;
+  entries: IdeaLoopEntryResult[];
+  resolvedCount: number;
+  iteratingCount: number;
+  terminatedCount: number;
+  notes: string[];
+};
+
 export type SystemModificationState = {
   modifiesSystem: boolean;
   sourceConceptId: string | null;
@@ -397,6 +454,22 @@ export type SystemModificationState = {
   probabilityBias: number;
   contaminationBias: number;
   attentionShift: number;
+  probabilities: {
+    conceptReuseWeight: number;
+    semanticPriority: number;
+    convergenceBias: number;
+  };
+  contaminationPattern: {
+    preferredMode: InfluenceMode | null;
+    resistanceWeight: number;
+    recurrenceWeight: number;
+    acceptsExternalInterference: boolean;
+  };
+  attentionDistribution: {
+    anchorWeight: number;
+    peripheralWeight: number;
+    memoryFieldWeight: number;
+  };
   charterAdditions: string[];
   notes: string[];
 };

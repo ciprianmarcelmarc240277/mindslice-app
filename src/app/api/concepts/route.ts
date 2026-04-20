@@ -168,15 +168,15 @@ export async function POST(request: Request) {
     concept_id: persistedConcept.id,
     artifact_type: "text",
     content_text: [
-      concept.core.title,
-      concept.core.oneLineDefinition,
-      concept.core.thesis,
-      concept.core.resolutionClaim,
-    ]
-      .filter(Boolean)
-      .join("\n\n"),
+      concept.output.textArtifact.title,
+      concept.output.textArtifact.publicText,
+      concept.output.textArtifact.curatorText,
+    ].filter(Boolean).join("\n\n"),
     content_json: {
-      title: concept.core.title,
+      title: concept.output.textArtifact.title,
+      publicText: concept.output.textArtifact.publicText,
+      curatorText: concept.output.textArtifact.curatorText,
+      prompt: concept.output.textArtifact.prompt,
       oneLineDefinition: concept.core.oneLineDefinition,
       thesis: concept.core.thesis,
       tension: concept.core.tension,
@@ -189,8 +189,12 @@ export async function POST(request: Request) {
   const graphArtifact = {
     concept_id: persistedConcept.id,
     artifact_type: "graph_state",
-    content_text: concept.expression.visualSignature,
+    content_text: concept.output.visualArtifact.summary,
     content_json: {
+      title: concept.output.visualArtifact.title,
+      summary: concept.output.visualArtifact.summary,
+      compositionBrief: concept.output.visualArtifact.compositionBrief,
+      visualPrompt: concept.output.visualArtifact.visualPrompt,
       expression: concept.expression,
       contamination: concept.contamination,
       validation,
@@ -211,8 +215,23 @@ export async function POST(request: Request) {
     updated_at: timestamp,
   };
 
+  const promptArtifact = {
+    concept_id: persistedConcept.id,
+    artifact_type: "prompt",
+    content_text: [
+      concept.output.textArtifact.prompt,
+      "",
+      concept.output.visualArtifact.visualPrompt,
+    ].join("\n"),
+    content_json: {
+      textPrompt: concept.output.textArtifact.prompt,
+      visualPrompt: concept.output.visualArtifact.visualPrompt,
+    },
+    updated_at: timestamp,
+  };
+
   const { error: artifactError } = await supabase.from("concept_artifacts").upsert(
-    [textArtifact, graphArtifact, systemArtifact],
+    [textArtifact, graphArtifact, systemArtifact, promptArtifact],
     {
       onConflict: "concept_id,artifact_type",
     },

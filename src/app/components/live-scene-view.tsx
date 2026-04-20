@@ -5,6 +5,7 @@ import type {
 } from "@/lib/mindslice/thought-scene-engine";
 import type {
   ConceptCandidate,
+  IdeaSetMainLoopResult,
   ProcessIdeaResult,
   ConceptValidationResult,
   EngineProfile,
@@ -41,9 +42,14 @@ type LiveSceneViewProps = {
   thoughtLines: string[];
   liveAiResponseLines: string[];
   systemState: SystemModificationState;
+  ideaSetMainLoop: IdeaSetMainLoopResult;
   conceptProcess: ProcessIdeaResult;
   conceptCandidate: ConceptCandidate;
   conceptValidation: ConceptValidationResult;
+  conceptPoolCount: number;
+  latestPoolConceptTitle: string | null;
+  canonCount: number;
+  primaryCanonTitle: string | null;
   conceptMemoryCount: number;
   resolvedConceptCount: number;
   latestConceptTitle: string | null;
@@ -78,9 +84,14 @@ export function LiveSceneView(props: LiveSceneViewProps) {
     thoughtLines,
     liveAiResponseLines,
     systemState,
+    ideaSetMainLoop,
     conceptProcess,
     conceptCandidate,
     conceptValidation,
+    conceptPoolCount,
+    latestPoolConceptTitle,
+    canonCount,
+    primaryCanonTitle,
     conceptMemoryCount,
     resolvedConceptCount,
     latestConceptTitle,
@@ -291,6 +302,43 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
+            <span>System Probabilities</span>
+            <ul>
+              <li>concept reuse: {systemState.probabilities.conceptReuseWeight.toFixed(2)}</li>
+              <li>semantic priority: {systemState.probabilities.semanticPriority.toFixed(2)}</li>
+              <li>convergence bias: {systemState.probabilities.convergenceBias.toFixed(2)}</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Contamination Pattern</span>
+            <ul>
+              <li>preferred mode: {systemState.contaminationPattern.preferredMode ?? "none"}</li>
+              <li>resistance: {systemState.contaminationPattern.resistanceWeight.toFixed(2)}</li>
+              <li>recurrence: {systemState.contaminationPattern.recurrenceWeight.toFixed(2)}</li>
+              <li>
+                accepts external interference: {systemState.contaminationPattern.acceptsExternalInterference ? "yes" : "no"}
+              </li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Attention Distribution</span>
+            <ul>
+              <li>anchor: {systemState.attentionDistribution.anchorWeight.toFixed(2)}</li>
+              <li>peripheral: {systemState.attentionDistribution.peripheralWeight.toFixed(2)}</li>
+              <li>memory field: {systemState.attentionDistribution.memoryFieldWeight.toFixed(2)}</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Main Loop</span>
+            <ul>
+              <li>IDEA_SET size: {ideaSetMainLoop.totalIdeas}</li>
+              <li>active idea index: {ideaSetMainLoop.activeIdeaIndex + 1}</li>
+              <li>resolved ideas: {ideaSetMainLoop.resolvedCount}</li>
+              <li>iterating ideas: {ideaSetMainLoop.iteratingCount}</li>
+              <li>terminated ideas: {ideaSetMainLoop.terminatedCount}</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
             <span>Process Idea</span>
             <ul>
               <li>status: {conceptProcess.status}</li>
@@ -352,6 +400,22 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
+            <span>Concept Pool</span>
+            <ul>
+              <li>pooled concepts: {conceptPoolCount}</li>
+              <li>latest pooled concept: {latestPoolConceptTitle ?? "none"}</li>
+              <li>pool role: staging area before memory persistence</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Canon</span>
+            <ul>
+              <li>canon concepts: {canonCount}</li>
+              <li>primary canon: {primaryCanonTitle ?? "none"}</li>
+              <li>canon role: active doctrine for system modification</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
             <span>Concept Memory</span>
             <ul>
               <li>stored concepts: {conceptMemoryCount}</li>
@@ -394,6 +458,14 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             <span>Validation Notes</span>
             <ul>
               {conceptValidation.notes.map((note) => (
+                <li key={note}>{note}</li>
+              ))}
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Main Loop Notes</span>
+            <ul>
+              {ideaSetMainLoop.notes.map((note) => (
                 <li key={note}>{note}</li>
               ))}
             </ul>

@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { CANON_STORAGE_KEY, CANON_UPDATED_EVENT, readCanon } from "@/lib/mindslice/canon-storage";
 import {
   CONCEPT_MEMORY_STORAGE_KEY,
   CONCEPT_MEMORY_UPDATED_EVENT,
   readConceptMemory,
 } from "@/lib/mindslice/concept-memory-storage";
+import { buildSystemModificationState } from "@/lib/mindslice/system-state-update";
 import type {
+  CanonEntry,
   EngineProfile,
   InfluenceMode,
   SystemModificationState,
@@ -43,26 +46,38 @@ export function useSystemModificationState({
   liveInfluenceMode,
 }: UseSystemModificationStateOptions) {
   const [conceptMemory, setConceptMemory] = useState(() => readConceptMemory());
+  const [canon, setCanon] = useState<CanonEntry[]>(() => readCanon());
 
   useEffect(() => {
     function syncConceptMemory() {
       setConceptMemory(readConceptMemory());
     }
 
+    function syncCanon() {
+      setCanon(readCanon());
+    }
+
     function handleStorage(event: StorageEvent) {
-      if (event.key && event.key !== CONCEPT_MEMORY_STORAGE_KEY) {
+      if (
+        event.key &&
+        event.key !== CONCEPT_MEMORY_STORAGE_KEY &&
+        event.key !== CANON_STORAGE_KEY
+      ) {
         return;
       }
 
       syncConceptMemory();
+      syncCanon();
     }
 
     window.addEventListener("storage", handleStorage);
     window.addEventListener(CONCEPT_MEMORY_UPDATED_EVENT, syncConceptMemory);
+    window.addEventListener(CANON_UPDATED_EVENT, syncCanon);
 
     return () => {
       window.removeEventListener("storage", handleStorage);
       window.removeEventListener(CONCEPT_MEMORY_UPDATED_EVENT, syncConceptMemory);
+      window.removeEventListener(CANON_UPDATED_EVENT, syncCanon);
     };
   }, []);
 
@@ -70,11 +85,17 @@ export function useSystemModificationState({
     () => (isSignedIn ? conceptMemory : []),
     [conceptMemory, isSignedIn],
   );
+  const visibleCanon = useMemo(() => (isSignedIn ? canon : []), [canon, isSignedIn]);
 
   const systemState = useMemo<SystemModificationState>(() => {
-    const sourceEntry = visibleConceptMemory.find(
-      (entry) => entry.concept.stage === "canonical",
-    ) ?? visibleConceptMemory.find((entry) => entry.validation.isValidConcept);
+    const sourceCanonEntry = visibleCanon[0] ?? null;
+    const sourceEntry =
+      sourceCanonEntry
+        ? {
+            concept: sourceCanonEntry.concept,
+            validation: sourceCanonEntry.validation,
+          }
+        : visibleConceptMemory.find((entry) => entry.validation.isValidConcept) ?? null;
 
     if (!sourceEntry) {
       return {
@@ -86,57 +107,48 @@ export function useSystemModificationState({
         probabilityBias: 0,
         contaminationBias: 0,
         attentionShift: 0,
+        probabilities: {
+          conceptReuseWeight: 0,
+          semanticPriority: 0,
+          convergenceBias: 0,
+        },
+        contaminationPattern: {
+          preferredMode: null,
+          resistanceWeight: 0,
+          recurrenceWeight: 0,
+          acceptsExternalInterference: true,
+        },
+        attentionDistribution: {
+          anchorWeight: 0,
+          peripheralWeight: 0,
+          memoryFieldWeight: 0,
+        },
         charterAdditions: [],
         notes: ["no resolved concept available to modify the runtime"],
       };
     }
 
-    const preferredInfluenceMode =
-      (sourceEntry.concept.contamination.transformedInfluences[0] as InfluenceMode | undefined) ??
-      null;
-    const probabilityBias = clamp(
-      sourceEntry.concept.confidence.overall * 0.22 +
-        sourceEntry.validation.scores.semanticStability * 0.18,
-      0,
-      0.32,
-    );
-    const contaminationBias = clamp(
-      sourceEntry.validation.scores.contaminationResolution * 0.2,
-      0,
-      0.28,
-    );
-    const attentionShift = clamp(
-      sourceEntry.validation.scores.authorDilemmaResolution * 0.16,
-      0,
-      0.2,
-    );
-    const charterAdditions = unique([
-      sourceEntry.concept.core.title,
-      ...sourceEntry.concept.core.keywords.slice(0, 2),
-      ...sourceEntry.concept.expression.dominantFragments.slice(0, 1),
-    ]).slice(0, 4);
+    const builtState = buildSystemModificationState({
+      concept: sourceEntry.concept,
+      validation: sourceEntry.validation,
+      canonEntry: sourceCanonEntry,
+      relatedConceptCount: sourceCanonEntry?.lineage.sourceIdeaCanonCount ?? 0,
+    });
 
     return {
+      ...builtState,
       modifiesSystem:
-        sourceEntry.validation.isValidConcept &&
+        builtState.modifiesSystem &&
         (sourceEntry.concept.stage === "canonical" ||
           sourceEntry.concept.confidence.overall >= 0.74),
-      sourceConceptId: sourceEntry.concept.id,
-      sourceConceptTitle: sourceEntry.concept.core.title,
-      sourceStage: sourceEntry.concept.stage,
-      preferredInfluenceMode,
-      probabilityBias,
-      contaminationBias,
-      attentionShift,
-      charterAdditions,
       notes: [
-        `source concept: ${sourceEntry.concept.core.title}`,
-        `probability bias: ${probabilityBias.toFixed(2)}`,
-        `contamination bias: ${contaminationBias.toFixed(2)}`,
-        `attention shift: ${attentionShift.toFixed(2)}`,
+        sourceCanonEntry
+          ? `canon source: ${sourceCanonEntry.concept.core.title} (${sourceCanonEntry.influenceWeight.toFixed(2)} influence weight)`
+          : "canon source: none, fallback to resolved concept memory",
+        ...builtState.notes,
       ],
     };
-  }, [visibleConceptMemory]);
+  }, [visibleCanon, visibleConceptMemory]);
 
   const effectiveInfluenceMode =
     liveInfluenceMode ?? (systemState.modifiesSystem ? systemState.preferredInfluenceMode : null);
@@ -166,28 +178,62 @@ export function useSystemModificationState({
       triad: {
         art: {
           ...current.triad.art,
-          score: clamp(current.triad.art.score + systemState.probabilityBias * 0.4, 0, 1),
+          score: clamp(
+            current.triad.art.score +
+              systemState.probabilities.semanticPriority * 0.18 +
+              systemState.probabilityBias * 0.26,
+            0,
+            1,
+          ),
         },
         design: {
           ...current.triad.design,
-          score: clamp(current.triad.design.score + systemState.contaminationBias * 0.35, 0, 1),
+          score: clamp(
+            current.triad.design.score +
+              systemState.contaminationPattern.resistanceWeight * 0.16 +
+              systemState.contaminationBias * 0.2,
+            0,
+            1,
+          ),
         },
         business: {
           ...current.triad.business,
-          score: clamp(current.triad.business.score + systemState.attentionShift * 0.5, 0, 1),
+          score: clamp(
+            current.triad.business.score +
+              systemState.attentionDistribution.anchorWeight * 0.18 +
+              systemState.attentionShift * 0.24,
+            0,
+            1,
+          ),
         },
       },
       visual: {
         ...current.visual,
-        density: clamp(current.visual.density + systemState.probabilityBias * 0.28, 0.9, 1.95),
-        wave: clamp(current.visual.wave + systemState.attentionShift * 0.32, 0.35, 1.55),
+        density: clamp(
+          current.visual.density +
+            systemState.probabilities.conceptReuseWeight * 0.18 +
+            systemState.probabilityBias * 0.1,
+          0.9,
+          1.95,
+        ),
+        wave: clamp(
+          current.visual.wave +
+            systemState.attentionDistribution.memoryFieldWeight * 0.16 +
+            systemState.attentionShift * 0.18,
+          0.35,
+          1.55,
+        ),
         drift: clamp(
-          current.visual.drift + systemState.contaminationBias * 0.18,
+          current.visual.drift +
+            systemState.contaminationPattern.recurrenceWeight * 0.1 +
+            systemState.contaminationBias * 0.08,
           0.25,
           1.2,
         ),
         convergence: clamp(
-          current.visual.convergence + systemState.probabilityBias * 0.22,
+          current.visual.convergence +
+            systemState.probabilities.convergenceBias * 0.16 +
+            systemState.attentionDistribution.anchorWeight * 0.06,
           0.45,
           0.95,
         ),
@@ -212,6 +258,13 @@ export function useSystemModificationState({
         (effectiveInfluenceMode
           ? `Concept memory reactivates ${effectiveInfluenceMode} as preferred contamination trace.`
           : "Concept memory shifts the runtime even without external contamination."),
+      sceneConstraints: unique([
+        ...engineProfile.sceneConstraints,
+        systemState.contaminationPattern.acceptsExternalInterference
+          ? "external interference may still fold into canon-biased runtime"
+          : "canon-biased runtime resists external interference spikes",
+        `attention anchor ${(systemState.attentionDistribution.anchorWeight * 100).toFixed(0)}%`,
+      ]),
     };
   }, [effectiveInfluenceMode, engineProfile, systemState]);
 

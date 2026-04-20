@@ -62,6 +62,7 @@ export default async function ConceptDetailPage(
   const textArtifact = artifacts.find((entry) => entry.artifact_type === "text");
   const graphArtifact = artifacts.find((entry) => entry.artifact_type === "graph_state");
   const systemArtifact = artifacts.find((entry) => entry.artifact_type === "hybrid");
+  const promptArtifact = artifacts.find((entry) => entry.artifact_type === "prompt");
 
   return (
     <main className={styles.page}>
@@ -115,12 +116,24 @@ export default async function ConceptDetailPage(
           <section className={styles.section}>
             <span className={styles.marker}>Artifacts</span>
             <h2>Artefactele conceptului</h2>
-            {textArtifact?.content_text ? (
+            {concept.concept_state.output?.textArtifact ? (
+              <div className={styles.artifactBox}>
+                <strong>{concept.concept_state.output.textArtifact.title}</strong>
+                <p className={styles.text}>{concept.concept_state.output.textArtifact.publicText}</p>
+                <p className={styles.text}>{concept.concept_state.output.textArtifact.curatorText}</p>
+              </div>
+            ) : textArtifact?.content_text ? (
               <div className={styles.artifactBox}>
                 <pre>{textArtifact.content_text}</pre>
               </div>
             ) : null}
-            {graphArtifact?.content_text ? (
+            {concept.concept_state.output?.visualArtifact ? (
+              <div className={styles.artifactBox}>
+                <strong>{concept.concept_state.output.visualArtifact.title}</strong>
+                <p className={styles.text}>{concept.concept_state.output.visualArtifact.summary}</p>
+                <p className={styles.text}>{concept.concept_state.output.visualArtifact.compositionBrief}</p>
+              </div>
+            ) : graphArtifact?.content_text ? (
               <div className={styles.artifactBox}>
                 <pre>{graphArtifact.content_text}</pre>
               </div>
@@ -130,6 +143,26 @@ export default async function ConceptDetailPage(
                 <pre>{systemArtifact.content_text}</pre>
               </div>
             ) : null}
+            {promptArtifact?.content_text ? (
+              <div className={styles.artifactBox}>
+                <pre>{promptArtifact.content_text}</pre>
+              </div>
+            ) : null}
+          </section>
+
+          <section className={styles.section}>
+            <span className={styles.marker}>Visual Brief</span>
+            <h2>Ieșirea vizuală autonomă</h2>
+            <p className={styles.text}>
+              {concept.concept_state.output?.visualArtifact.summary ??
+                concept.concept_state.expression.visualSignature}
+            </p>
+            <div className={styles.artifactBox}>
+              <pre>
+                {concept.concept_state.output?.visualArtifact.compositionBrief ??
+                  "Fără brief vizual explicit încă."}
+              </pre>
+            </div>
           </section>
         </div>
 
@@ -157,6 +190,37 @@ export default async function ConceptDetailPage(
                   ? concept.concept_state.systemEffect.attentionShift.toFixed(2)
                   : "0.00"}
               </li>
+              <li>
+                reuse weight: {concept.concept_state.systemEffect
+                  ? concept.concept_state.systemEffect.probabilities.conceptReuseWeight.toFixed(2)
+                  : "0.00"}
+              </li>
+              <li>
+                resistance: {concept.concept_state.systemEffect
+                  ? concept.concept_state.systemEffect.contaminationPattern.resistanceWeight.toFixed(2)
+                  : "0.00"}
+              </li>
+              <li>
+                anchor weight: {concept.concept_state.systemEffect
+                  ? concept.concept_state.systemEffect.attentionDistribution.anchorWeight.toFixed(2)
+                  : "0.00"}
+              </li>
+            </ul>
+          </section>
+
+          <section className={styles.sidebarCard}>
+            <span className={styles.marker}>Canon</span>
+            <h2>Poziție în canon</h2>
+            <p className={styles.text}>
+              {concept.concept_state.stage === "canonical"
+                ? "Conceptul a intrat în canonul activ al Artist AI și poate funcționa ca doctrină pentru runtime-ul viitor."
+                : "Conceptul este arhivat și validat, dar nu a intrat încă în canonul activ."}
+            </p>
+            <ul className={styles.list}>
+              <li>canon cluster: {concept.concept_state.memory.canonClusterId ?? "none"}</li>
+              <li>parent concepts: {concept.concept_state.memory.parentConceptIds.length}</li>
+              <li>sibling concepts: {concept.concept_state.memory.siblingConceptIds.length}</li>
+              <li>descendant concepts: {concept.concept_state.memory.descendantConceptIds.length}</li>
             </ul>
           </section>
 

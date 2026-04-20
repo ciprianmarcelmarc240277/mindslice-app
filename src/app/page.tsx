@@ -1,12 +1,12 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   buildThoughtSceneEngine,
   getThoughtCycleDuration,
 } from "@/lib/mindslice/thought-scene-engine";
-import { processIdea } from "@/lib/mindslice/concept-process-system";
+import { runIdeaSetMainLoop } from "@/lib/mindslice/concept-main-loop-system";
 import { useAccountProfileSystem } from "@/lib/mindslice/use-account-profile-system";
 import { AccountPanel } from "@/app/components/account-panel";
 import { ArchivePanel } from "@/app/components/archive-panel";
@@ -19,6 +19,8 @@ import { LiveSceneView } from "@/app/components/live-scene-view";
 import { useConceptArchiveSystem } from "@/lib/mindslice/use-concept-archive-system";
 import { useLiveRuntimeSystem } from "@/lib/mindslice/use-live-runtime-system";
 import { useConceptMemorySystem } from "@/lib/mindslice/use-concept-memory-system";
+import { useConceptPoolSystem } from "@/lib/mindslice/use-concept-pool-system";
+import { useCanonSystem } from "@/lib/mindslice/use-canon-system";
 import { useSystemModificationState } from "@/lib/mindslice/use-system-modification-state";
 import { useJournalEditorSystem } from "@/lib/mindslice/use-journal-editor-system";
 import type {
@@ -476,22 +478,43 @@ export default function Home() {
   const leadingLineStyles = thoughtScene.sceneGraph.leadingLines;
   const negativeSpaceStyles = thoughtScene.sceneGraph.negativeSpace;
   const thoughtLines = thoughtScene.sceneGraph.thoughtLines;
-  const conceptProcess = processIdea({
-    current: adjustedCurrent,
-    currentIndex,
-    thoughtScene,
-    history,
-    thoughtMemory,
-    interference,
-    influenceMode: effectiveInfluenceMode,
-  });
+  const ideaSetMainLoop = useMemo(
+    () =>
+      runIdeaSetMainLoop({
+        ideaSet: stateLibrary,
+        activeIdeaIndex: currentIndex,
+        history,
+        thoughtMemory,
+        interference,
+        influenceMode: effectiveInfluenceMode,
+        liveAiResponseLines,
+      }),
+    [
+      currentIndex,
+      effectiveInfluenceMode,
+      history,
+      interference,
+      liveAiResponseLines,
+      stateLibrary,
+      thoughtMemory,
+    ],
+  );
+  const conceptProcess = ideaSetMainLoop.activeResult;
   const conceptCandidate = conceptProcess.candidate;
   const conceptValidation = conceptProcess.validation;
+  const { conceptPoolCount, latestPoolEntry, activePoolEntry } = useConceptPoolSystem({
+    isSignedIn: isUserSignedIn,
+    isActive,
+    ideaSetMainLoop,
+  });
   const { conceptMemory, latestConcept, resolvedConceptCount, latestPromotion } = useConceptMemorySystem({
     isSignedIn: isUserSignedIn,
     isActive,
-    conceptCandidate,
-    conceptValidation,
+    activePoolEntry,
+  });
+  const { canonCount, primaryCanon } = useCanonSystem({
+    isSignedIn: isUserSignedIn,
+    conceptMemory,
   });
   const handleBioSaveWithAccess = () => handleBioSave(hasProfileAccess);
   const handleDebutProgramSaveWithAccess = () => handleDebutProgramSave(hasProfileAccess);
@@ -1049,9 +1072,14 @@ export default function Home() {
             thoughtLines={thoughtLines}
             liveAiResponseLines={liveAiResponseLines}
             systemState={systemState}
+            ideaSetMainLoop={ideaSetMainLoop}
             conceptProcess={conceptProcess}
             conceptCandidate={conceptCandidate}
             conceptValidation={conceptValidation}
+            conceptPoolCount={conceptPoolCount}
+            latestPoolConceptTitle={latestPoolEntry?.concept.core.title ?? null}
+            canonCount={canonCount}
+            primaryCanonTitle={primaryCanon?.concept.core.title ?? null}
             conceptMemoryCount={conceptMemory.length}
             resolvedConceptCount={resolvedConceptCount}
             latestConceptTitle={latestConcept?.concept.core.title ?? null}
