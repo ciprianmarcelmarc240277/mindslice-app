@@ -6,6 +6,7 @@ import {
   buildThoughtSceneEngine,
   getThoughtCycleDuration,
 } from "@/lib/mindslice/thought-scene-engine";
+import { buildEngineDebuggerReport } from "@/lib/mindslice/engine-debugger-system";
 import { runIdeaSetMainLoop } from "@/lib/mindslice/concept-main-loop-system";
 import { useAccountProfileSystem } from "@/lib/mindslice/use-account-profile-system";
 import { AccountPanel } from "@/app/components/account-panel";
@@ -21,6 +22,7 @@ import { useLiveRuntimeSystem } from "@/lib/mindslice/use-live-runtime-system";
 import { useConceptMemorySystem } from "@/lib/mindslice/use-concept-memory-system";
 import { useConceptPoolSystem } from "@/lib/mindslice/use-concept-pool-system";
 import { useCanonSystem } from "@/lib/mindslice/use-canon-system";
+import { useEngineDebuggerSystem } from "@/lib/mindslice/use-engine-debugger-system";
 import { useSystemModificationState } from "@/lib/mindslice/use-system-modification-state";
 import { useJournalEditorSystem } from "@/lib/mindslice/use-journal-editor-system";
 import type {
@@ -502,7 +504,7 @@ export default function Home() {
   const conceptProcess = ideaSetMainLoop.activeResult;
   const conceptCandidate = conceptProcess.candidate;
   const conceptValidation = conceptProcess.validation;
-  const { conceptPoolCount, latestPoolEntry, activePoolEntry } = useConceptPoolSystem({
+  const { conceptPool, conceptPoolCount, latestPoolEntry, activePoolEntry } = useConceptPoolSystem({
     isSignedIn: isUserSignedIn,
     isActive,
     ideaSetMainLoop,
@@ -512,9 +514,25 @@ export default function Home() {
     isActive,
     activePoolEntry,
   });
-  const { canonCount, primaryCanon } = useCanonSystem({
+  const { canon, canonCount, primaryCanon } = useCanonSystem({
     isSignedIn: isUserSignedIn,
     conceptMemory,
+  });
+  const engineDebuggerReport = useMemo(
+    () =>
+      buildEngineDebuggerReport({
+        ideaSetMainLoop,
+        conceptPool,
+        conceptMemory,
+        canon,
+        systemState,
+      }),
+    [canon, conceptMemory, conceptPool, ideaSetMainLoop, systemState],
+  );
+  const { debugRuns, comparativeDelta } = useEngineDebuggerSystem({
+    isSignedIn: isUserSignedIn,
+    isActive,
+    report: engineDebuggerReport,
   });
   const handleBioSaveWithAccess = () => handleBioSave(hasProfileAccess);
   const handleDebutProgramSaveWithAccess = () => handleDebutProgramSave(hasProfileAccess);
@@ -1072,6 +1090,9 @@ export default function Home() {
             thoughtLines={thoughtLines}
             liveAiResponseLines={liveAiResponseLines}
             systemState={systemState}
+            engineDebuggerReport={engineDebuggerReport}
+            debugRunCount={debugRuns.length}
+            comparativeDelta={comparativeDelta}
             ideaSetMainLoop={ideaSetMainLoop}
             conceptProcess={conceptProcess}
             conceptCandidate={conceptCandidate}

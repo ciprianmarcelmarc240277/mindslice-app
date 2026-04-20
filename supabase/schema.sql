@@ -244,6 +244,13 @@ create table if not exists public.concept_artifacts (
   constraint concept_artifacts_concept_type_unique unique (concept_id, artifact_type)
 );
 
+create table if not exists public.engine_debug_runs (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null references public.profiles(user_id) on delete cascade,
+  report jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists saved_moments_user_id_created_at_idx
   on public.saved_moments (user_id, created_at desc);
 
@@ -274,6 +281,9 @@ create index if not exists concepts_user_id_stage_updated_at_idx
 create index if not exists concept_artifacts_concept_id_created_at_idx
   on public.concept_artifacts (concept_id, created_at desc);
 
+create index if not exists engine_debug_runs_user_id_created_at_idx
+  on public.engine_debug_runs (user_id, created_at desc);
+
 alter table public.profiles enable row level security;
 alter table public.saved_moments enable row level security;
 alter table public.favorites enable row level security;
@@ -285,6 +295,7 @@ alter table public.pseudonym_follows enable row level security;
 alter table public.collections enable row level security;
 alter table public.concepts enable row level security;
 alter table public.concept_artifacts enable row level security;
+alter table public.engine_debug_runs enable row level security;
 
 drop policy if exists "profiles_owner_read" on public.profiles;
 create policy "profiles_owner_read"
@@ -606,3 +617,21 @@ create policy "concept_artifacts_owner_delete"
         and public.concepts.user_id = coalesce(auth.jwt() ->> 'sub', '')
     )
   );
+
+drop policy if exists "engine_debug_runs_owner_read" on public.engine_debug_runs;
+create policy "engine_debug_runs_owner_read"
+  on public.engine_debug_runs
+  for select
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "engine_debug_runs_owner_insert" on public.engine_debug_runs;
+create policy "engine_debug_runs_owner_insert"
+  on public.engine_debug_runs
+  for insert
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "engine_debug_runs_owner_delete" on public.engine_debug_runs;
+create policy "engine_debug_runs_owner_delete"
+  on public.engine_debug_runs
+  for delete
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));

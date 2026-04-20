@@ -473,3 +473,64 @@ export type SystemModificationState = {
   charterAdditions: string[];
   notes: string[];
 };
+
+export type EngineDebugEvent = {
+  id: string;
+  phase:
+    | "interpret"
+    | "contamination"
+    | "validation"
+    | "promotion"
+    | "pool"
+    | "memory"
+    | "canon"
+    | "system";
+  level: "info" | "warning" | "success";
+  ideaIndex: number | null;
+  ideaDirection: string | null;
+  sequence: number;
+  summary: string;
+  detail: string;
+};
+
+export type EngineFailureAnalysis = {
+  currentBlocker: string;
+  topFailurePattern: string;
+  nextLikelyPromotion: string;
+  systemPressureSummary: string;
+};
+
+export type EngineDebuggerReport = {
+  trace: EngineDebugEvent[];
+  activeTrace: EngineDebugEvent[];
+  timeline: Array<{
+    label: string;
+    sequence: number;
+    status: "iterating" | "resolved" | "terminated" | "pooled" | "stored" | "canonical";
+    ideaDirection: string | null;
+  }>;
+  comparativeRuns: Array<{
+    ideaDirection: string;
+    status: ConceptProcessStatus;
+    blocker: string;
+    validationStrength: number;
+    reachedPool: boolean;
+    reachedCanon: boolean;
+  }>;
+  failureAnalysis: EngineFailureAnalysis;
+  funnel: {
+    total: number;
+    iterating: number;
+    resolved: number;
+    pooled: number;
+    stored: number;
+    canonical: number;
+    systemChanging: number;
+  };
+};
+
+export type EngineDebugRunEntry = {
+  id: string;
+  report: EngineDebuggerReport;
+  createdAt: string;
+};

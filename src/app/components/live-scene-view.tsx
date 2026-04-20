@@ -1,10 +1,12 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import type {
   ThoughtSceneEngineState,
 } from "@/lib/mindslice/thought-scene-engine";
 import type {
   ConceptCandidate,
+  EngineDebuggerReport,
   IdeaSetMainLoopResult,
   ProcessIdeaResult,
   ConceptValidationResult,
@@ -42,6 +44,13 @@ type LiveSceneViewProps = {
   thoughtLines: string[];
   liveAiResponseLines: string[];
   systemState: SystemModificationState;
+  engineDebuggerReport: EngineDebuggerReport;
+  debugRunCount: number;
+  comparativeDelta: {
+    resolvedDelta: number;
+    pooledDelta: number;
+    canonicalDelta: number;
+  } | null;
   ideaSetMainLoop: IdeaSetMainLoopResult;
   conceptProcess: ProcessIdeaResult;
   conceptCandidate: ConceptCandidate;
@@ -84,6 +93,9 @@ export function LiveSceneView(props: LiveSceneViewProps) {
     thoughtLines,
     liveAiResponseLines,
     systemState,
+    engineDebuggerReport,
+    debugRunCount,
+    comparativeDelta,
     ideaSetMainLoop,
     conceptProcess,
     conceptCandidate,
@@ -99,6 +111,27 @@ export function LiveSceneView(props: LiveSceneViewProps) {
     canPromoteToCanonical,
     promotionNotes,
   } = props;
+  const [activeTracePhase, setActiveTracePhase] = useState<
+    "all" | "interpret" | "contamination" | "validation" | "promotion" | "pool" | "memory" | "canon" | "system"
+  >("all");
+  const [activeTraceLevel, setActiveTraceLevel] = useState<"all" | "info" | "warning" | "success">(
+    "all",
+  );
+  const filteredActiveTrace = useMemo(
+    () =>
+      engineDebuggerReport.activeTrace.filter((event) => {
+        if (activeTracePhase !== "all" && event.phase !== activeTracePhase) {
+          return false;
+        }
+
+        if (activeTraceLevel !== "all" && event.level !== activeTraceLevel) {
+          return false;
+        }
+
+        return true;
+      }),
+    [activeTraceLevel, activeTracePhase, engineDebuggerReport.activeTrace],
+  );
 
   return (
     <>
@@ -339,6 +372,19 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
+            <span>Debugger Funnel</span>
+            <ul>
+              <li>total: {engineDebuggerReport.funnel.total}</li>
+              <li>iterating: {engineDebuggerReport.funnel.iterating}</li>
+              <li>resolved: {engineDebuggerReport.funnel.resolved}</li>
+              <li>pooled: {engineDebuggerReport.funnel.pooled}</li>
+              <li>stored: {engineDebuggerReport.funnel.stored}</li>
+              <li>canonical: {engineDebuggerReport.funnel.canonical}</li>
+              <li>system-changing: {engineDebuggerReport.funnel.systemChanging}</li>
+              <li>stored debug runs: {debugRunCount}</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
             <span>Process Idea</span>
             <ul>
               <li>status: {conceptProcess.status}</li>
@@ -463,10 +509,121 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
+            <span>Failure Analysis</span>
+            <ul>
+              <li>{engineDebuggerReport.failureAnalysis.currentBlocker}</li>
+              <li>{engineDebuggerReport.failureAnalysis.topFailurePattern}</li>
+              <li>next likely promotion: {engineDebuggerReport.failureAnalysis.nextLikelyPromotion}</li>
+              <li>{engineDebuggerReport.failureAnalysis.systemPressureSummary}</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Comparative Runs</span>
+            <ul>
+              {comparativeDelta ? (
+                <>
+                  <li>resolved delta: {comparativeDelta.resolvedDelta}</li>
+                  <li>pooled delta: {comparativeDelta.pooledDelta}</li>
+                  <li>canonical delta: {comparativeDelta.canonicalDelta}</li>
+                </>
+              ) : (
+                <li>No previous persisted run yet.</li>
+              )}
+              {engineDebuggerReport.comparativeRuns.slice(0, 4).map((run) => (
+                <li key={run.ideaDirection}>
+                  {run.ideaDirection}: {run.status} / strength {run.validationStrength.toFixed(2)} / blocker {run.blocker}
+                </li>
+              ))}
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
             <span>Main Loop Notes</span>
             <ul>
               {ideaSetMainLoop.notes.map((note) => (
                 <li key={note}>{note}</li>
+              ))}
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Automatic Trace</span>
+            <div className={styles.modeTabs}>
+              <button
+                type="button"
+                className={`${styles.modeTab} ${activeTracePhase === "all" ? styles.modeTabActive : ""}`}
+                onClick={() => setActiveTracePhase("all")}
+              >
+                Toate fazele
+              </button>
+              <button
+                type="button"
+                className={`${styles.modeTab} ${activeTracePhase === "validation" ? styles.modeTabActive : ""}`}
+                onClick={() => setActiveTracePhase("validation")}
+              >
+                Validation
+              </button>
+              <button
+                type="button"
+                className={`${styles.modeTab} ${activeTracePhase === "promotion" ? styles.modeTabActive : ""}`}
+                onClick={() => setActiveTracePhase("promotion")}
+              >
+                Promotion
+              </button>
+              <button
+                type="button"
+                className={`${styles.modeTab} ${activeTracePhase === "system" ? styles.modeTabActive : ""}`}
+                onClick={() => setActiveTracePhase("system")}
+              >
+                System
+              </button>
+            </div>
+            <div className={styles.modeTabs}>
+              <button
+                type="button"
+                className={`${styles.modeTab} ${activeTraceLevel === "all" ? styles.modeTabActive : ""}`}
+                onClick={() => setActiveTraceLevel("all")}
+              >
+                Toate nivelele
+              </button>
+              <button
+                type="button"
+                className={`${styles.modeTab} ${activeTraceLevel === "success" ? styles.modeTabActive : ""}`}
+                onClick={() => setActiveTraceLevel("success")}
+              >
+                Success
+              </button>
+              <button
+                type="button"
+                className={`${styles.modeTab} ${activeTraceLevel === "warning" ? styles.modeTabActive : ""}`}
+                onClick={() => setActiveTraceLevel("warning")}
+              >
+                Warning
+              </button>
+              <button
+                type="button"
+                className={`${styles.modeTab} ${activeTraceLevel === "info" ? styles.modeTabActive : ""}`}
+                onClick={() => setActiveTraceLevel("info")}
+              >
+                Info
+              </button>
+            </div>
+            <ul>
+              <li>
+                filtered events: {filteredActiveTrace.length} / {engineDebuggerReport.activeTrace.length}
+              </li>
+              {filteredActiveTrace.slice(0, 8).map((event) => (
+                <li key={event.id}>
+                  <strong>{event.phase}</strong> [{event.level}]: {event.summary} · {event.detail}
+                </li>
+              ))}
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Timeline</span>
+            <ul>
+              {engineDebuggerReport.timeline.slice(0, 8).map((point) => (
+                <li key={`${point.sequence}:${point.label}`}>
+                  #{point.sequence} · {point.status} · {point.ideaDirection ?? "global"} · {point.label}
+                </li>
               ))}
             </ul>
           </article>
