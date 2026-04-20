@@ -1,0 +1,196 @@
+.visual {
+  position: relative;
+  overflow: hidden;
+  min-height: 220px;
+  border-radius: 24px;
+  border: 1px solid rgba(24, 20, 17, 0.08);
+  background:
+    radial-gradient(circle at 18% 22%, color-mix(in srgb, var(--accent-color) 24%, transparent), transparent 34%),
+    radial-gradient(circle at 78% 26%, color-mix(in srgb, var(--secondary-color) 22%, transparent), transparent 36%),
+    linear-gradient(145deg, var(--background-color), color-mix(in srgb, var(--dominant-color) 34%, var(--background-color)));
+}
+
+.compact {
+  min-height: 176px;
+  border-radius: 20px;
+}
+
+.grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(24, 20, 17, 0.04) 1px, transparent 1px);
+  background-size: 22px 22px, 22px 22px;
+  mix-blend-mode: multiply;
+}
+
+.halo,
+.haloSecondary {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(8px);
+  opacity: 0.8;
+}
+
+.halo {
+  width: 12rem;
+  height: 12rem;
+  top: -2rem;
+  right: -1rem;
+  background: color-mix(in srgb, var(--accent-color) 78%, transparent);
+  animation: floatHalo 9s ease-in-out infinite;
+}
+
+.haloSecondary {
+  width: 10rem;
+  height: 10rem;
+  bottom: -2rem;
+  left: -1rem;
+  background: color-mix(in srgb, var(--secondary-color) 72%, transparent);
+  animation: floatHaloSecondary 11s ease-in-out infinite;
+}
+
+.axis,
+.axisSecondary,
+.wave {
+  position: absolute;
+  transform-origin: center;
+  opacity: 0.52;
+}
+
+.axis {
+  inset: 18% 12%;
+  border-top: 1px solid color-mix(in srgb, var(--ink-color) 22%, transparent);
+  transform: rotate(-12deg);
+}
+
+.axisSecondary {
+  inset: 34% 10%;
+  border-top: 1px solid color-mix(in srgb, var(--dominant-color) 40%, transparent);
+  transform: rotate(18deg);
+}
+
+.wave {
+  inset: 56% 16% auto 16%;
+  height: 72px;
+  border-top: 2px solid color-mix(in srgb, var(--accent-color) 76%, transparent);
+  border-radius: 50%;
+  animation: pulseWave 7s ease-in-out infinite;
+}
+
+.chips {
+  position: absolute;
+  inset: auto 16px 16px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  z-index: 2;
+}
+
+.chip {
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(255, 252, 247, 0.72);
+  border: 1px solid rgba(24, 20, 17, 0.08);
+  color: var(--ink-color);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.copy {
+  position: absolute;
+  inset: 18px 18px auto 18px;
+  z-index: 2;
+  display: grid;
+  gap: 8px;
+  max-width: min(28rem, 78%);
+}
+
+.marker {
+  display: inline-flex;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 252, 247, 0.76);
+  border: 1px solid rgba(24, 20, 17, 0.08);
+  color: rgba(24, 20, 17, 0.62);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.signature {
+  margin: 0;
+  color: var(--ink-color);
+  font-family: var(--display-font);
+  font-size: clamp(1.05rem, 1.8vw, 1.6rem);
+  line-height: 1.02;
+}
+
+.brief {
+  margin: 0;
+  color: color-mix(in srgb, var(--ink-color) 76%, transparent);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.compact .copy {
+  max-width: 74%;
+}
+
+.compact .signature {
+  font-size: 1rem;
+}
+
+.compact .brief {
+  font-size: 0.84rem;
+}
+
+[data-motion="fracture"] .axis {
+  transform: rotate(-28deg);
+}
+
+[data-motion="fracture"] .axisSecondary {
+  transform: rotate(36deg);
+}
+
+[data-motion="drift"] .halo {
+  animation-duration: 13s;
+}
+
+[data-motion="radial"] .wave {
+  border-radius: 999px;
+}
+
+@keyframes floatHalo {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-16px, 18px, 0) scale(1.08);
+  }
+}
+
+@keyframes floatHaloSecondary {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(18px, -12px, 0) scale(0.94);
+  }
+}
+
+@keyframes pulseWave {
+  0%, 100% {
+    transform: scaleX(0.94) translateY(0);
+    opacity: 0.44;
+  }
+  50% {
+    transform: scaleX(1.02) translateY(-8px);
+    opacity: 0.78;
+  }
+}

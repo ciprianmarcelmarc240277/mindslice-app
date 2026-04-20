@@ -157,7 +157,7 @@ export function JournalDraftPanel(props: JournalDraftPanelProps) {
             <div className={styles.influenceEditorGrid}>
               <div>
                 <label className={styles.editorLabel} htmlFor="sense-weight">
-                  Sense
+                  Sens
                 </label>
                 <input
                   id="sense-weight"
@@ -172,7 +172,7 @@ export function JournalDraftPanel(props: JournalDraftPanelProps) {
               </div>
               <div>
                 <label className={styles.editorLabel} htmlFor="structure-weight">
-                  Structure
+                  Organizare internă
                 </label>
                 <input
                   id="structure-weight"
@@ -187,7 +187,7 @@ export function JournalDraftPanel(props: JournalDraftPanelProps) {
               </div>
               <div>
                 <label className={styles.editorLabel} htmlFor="attention-weight">
-                  Attention
+                  Focalizare conceptuală
                 </label>
                 <input
                   id="attention-weight"
@@ -202,7 +202,7 @@ export function JournalDraftPanel(props: JournalDraftPanelProps) {
               </div>
             </div>
             <label className={styles.editorLabel} htmlFor="influence-mode">
-              Influence mode
+              Mod de influență
             </label>
             <select
               id="influence-mode"

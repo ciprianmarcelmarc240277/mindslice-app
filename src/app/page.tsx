@@ -22,13 +22,24 @@ import { useLiveRuntimeSystem } from "@/lib/mindslice/use-live-runtime-system";
 import { useConceptMemorySystem } from "@/lib/mindslice/use-concept-memory-system";
 import { useConceptPoolSystem } from "@/lib/mindslice/use-concept-pool-system";
 import { useCanonSystem } from "@/lib/mindslice/use-canon-system";
+import { useColorPoolSystem } from "@/lib/mindslice/use-color-pool-system";
+import { useScenarioPoolSystem } from "@/lib/mindslice/use-scenario-pool-system";
+import { useArtCompositionPoolSystem } from "@/lib/mindslice/use-art-composition-pool-system";
+import { useArtMemorySystem } from "@/lib/mindslice/use-art-memory-system";
+import { useStoryMemorySystem } from "@/lib/mindslice/use-story-memory-system";
+import { useNarrativeCanonSystem } from "@/lib/mindslice/use-narrative-canon-system";
+import { useArtCanonSystem } from "@/lib/mindslice/use-art-canon-system";
+import { useColorMemorySystem } from "@/lib/mindslice/use-color-memory-system";
+import { useColorCanonSystem } from "@/lib/mindslice/use-color-canon-system";
 import { useEngineDebuggerSystem } from "@/lib/mindslice/use-engine-debugger-system";
 import { useSystemModificationState } from "@/lib/mindslice/use-system-modification-state";
+import { useClockSystem } from "@/lib/mindslice/use-clock-system";
 import { useJournalEditorSystem } from "@/lib/mindslice/use-journal-editor-system";
 import type {
   BlogPostDraft,
   EngineProfile,
   InteriorChatMessage,
+  LiveInterference,
   SavedMoment,
   ThoughtState,
   UserProfile,
@@ -131,6 +142,52 @@ function formatQuotedPseudonym(value: string) {
 
 function formatPublicAuthor(pseudonym: string | null | undefined) {
   return pseudonym?.trim() ? formatQuotedPseudonym(pseudonym.trim()) : "Pseudonim nesetat";
+}
+
+function buildLiveInterferenceNote(influenceMode: BlogPostDraft["influence_mode"]) {
+  switch (influenceMode) {
+    case "echo":
+      return "Jurnalul repetă și amplifică un motiv activ în gândirea live.";
+    case "rupture":
+      return "Jurnalul rupe direcția curentă și introduce o deviație bruscă.";
+    case "counterpoint":
+      return "Jurnalul introduce opoziție și tensiune față de gândirea curentă.";
+    case "stain":
+      return "Jurnalul lasă urme persistente în câmpul de gândire.";
+    case "whisper":
+    default:
+      return "Jurnalul injectează o influență subtilă în gândirea live.";
+  }
+}
+
+function buildFallbackInterference(publishedPosts: BlogPostDraft[]): LiveInterference | null {
+  const latestContaminant = publishedPosts
+    .filter((entry) => entry.is_contaminant)
+    .sort((left, right) => {
+      const leftTime = new Date(left.published_at ?? left.updated_at).getTime();
+      const rightTime = new Date(right.published_at ?? right.updated_at).getTime();
+      return rightTime - leftTime;
+    })[0];
+
+  if (!latestContaminant) {
+    return null;
+  }
+
+  return {
+    sourceId: latestContaminant.id,
+    authorUserId: latestContaminant.author_user_id,
+    title: latestContaminant.title,
+    authorPseudonym: latestContaminant.author_pseudonym ?? null,
+    excerpt: latestContaminant.excerpt ?? null,
+    aiResponseText: latestContaminant.ai_response_text ?? null,
+    aiResponseGeneratedAt: latestContaminant.ai_response_generated_at ?? null,
+    senseWeight: Number(latestContaminant.sense_weight ?? 0),
+    structureWeight: Number(latestContaminant.structure_weight ?? 0),
+    attentionWeight: Number(latestContaminant.attention_weight ?? 0),
+    influenceMode: latestContaminant.influence_mode,
+    note: buildLiveInterferenceNote(latestContaminant.influence_mode),
+    publishedAt: latestContaminant.published_at ?? latestContaminant.updated_at,
+  };
 }
 
 function normalizeDisplayName(value: string) {
@@ -257,7 +314,7 @@ function buildPrompt(snapshotMode: boolean, current: ThoughtState) {
     `Palette: ${current.palette.join(", ")}.`,
     `Materials: ${current.materials.join(", ")}.`,
     `Motion: ${current.motion}.`,
-    `Visual thought evaluation: sense ${current.triad.art.score.toFixed(2)} · ${current.triad.art.label}, structure ${current.triad.design.score.toFixed(2)} · ${current.triad.design.label}, attention ${current.triad.business.score.toFixed(2)} · ${current.triad.business.label}.`,
+    `Evaluarea gândului vizual: sens ${current.triad.art.score.toFixed(2)} · ${current.triad.art.label}, organizare internă ${current.triad.design.score.toFixed(2)} · ${current.triad.design.label}, focalizare conceptuală ${current.triad.business.score.toFixed(2)} · ${current.triad.business.label}.`,
     "Visual behavior: hand-drawn conceptual map, density gradients, text fragments converging toward a dominant anchor, visible tension zones, imperfect spacing, controlled chaos, no decorative polish.",
     `Keywords: ${current.keywords.join(", ")}.`,
     "Output style: sophisticated post-generative art direction, museum-grade conceptual aesthetics, layered typography, warm paper texture, subtle ink bleed, high compositional intelligence.",
@@ -372,6 +429,10 @@ export default function Home() {
     deriveEditorialText: deriveLegacyEditorialText,
   });
   const publishedPosts = blogPosts.filter((entry) => entry.status === "published");
+  const fallbackInterference = useMemo(
+    () => buildFallbackInterference(publishedPosts),
+    [publishedPosts],
+  );
   const interferenceRefreshKey = publishedPosts
     .map((entry) => `${entry.id}:${entry.updated_at}:${entry.published_at ?? "draft"}`)
     .join("|");
@@ -385,6 +446,7 @@ export default function Home() {
   } = useLiveRuntimeSystem({
     isSignedIn: isUserSignedIn,
     interferenceRefreshKey,
+    fallbackInterference,
   });
   const {
     stateLibrary,
@@ -406,16 +468,24 @@ export default function Home() {
   const current = stateLibrary[currentIndex];
   const {
     systemState,
+    adjustedStateLibrary,
     adjustedCurrent,
     adjustedEngineMode,
     adjustedEngineProfile,
     effectiveInfluenceMode,
   } = useSystemModificationState({
     isSignedIn: isUserSignedIn,
+    stateLibrary,
+    currentIndex,
     current,
     engineMode,
     engineProfile,
     liveInfluenceMode,
+  });
+  const { clockDisplay, clockMemoryCount, latestClockMemory } = useClockSystem({
+    isActive,
+    current: adjustedCurrent,
+    influenceMode: effectiveInfluenceMode,
   });
   const normalizedDisplayNameInput = normalizeDisplayName(displayNameInput);
   const hasDisplayNameInput = normalizedDisplayNameInput.length > 0;
@@ -483,7 +553,7 @@ export default function Home() {
   const ideaSetMainLoop = useMemo(
     () =>
       runIdeaSetMainLoop({
-        ideaSet: stateLibrary,
+        ideaSet: adjustedStateLibrary,
         activeIdeaIndex: currentIndex,
         history,
         thoughtMemory,
@@ -493,11 +563,11 @@ export default function Home() {
       }),
     [
       currentIndex,
+      adjustedStateLibrary,
       effectiveInfluenceMode,
       history,
       interference,
       liveAiResponseLines,
-      stateLibrary,
       thoughtMemory,
     ],
   );
@@ -509,14 +579,66 @@ export default function Home() {
     isActive,
     ideaSetMainLoop,
   });
+  const { colorPool, colorPoolCount, latestColorPoolEntry, activeColorPoolEntry } = useColorPoolSystem({
+    isSignedIn: isUserSignedIn,
+    isActive,
+    conceptPool,
+  });
+  const {
+    scenarioPool,
+    scenarioPoolCount,
+    latestScenarioPoolEntry,
+    activeScenarioPoolEntry,
+  } = useScenarioPoolSystem({
+    isSignedIn: isUserSignedIn,
+    isActive,
+    conceptPool,
+  });
+  const {
+    artCompositionPool,
+    artCompositionPoolCount,
+    latestArtCompositionPoolEntry,
+    activeArtCompositionPoolEntry,
+  } = useArtCompositionPoolSystem({
+    isSignedIn: isUserSignedIn,
+    isActive,
+    conceptPool,
+  });
+  const { artMemory, latestArtMemory, resolvedArtCount } = useArtMemorySystem({
+    isSignedIn: isUserSignedIn,
+    isActive,
+    activeArtCompositionPoolEntry,
+  });
+  const { storyMemory, latestStoryMemory, resolvedScenarioCount } = useStoryMemorySystem({
+    isSignedIn: isUserSignedIn,
+    isActive,
+    activeScenarioPoolEntry,
+  });
+  const { narrativeCanon, narrativeCanonCount, primaryNarrativeCanon } = useNarrativeCanonSystem({
+    isSignedIn: isUserSignedIn,
+    storyMemory,
+  });
+  const { artCanon, artCanonCount, primaryArtCanon } = useArtCanonSystem({
+    isSignedIn: isUserSignedIn,
+    artMemory,
+  });
   const { conceptMemory, latestConcept, resolvedConceptCount, latestPromotion } = useConceptMemorySystem({
     isSignedIn: isUserSignedIn,
     isActive,
     activePoolEntry,
   });
+  const { colorMemory, latestColorMemory, resolvedColorCount } = useColorMemorySystem({
+    isSignedIn: isUserSignedIn,
+    isActive,
+    activeColorPoolEntry,
+  });
   const { canon, canonCount, primaryCanon } = useCanonSystem({
     isSignedIn: isUserSignedIn,
     conceptMemory,
+  });
+  const { colorCanon, colorCanonCount, primaryColorCanon } = useColorCanonSystem({
+    isSignedIn: isUserSignedIn,
+    colorMemory,
   });
   const engineDebuggerReport = useMemo(
     () =>
@@ -1072,6 +1194,11 @@ export default function Home() {
             current={adjustedCurrent}
             currentIndex={currentIndex}
             libraryLength={libraryLength}
+            clockDisplay={clockDisplay}
+            clockMemoryCount={clockMemoryCount}
+            latestClockTime={latestClockMemory
+              ? `${latestClockMemory.display.hours}:${latestClockMemory.display.minutes}:${latestClockMemory.display.seconds}`
+              : null}
             liveInfluenceMode={effectiveInfluenceMode}
             thoughtScene={thoughtScene}
             leadingLineStyles={leadingLineStyles}
@@ -1099,11 +1226,32 @@ export default function Home() {
             conceptValidation={conceptValidation}
             conceptPoolCount={conceptPoolCount}
             latestPoolConceptTitle={latestPoolEntry?.concept.core.title ?? null}
+            colorPoolCount={colorPoolCount}
+            latestColorPoolTitle={latestColorPoolEntry?.conceptTitle ?? null}
+            scenarioPoolCount={scenarioPoolCount}
+            latestScenarioPoolTitle={latestScenarioPoolEntry?.conceptTitle ?? null}
+            artCompositionPoolCount={artCompositionPoolCount}
+            latestArtCompositionPoolTitle={latestArtCompositionPoolEntry?.conceptTitle ?? null}
             canonCount={canonCount}
             primaryCanonTitle={primaryCanon?.concept.core.title ?? null}
+            colorCanonCount={colorCanonCount}
+            primaryColorCanonTitle={primaryColorCanon?.conceptTitle ?? null}
+            narrativeCanonCount={narrativeCanonCount}
+            primaryNarrativeCanonTitle={primaryNarrativeCanon?.conceptTitle ?? null}
             conceptMemoryCount={conceptMemory.length}
             resolvedConceptCount={resolvedConceptCount}
             latestConceptTitle={latestConcept?.concept.core.title ?? null}
+            colorMemoryCount={colorMemory.length}
+            resolvedColorCount={resolvedColorCount}
+            latestColorTitle={latestColorMemory?.conceptTitle ?? null}
+            storyMemoryCount={storyMemory.length}
+            resolvedScenarioCount={resolvedScenarioCount}
+            latestScenarioTitle={latestStoryMemory?.conceptTitle ?? null}
+            artMemoryCount={artMemory.length}
+            resolvedArtCount={resolvedArtCount}
+            latestArtTitle={latestArtMemory?.conceptTitle ?? null}
+            artCanonCount={artCanonCount}
+            primaryArtCanonTitle={primaryArtCanon?.conceptTitle ?? null}
             promotionStatus={latestPromotion?.promotedConcept.stage ?? conceptCandidate.stage}
             canPromoteToCanonical={Boolean(latestPromotion?.canPromoteToCanonical)}
             promotionNotes={latestPromotion?.notes ?? []}

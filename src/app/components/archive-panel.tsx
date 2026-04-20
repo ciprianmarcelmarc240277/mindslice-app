@@ -63,8 +63,8 @@ export function ArchivePanel(props: ArchivePanelProps) {
                 <strong>{entry.direction}</strong>
                 <p>{entry.thought}</p>
                 <span className={styles.draftStatus}>
-                  {entry.source_type} · sense {entry.sense_score.toFixed(2)} · structure{" "}
-                  {entry.structure_score.toFixed(2)} · attention{" "}
+                  {entry.source_type} · sens {entry.sense_score.toFixed(2)} · organizare internă{" "}
+                  {entry.structure_score.toFixed(2)} · focalizare conceptuală{" "}
                   {entry.attention_score.toFixed(2)}
                 </span>
               </li>

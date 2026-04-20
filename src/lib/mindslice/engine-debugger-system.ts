@@ -8,6 +8,9 @@ import type {
   IdeaSetMainLoopResult,
   SystemModificationState,
 } from "@/lib/mindslice/mindslice-types";
+import { updateArtSystemState } from "@/lib/mindslice/concept-art-composition-system";
+import { updateColorSystemState } from "@/lib/mindslice/concept-color-theory-system";
+import { updateNarrativeSystemState } from "@/lib/mindslice/concept-scenario-system";
 
 type BuildEngineDebuggerReportInput = {
   ideaSetMainLoop: IdeaSetMainLoopResult;
@@ -49,15 +52,15 @@ function buildEntryTrace(entry: IdeaLoopEntryResult, conceptPool: ConceptPoolEnt
       "interpret",
       "info",
       entry,
-      "Idea interpreted",
-      `memory pressure ${process.interpretation.memoryPressure.toFixed(2)} / contamination pressure ${process.interpretation.contaminationPressure.toFixed(2)}`,
+      "Idee interpretată",
+      `presiune de memorie ${process.interpretation.memoryPressure.toFixed(2)} / presiune de contaminare ${process.interpretation.contaminationPressure.toFixed(2)}`,
     ),
     makeEvent(
       sequence++,
       "contamination",
       process.contamination.accepted ? "success" : "warning",
       entry,
-      `Contamination ${process.contamination.requestedMode} -> ${process.contamination.appliedMode}`,
+      `Contaminare ${process.contamination.requestedMode} -> ${process.contamination.appliedMode}`,
       process.contamination.rationale,
     ),
     makeEvent(
@@ -65,16 +68,16 @@ function buildEntryTrace(entry: IdeaLoopEntryResult, conceptPool: ConceptPoolEnt
       "validation",
       process.validation.isValidConcept ? "success" : "warning",
       entry,
-      `Validation ${process.validation.isValidConcept ? "passed" : "failed"}`,
-      `structure ${process.validation.axes.structure.toFixed(2)} / sense ${process.validation.axes.sense.toFixed(2)} / attention ${process.validation.axes.attention.toFixed(2)} / coherence ${process.validation.axes.coherence.toFixed(2)}`,
+      `Validare ${process.validation.isValidConcept ? "reușită" : "eșuată"}`,
+      `organizare internă ${process.validation.axes.structure.toFixed(2)} / sens ${process.validation.axes.sense.toFixed(2)} / focalizare conceptuală ${process.validation.axes.attention.toFixed(2)} / coerență ${process.validation.axes.coherence.toFixed(2)}`,
     ),
     makeEvent(
       sequence++,
       "promotion",
       process.status === "resolved" ? "success" : process.status === "terminated" ? "warning" : "info",
       entry,
-      `Process ${process.status}`,
-      `next action ${process.nextAction} / termination ${process.terminationReason}`,
+      `Proces ${process.status}`,
+      `acțiune următoare ${process.nextAction} / terminare ${process.terminationReason}`,
     ),
   ];
 
@@ -85,8 +88,8 @@ function buildEntryTrace(entry: IdeaLoopEntryResult, conceptPool: ConceptPoolEnt
         "pool",
         "success",
         entry,
-        "Concept entered pool",
-        `stage ${pooledEntry.concept.stage} / source ${pooledEntry.source}`,
+        "Concept intrat în pool",
+        `stadiu ${pooledEntry.concept.stage} / sursă ${pooledEntry.source}`,
       ),
     );
   }
@@ -160,19 +163,20 @@ function buildFailureAnalysis(
   systemState: SystemModificationState,
 ) {
   const active = ideaSetMainLoop.activeResult;
-  let currentBlocker = "No active blocker.";
+  let currentBlocker = "Niciun blocaj activ.";
 
   if (active.status === "terminated") {
-    currentBlocker = `Active idea terminated because ${active.terminationReason}.`;
+    currentBlocker = `Ideea activă s-a încheiat din cauza: ${active.terminationReason}.`;
   } else if (!active.validation.isValidConcept) {
     const failedAxes = Object.entries(active.validation.axes)
       .filter(([axis, value]) => value < active.validation.thresholds[axis as keyof typeof active.validation.axes])
       .map(([axis]) => axis);
     currentBlocker = failedAxes.length
-      ? `Active idea is blocked by ${failedAxes.join(", ")} below threshold.`
-      : "Active idea is still iterating without a dominant passing signal.";
+      ? `Ideea activă este blocată de axe sub prag: ${failedAxes.join(", ")}.`
+      : "Ideea activă încă iterează fără un semnal dominant de trecere.";
   } else if (!systemState.modifiesSystem) {
-    currentBlocker = "Concept passed validation but has not produced enough system effect.";
+    currentBlocker =
+      "Conceptul a trecut validarea, dar nu produce încă un efect suficient asupra sistemului.";
   }
 
   const terminationCounts = ideaSetMainLoop.entries.reduce<Record<string, number>>((acc, entry) => {
@@ -188,7 +192,7 @@ function buildFailureAnalysis(
   const nextLikelyPromotion =
     conceptPool[0]?.concept.core.title ??
     ideaSetMainLoop.entries.find((entry) => entry.process.validation.isValidConcept)?.ideaDirection ??
-    "No concept is close to promotion yet.";
+    "Niciun concept nu este încă aproape de promovare.";
 
   const systemPressureSummary = [
     `pool ${conceptPool.length}`,
@@ -201,8 +205,8 @@ function buildFailureAnalysis(
     currentBlocker,
     topFailurePattern:
       topFailurePattern === "none"
-        ? "No dominant failure pattern yet."
-        : `Most common failure pattern: ${topFailurePattern}.`,
+        ? "Nu există încă un tipar dominant de eșec."
+        : `Cel mai frecvent tipar de eșec: ${topFailurePattern}.`,
     nextLikelyPromotion,
     systemPressureSummary,
   };
@@ -217,6 +221,27 @@ export function buildEngineDebuggerReport({
 }: BuildEngineDebuggerReportInput): EngineDebuggerReport {
   const trace = ideaSetMainLoop.entries.flatMap((entry) => buildEntryTrace(entry, conceptPool));
   let globalSequence = trace.length * 10 + 1;
+  const activePalette = ideaSetMainLoop.activeResult.candidate.conceptStateDraft.expression.palette;
+  const activeArtComposition = ideaSetMainLoop.activeResult.candidate.conceptStateDraft.expression.artComposition;
+  const activeScenario = ideaSetMainLoop.activeResult.candidate.conceptStateDraft.expression.scenario;
+  const colorSystemStateUpdate = activePalette.runtime
+    ? updateColorSystemState({
+        palette: activePalette,
+        validation: activePalette.runtime.scores,
+      })
+    : null;
+  const artSystemStateUpdate = activeArtComposition.runtime
+    ? updateArtSystemState({
+        composition: activeArtComposition,
+        validation: activeArtComposition.runtime.scores,
+      })
+    : null;
+  const narrativeSystemStateUpdate = activeScenario.runtime
+    ? updateNarrativeSystemState({
+        scenario: activeScenario,
+        validation: activeScenario.runtime.scores,
+      })
+    : null;
 
   if (conceptMemory.length) {
     trace.push(
@@ -225,8 +250,8 @@ export function buildEngineDebuggerReport({
         "memory",
         "success",
         null,
-        "Concept memory updated",
-        `${conceptMemory.length} concepts stored in memory`,
+        "Memoria conceptelor a fost actualizată",
+        `${conceptMemory.length} concepte stocate în memorie`,
       ),
     );
   }
@@ -238,8 +263,8 @@ export function buildEngineDebuggerReport({
         "canon",
         "success",
         null,
-        "Canon is active",
-        `${canon.length} canonical concepts / primary ${canon[0]?.concept.core.title ?? "none"}`,
+        "Canonul este activ",
+        `${canon.length} concepte canonice / principal ${canon[0]?.concept.core.title ?? "niciunul"}`,
       ),
     );
   }
@@ -250,7 +275,7 @@ export function buildEngineDebuggerReport({
       "system",
       systemState.modifiesSystem ? "success" : "info",
       null,
-      systemState.modifiesSystem ? "System modified" : "System idle",
+      systemState.modifiesSystem ? "Sistem modificat" : "Sistem în repaus",
       systemState.notes.join(" | "),
     ),
   );
@@ -263,6 +288,99 @@ export function buildEngineDebuggerReport({
   return {
     trace,
     activeTrace,
+    colorTheory: {
+      interpretation: activePalette.runtime?.interpretation ?? "Nicio interpretare cromatică disponibilă.",
+      contaminationMode: activePalette.runtime?.contaminationMode ?? "none",
+      acceptedContamination: activePalette.runtime?.acceptedContamination ?? false,
+      iterationCount: activePalette.runtime?.iterationCount ?? 0,
+      terminated: activePalette.runtime?.terminated ?? false,
+      terminationReason: activePalette.runtime?.terminationReason ?? "none",
+      isValidPalette: activePalette.runtime?.isValidPalette ?? false,
+      lawPassed: activePalette.runtime?.lawPassed ?? false,
+      lawNote: activePalette.runtime?.lawNote ?? "Nicio lege cromatică evaluată.",
+      thresholds: activePalette.runtime?.thresholds ?? {
+        hueStructure: 0.7,
+        valueBalance: 0.7,
+        saturationControl: 0.7,
+        colorRelations: 0.72,
+        attentionImpact: 0.72,
+      },
+      scores: activePalette.runtime?.scores ?? {
+        hueStructure: 0,
+        valueBalance: 0,
+        saturationControl: 0,
+        colorRelations: 0,
+        attentionImpact: 0,
+      },
+      outputText: activePalette.outputText,
+      outputVisual: activePalette.outputVisual,
+      systemStateUpdate: colorSystemStateUpdate,
+      notes: activePalette.runtime?.notes ?? [],
+    },
+    artComposition: {
+      interpretation: activeArtComposition.runtime?.interpretation ?? "Nicio interpretare compozițională disponibilă.",
+      contaminationMode: activeArtComposition.runtime?.contaminationMode ?? "none",
+      acceptedContamination: activeArtComposition.runtime?.acceptedContamination ?? false,
+      iterationCount: activeArtComposition.runtime?.iterationCount ?? 0,
+      terminated: activeArtComposition.runtime?.terminated ?? false,
+      terminationReason: activeArtComposition.runtime?.terminationReason ?? "none",
+      isValidComposition: activeArtComposition.runtime?.isValidComposition ?? false,
+      lawPassed: activeArtComposition.runtime?.lawPassed ?? false,
+      lawNote: activeArtComposition.runtime?.lawNote ?? "Nicio lege compozițională evaluată.",
+      thresholds: activeArtComposition.runtime?.thresholds ?? {
+        unity: 0.7,
+        balance: 0.68,
+        rhythm: 0.66,
+        movement: 0.68,
+        contrast: 0.7,
+        proportion: 0.67,
+        focus: 0.72,
+      },
+      scores: activeArtComposition.runtime?.scores ?? {
+        unity: 0,
+        balance: 0,
+        rhythm: 0,
+        movement: 0,
+        contrast: 0,
+        proportion: 0,
+        focus: 0,
+      },
+      focusNode: activeArtComposition.focusNode,
+      outputText: activeArtComposition.outputText,
+      outputVisual: activeArtComposition.outputVisual,
+      systemStateUpdate: artSystemStateUpdate,
+      notes: activeArtComposition.runtime?.notes ?? [],
+    },
+    scenario: {
+      interpretation: activeScenario.runtime?.interpretation ?? "Nicio interpretare narativă disponibilă.",
+      contaminationMode: activeScenario.runtime?.contaminationMode ?? "none",
+      acceptedContamination: activeScenario.runtime?.acceptedContamination ?? false,
+      iterationCount: activeScenario.runtime?.iterationCount ?? 0,
+      terminated: activeScenario.runtime?.terminated ?? false,
+      terminationReason: activeScenario.runtime?.terminationReason ?? "none",
+      isValidScenario: activeScenario.runtime?.isValidScenario ?? false,
+      lawPassed: activeScenario.runtime?.lawPassed ?? false,
+      lawNote: activeScenario.runtime?.lawNote ?? "Nicio lege narativă evaluată.",
+      thresholds: activeScenario.runtime?.thresholds ?? {
+        conflict: 0.68,
+        tension: 0.7,
+        progression: 0.66,
+        meaning: 0.68,
+        attention: 0.7,
+      },
+      scores: activeScenario.runtime?.scores ?? {
+        conflict: 0,
+        tension: 0,
+        progression: 0,
+        meaning: 0,
+        attention: 0,
+      },
+      coreConflict: activeScenario.coreConflict,
+      outputText: activeScenario.outputText,
+      outputStructure: activeScenario.outputStructure,
+      systemStateUpdate: narrativeSystemStateUpdate,
+      notes: activeScenario.runtime?.notes ?? [],
+    },
     timeline: buildTimeline(trace),
     comparativeRuns: buildComparativeRuns(ideaSetMainLoop, conceptPool, canon),
     failureAnalysis: buildFailureAnalysis(

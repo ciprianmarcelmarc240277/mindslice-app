@@ -6,11 +6,13 @@ import type { LiveInterference } from "@/lib/mindslice/mindslice-types";
 type UseLiveRuntimeSystemOptions = {
   isSignedIn: boolean;
   interferenceRefreshKey: string;
+  fallbackInterference: LiveInterference | null;
 };
 
 export function useLiveRuntimeSystem({
   isSignedIn,
   interferenceRefreshKey,
+  fallbackInterference,
 }: UseLiveRuntimeSystemOptions) {
   const [referenceImageUrls, setReferenceImageUrls] = useState<string[]>([]);
   const [imageIndex, setImageIndex] = useState(0);
@@ -64,11 +66,11 @@ export function useLiveRuntimeSystem({
         };
 
         if (!cancelled) {
-          setInterference(payload.interference ?? null);
+          setInterference(payload.interference ?? fallbackInterference ?? null);
         }
       } catch {
         if (!cancelled) {
-          setInterference(null);
+          setInterference(fallbackInterference ?? null);
         }
       }
     }
@@ -78,7 +80,7 @@ export function useLiveRuntimeSystem({
     return () => {
       cancelled = true;
     };
-  }, [interferenceRefreshKey, isSignedIn]);
+  }, [fallbackInterference, interferenceRefreshKey, isSignedIn]);
 
   const currentImageUrl = referenceImageUrls.length
     ? referenceImageUrls[imageIndex % referenceImageUrls.length]

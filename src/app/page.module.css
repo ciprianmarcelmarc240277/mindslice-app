@@ -201,7 +201,7 @@
   padding: 16px 20px;
   border-radius: 20px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 14px;
   background: #ffffff;
   position: relative;
@@ -1160,6 +1160,124 @@
   font-size: 0.82rem;
   letter-spacing: 0.04em;
   color: rgba(24, 20, 17, 0.6);
+}
+
+.clockField {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 3;
+  display: grid;
+  gap: 6px;
+  min-width: min(22vw, 11rem);
+  padding: 10px 12px 9px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--clock-ink, rgba(24, 20, 17, 0.08)) 8%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--clock-background, #ffffff) 72%, white) 0%, rgba(255, 255, 255, 0.68) 100%);
+  box-shadow:
+    0 6px 18px rgba(24, 20, 17, 0.05),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  opacity: 0.78;
+}
+
+.clockField::before {
+  content: "";
+  position: absolute;
+  inset: -18% auto auto 62%;
+  width: 4.6rem;
+  height: 4.6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--clock-accent, #b5452f) 10%, transparent);
+  filter: blur(16px);
+  opacity: 0.34;
+  pointer-events: none;
+}
+
+.clockMeta {
+  position: relative;
+  z-index: 1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.54rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--clock-ink, #181411) 34%, transparent);
+}
+
+.clockDigits {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 0.1rem;
+  font-family: var(--display-font);
+  font-size: clamp(1.15rem, 2vw, 1.85rem);
+  line-height: 0.92;
+  color: color-mix(in srgb, var(--clock-ink, #181411) 74%, transparent);
+  text-shadow: none;
+}
+
+.clockHours,
+.clockMinutes {
+  letter-spacing: -0.04em;
+}
+
+.clockSeconds {
+  font-size: 0.42em;
+  opacity: 0.66;
+  letter-spacing: 0.02em;
+}
+
+.clockSeparator {
+  transform: translateY(-0.02em);
+  color: color-mix(in srgb, var(--clock-accent, #b5452f) 44%, var(--clock-ink, #181411));
+}
+
+.clockEcho {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  z-index: 0;
+  display: flex;
+  gap: 0.3rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.52rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--clock-accent, #b5452f) 14%, transparent);
+  opacity: 0.3;
+}
+
+.clockSignalRow {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--clock-ink, #181411) 36%, transparent);
+}
+
+.clockFieldwhisper {
+  opacity: 0.68;
+}
+
+.clockFieldecho .clockEcho {
+  opacity: 0.74;
+  transform: translateX(6px);
+}
+
+.clockFieldcounterpoint {
+  transform: rotate(-0.6deg);
+}
+
+.clockFieldstain::before {
+  opacity: 0.46;
+  filter: blur(20px);
 }
 
 .relationField {
@@ -2334,6 +2452,10 @@
     height: 54vh;
   }
 
+  .clockField {
+    min-width: min(34vw, 10rem);
+  }
+
   .blogGrid {
     grid-template-columns: 1fr;
   }
@@ -2380,6 +2502,23 @@
     right: 14px;
     bottom: 8px;
     padding: 14px;
+  }
+
+  .clockField {
+    top: 14px;
+    right: 14px;
+    left: auto;
+    min-width: min(46vw, 9rem);
+    padding: 8px 10px 8px;
+  }
+
+  .clockDigits {
+    font-size: clamp(0.98rem, 4.8vw, 1.35rem);
+  }
+
+  .clockEcho {
+    font-size: 0.46rem;
+    letter-spacing: 0.14em;
   }
 
   .textStageCenter {

@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { ConceptMemoryEntry } from "@/lib/mindslice/mindslice-types";
+import { ConceptArtCompositionVisual } from "@/app/components/concept-art-composition-visual";
+import { ConceptPaletteVisual } from "@/app/components/concept-palette-visual";
 import styles from "../page.module.css";
 
 type ConceptArchiveViewProps = {
@@ -220,6 +222,22 @@ export function ConceptArchiveView(props: ConceptArchiveViewProps) {
                 ) : null}
                 <h3>{entry.concept.core.title}</h3>
                 <p className={styles.blogByline}>{entry.concept.core.oneLineDefinition}</p>
+                <ConceptPaletteVisual
+                  expression={entry.concept.expression}
+                  compositionBrief={entry.concept.output?.visualArtifact.compositionBrief}
+                  compact
+                />
+                <ConceptArtCompositionVisual
+                  expression={entry.concept.expression}
+                  compact
+                />
+                {entry.concept.expression.scenario ? (
+                  <div className={styles.conceptArchiveSignature}>
+                    <span className={styles.blogAiResponseLabel}>Scenario System</span>
+                    <p>{entry.concept.expression.scenario.coreConflict}</p>
+                    <p>{entry.concept.expression.scenario.outputStructure}</p>
+                  </div>
+                ) : null}
                 {(entry.concept.provenance.sourceAuthorPseudonyms ?? []).length ? (
                   <p className={styles.blogByline}>
                     Influențat de: {(entry.concept.provenance.sourceAuthorPseudonyms ?? []).join(", ")}

@@ -86,13 +86,13 @@ export function processIdea(input: ProcessIdeaInput): ProcessIdeaResult {
     ...interpretation.notes,
     ...contaminationResult.notes,
     `contamination: ${contamination.rationale}`,
-    `evaluate: structure ${validation.axes.structure.toFixed(2)} / sense ${validation.axes.sense.toFixed(2)} / attention ${validation.axes.attention.toFixed(2)} / coherence ${validation.axes.coherence.toFixed(2)}`,
-    `decision: ${nextAction}`,
+    `evaluare: organizare internă ${validation.axes.structure.toFixed(2)} / sens ${validation.axes.sense.toFixed(2)} / focalizare conceptuală ${validation.axes.attention.toFixed(2)} / coerență ${validation.axes.coherence.toFixed(2)}`,
+    `decizie: ${nextAction}`,
     ...iteration.notes,
   ];
 
   if (terminationReason !== "none") {
-    notes.push(`termination: ${terminationReason}`);
+    notes.push(`terminare: ${terminationReason}`);
   }
 
   return {

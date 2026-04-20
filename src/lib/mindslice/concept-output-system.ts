@@ -70,6 +70,8 @@ function buildVisualArtifact(
   const summary = [
     `${current.direction} este tratat ca un câmp tipografic ${expression.compositionMode}.`,
     `Semnătura vizuală urmărește ${expression.visualSignature}.`,
+    expression.scenario.outputText,
+    expression.artComposition.outputText,
     interference
       ? `Contaminarea ${interference.influenceMode} modifică ritmul fără să anuleze centrul.`
       : "Centrul vizual este construit fără contaminare externă.",
@@ -79,6 +81,9 @@ function buildVisualArtifact(
     `Stage ${stage}`,
     `Typography ${expression.typographyMode}`,
     `Motion ${expression.motionMode}`,
+    `Palette ${expression.palette.dominant} / ${expression.palette.secondary} / ${expression.palette.accent}`,
+    `Scenario ${expression.scenario.outputStructure}`,
+    `Focus ${expression.artComposition.focusNode}`,
     `Fragments ${expression.dominantFragments.join(", ")}`,
     `Keywords ${expression.dominantKeywords.join(", ")}`,
   ].join(" · ");
@@ -88,6 +93,8 @@ function buildVisualArtifact(
     `Concept: ${current.direction}`,
     `Visual signature: ${expression.visualSignature}`,
     `Composition: ${expression.compositionMode}`,
+    `Scenario: ${expression.scenario.outputStructure}`,
+    `Art composition: ${expression.artComposition.outputVisual}`,
     `Typography mode: ${expression.typographyMode}`,
     `Motion mode: ${expression.motionMode}`,
     `Mood: ${current.mood}`,

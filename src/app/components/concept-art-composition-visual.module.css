@@ -1,0 +1,161 @@
+.visual {
+  position: relative;
+  overflow: hidden;
+  min-height: 220px;
+  border-radius: 24px;
+  border: 1px solid rgba(24, 20, 17, 0.08);
+  background:
+    radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--composition-accent) 18%, transparent), transparent 30%),
+    linear-gradient(160deg, var(--composition-bg), color-mix(in srgb, var(--composition-secondary) 18%, var(--composition-bg)));
+}
+
+.compact {
+  min-height: 176px;
+  border-radius: 20px;
+}
+
+.grid,
+.massPrimary,
+.massSecondary,
+.pathPrimary,
+.pathSecondary,
+.focusNode {
+  position: absolute;
+}
+
+.grid {
+  inset: 0;
+  opacity: 0.22;
+  background-image:
+    linear-gradient(rgba(24, 20, 17, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(24, 20, 17, 0.05) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+.massPrimary,
+.massSecondary {
+  border-radius: 28px;
+  border: 1px solid color-mix(in srgb, var(--composition-ink) 10%, transparent);
+  background: color-mix(in srgb, var(--composition-bg) 68%, white);
+  box-shadow: 0 18px 44px rgba(24, 20, 17, 0.08);
+}
+
+.massPrimary {
+  inset: 18% 46% 24% 10%;
+  transform: rotate(-8deg);
+}
+
+.massSecondary {
+  inset: 34% 10% 16% 52%;
+  transform: rotate(10deg);
+}
+
+.pathPrimary,
+.pathSecondary {
+  inset: auto;
+  border-top: 2px solid color-mix(in srgb, var(--composition-accent) 70%, transparent);
+  border-radius: 999px;
+  opacity: 0.7;
+}
+
+.pathPrimary {
+  left: 18%;
+  right: 22%;
+  top: 40%;
+  height: 110px;
+  transform: rotate(-10deg);
+}
+
+.pathSecondary {
+  left: 28%;
+  right: 16%;
+  top: 28%;
+  height: 150px;
+  border-top-color: color-mix(in srgb, var(--composition-secondary) 72%, transparent);
+  transform: rotate(16deg);
+}
+
+.focusNode {
+  top: 44%;
+  left: 48%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  border-radius: 999px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--composition-accent) 24%, white), rgba(255, 255, 255, 0.82));
+  border: 1px solid color-mix(in srgb, var(--composition-ink) 10%, transparent);
+  box-shadow: 0 16px 40px color-mix(in srgb, var(--composition-accent) 18%, transparent);
+  text-align: center;
+  padding: 14px;
+}
+
+.focusNode span {
+  color: var(--composition-ink);
+  font-family: var(--display-font);
+  font-size: 0.9rem;
+  line-height: 1.05;
+}
+
+.copy {
+  position: absolute;
+  inset: 18px 18px auto 18px;
+  z-index: 2;
+  display: grid;
+  gap: 8px;
+  max-width: min(26rem, 72%);
+}
+
+.marker,
+.metric {
+  display: inline-flex;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(24, 20, 17, 0.08);
+  background: rgba(255, 252, 247, 0.78);
+  color: rgba(24, 20, 17, 0.66);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.signature {
+  margin: 0;
+  color: var(--composition-ink);
+  font-family: var(--display-font);
+  font-size: clamp(1.02rem, 1.6vw, 1.45rem);
+  line-height: 1.02;
+}
+
+.brief {
+  margin: 0;
+  color: color-mix(in srgb, var(--composition-ink) 76%, transparent);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.metrics {
+  position: absolute;
+  inset: auto 16px 16px 16px;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+[data-layout="contaminated"] .pathPrimary {
+  transform: rotate(-18deg);
+}
+
+[data-layout="contaminated"] .massSecondary {
+  transform: rotate(18deg) translateY(-6px);
+}
+
+[data-layout="field"] .focusNode {
+  width: 124px;
+  height: 124px;
+}

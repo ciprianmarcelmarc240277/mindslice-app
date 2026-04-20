@@ -50,15 +50,15 @@ export function LiveControlsPanel(props: LiveControlsPanelProps) {
       <section className={`${styles.panelBlock} ${styles.metricsGrid}`}>
         <span className={styles.panelMarker}>PANEL · Evaluation Metrics</span>
         <article>
-          <span>Sense</span>
+          <span>Sens</span>
           <strong>{current.triad.art.score.toFixed(2)} · {current.triad.art.label}</strong>
         </article>
         <article>
-          <span>Structure</span>
+          <span>Organizare internă</span>
           <strong>{current.triad.design.score.toFixed(2)} · {current.triad.design.label}</strong>
         </article>
         <article>
-          <span>Attention</span>
+          <span>Focalizare conceptuală</span>
           <strong>
             {current.triad.business.score.toFixed(2)} · {current.triad.business.label}
           </strong>

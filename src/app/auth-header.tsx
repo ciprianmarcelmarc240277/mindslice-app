@@ -173,8 +173,42 @@ export function AuthHeader() {
         }}
       >
         <Show when="signed-out">
-          <SignInButton />
-          <SignUpButton />
+          <SignInButton mode="modal">
+            <button
+              type="button"
+              style={{
+                border: "1px solid rgba(69, 48, 34, 0.18)",
+                background: "rgba(255, 250, 243, 0.86)",
+                color: "#2a211b",
+                padding: "10px 14px",
+                borderRadius: "999px",
+                fontSize: "12px",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                cursor: "pointer",
+              }}
+            >
+              Conectează-te
+            </button>
+          </SignInButton>
+          <SignUpButton mode="modal">
+            <button
+              type="button"
+              style={{
+                border: "1px solid transparent",
+                background: "#2a211b",
+                color: "#f6efe5",
+                padding: "10px 14px",
+                borderRadius: "999px",
+                fontSize: "12px",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                cursor: "pointer",
+              }}
+            >
+              Creează cont
+            </button>
+          </SignUpButton>
         </Show>
         <Show when="signed-in">
           <UserButton />

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ConceptArtCompositionVisual } from "@/app/components/concept-art-composition-visual";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { ConceptPaletteVisual } from "@/app/components/concept-palette-visual";
 import type {
   ConceptArtifact,
   ConceptState,
@@ -63,6 +65,9 @@ export default async function ConceptDetailPage(
   const graphArtifact = artifacts.find((entry) => entry.artifact_type === "graph_state");
   const systemArtifact = artifacts.find((entry) => entry.artifact_type === "hybrid");
   const promptArtifact = artifacts.find((entry) => entry.artifact_type === "prompt");
+  const palette = concept.concept_state.expression.palette;
+  const artComposition = concept.concept_state.expression.artComposition;
+  const scenario = concept.concept_state.expression.scenario;
 
   return (
     <main className={styles.page}>
@@ -153,6 +158,11 @@ export default async function ConceptDetailPage(
           <section className={styles.section}>
             <span className={styles.marker}>Visual Brief</span>
             <h2>Ieșirea vizuală autonomă</h2>
+            <ConceptPaletteVisual
+              expression={concept.concept_state.expression}
+              compositionBrief={concept.concept_state.output?.visualArtifact.compositionBrief}
+            />
+            <ConceptArtCompositionVisual expression={concept.concept_state.expression} />
             <p className={styles.text}>
               {concept.concept_state.output?.visualArtifact.summary ??
                 concept.concept_state.expression.visualSignature}
@@ -163,6 +173,44 @@ export default async function ConceptDetailPage(
                   "Fără brief vizual explicit încă."}
               </pre>
             </div>
+            {palette ? (
+              <div className={styles.artifactBox}>
+                <strong>Sistem cromatic</strong>
+                <p className={styles.text}>{palette.outputText}</p>
+                <ul className={styles.list}>
+                  <li>dominantă: {palette.dominant}</li>
+                  <li>secundară: {palette.secondary}</li>
+                  <li>accent: {palette.accent}</li>
+                  <li>suport: {palette.supportTones.length ? palette.supportTones.join(", ") : "niciunul"}</li>
+                </ul>
+              </div>
+            ) : null}
+            {artComposition ? (
+              <div className={styles.artifactBox}>
+                <strong>Sistem compozițional</strong>
+                <p className={styles.text}>{artComposition.outputText}</p>
+                <ul className={styles.list}>
+                  <li>focus node: {artComposition.focusNode}</li>
+                  <li>unity: {artComposition.unityMap.length ? artComposition.unityMap.join(", ") : "niciun raport încă"}</li>
+                  <li>balance: {artComposition.balanceMap.length ? artComposition.balanceMap.join(", ") : "niciun raport încă"}</li>
+                  <li>rhythm: {artComposition.rhythmMap.length ? artComposition.rhythmMap.join(", ") : "niciun raport încă"}</li>
+                </ul>
+              </div>
+            ) : null}
+            {scenario ? (
+              <div className={styles.artifactBox}>
+                <strong>Sistem narativ</strong>
+                <p className={styles.text}>{scenario.outputText}</p>
+                <ul className={styles.list}>
+                  <li>conflict central: {scenario.coreConflict}</li>
+                  <li>motor de personaj: {scenario.characterDrive}</li>
+                  <li>stakes: {scenario.stakes}</li>
+                  <li>turning points: {scenario.turningPoints.length ? scenario.turningPoints.join(", ") : "niciun prag încă"}</li>
+                  <li>tension curve: {scenario.tensionCurve.length ? scenario.tensionCurve.join(", ") : "niciun traseu încă"}</li>
+                  <li>resolution: {scenario.resolution}</li>
+                </ul>
+              </div>
+            ) : null}
           </section>
         </div>
 
@@ -231,6 +279,18 @@ export default async function ConceptDetailPage(
               {[
                 ["Semantic", concept.validation_result.scores.semanticStability],
                 ["Visual", concept.validation_result.scores.visualConsistency],
+                ["Unity", concept.validation_result.scores.unity ?? 0],
+                ["Balance", concept.validation_result.scores.balance ?? 0],
+                ["Rhythm", concept.validation_result.scores.rhythm ?? 0],
+                ["Movement", concept.validation_result.scores.movement ?? 0],
+                ["Contrast", concept.validation_result.scores.contrast ?? 0],
+                ["Proportion", concept.validation_result.scores.proportion ?? 0],
+                ["Focus", concept.validation_result.scores.focus ?? 0],
+                ["Hue Structure", concept.validation_result.scores.hueStructure ?? 0],
+                ["Value Balance", concept.validation_result.scores.valueBalance ?? 0],
+                ["Saturation Control", concept.validation_result.scores.saturationControl ?? 0],
+                ["Color Relations", concept.validation_result.scores.colorRelations ?? 0],
+                ["Attention Impact", concept.validation_result.scores.attentionImpact ?? 0],
                 ["Cross-modal", concept.validation_result.scores.crossModalAlignment],
                 ["Contamination", concept.validation_result.scores.contaminationResolution],
                 [

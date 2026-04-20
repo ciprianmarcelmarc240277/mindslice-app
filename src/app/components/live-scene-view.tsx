@@ -5,6 +5,7 @@ import type {
   ThoughtSceneEngineState,
 } from "@/lib/mindslice/thought-scene-engine";
 import type {
+  ClockDisplayState,
   ConceptCandidate,
   EngineDebuggerReport,
   IdeaSetMainLoopResult,
@@ -26,6 +27,9 @@ type LiveSceneViewProps = {
   current: ThoughtState;
   currentIndex: number;
   libraryLength: number;
+  clockDisplay: ClockDisplayState | null;
+  clockMemoryCount: number;
+  latestClockTime: string | null;
   liveInfluenceMode: InfluenceMode | null;
   thoughtScene: ThoughtSceneEngineState;
   leadingLineStyles: ThoughtSceneEngineState["sceneGraph"]["leadingLines"];
@@ -57,11 +61,32 @@ type LiveSceneViewProps = {
   conceptValidation: ConceptValidationResult;
   conceptPoolCount: number;
   latestPoolConceptTitle: string | null;
+  colorPoolCount: number;
+  latestColorPoolTitle: string | null;
+  scenarioPoolCount: number;
+  latestScenarioPoolTitle: string | null;
+  artCompositionPoolCount: number;
+  latestArtCompositionPoolTitle: string | null;
   canonCount: number;
   primaryCanonTitle: string | null;
+  colorCanonCount: number;
+  primaryColorCanonTitle: string | null;
+  narrativeCanonCount: number;
+  primaryNarrativeCanonTitle: string | null;
+  artCanonCount: number;
+  primaryArtCanonTitle: string | null;
   conceptMemoryCount: number;
   resolvedConceptCount: number;
   latestConceptTitle: string | null;
+  colorMemoryCount: number;
+  resolvedColorCount: number;
+  latestColorTitle: string | null;
+  storyMemoryCount: number;
+  resolvedScenarioCount: number;
+  latestScenarioTitle: string | null;
+  artMemoryCount: number;
+  resolvedArtCount: number;
+  latestArtTitle: string | null;
   promotionStatus: string;
   canPromoteToCanonical: boolean;
   promotionNotes: string[];
@@ -75,6 +100,9 @@ export function LiveSceneView(props: LiveSceneViewProps) {
     current,
     currentIndex,
     libraryLength,
+    clockDisplay,
+    clockMemoryCount,
+    latestClockTime,
     liveInfluenceMode,
     thoughtScene,
     leadingLineStyles,
@@ -102,11 +130,32 @@ export function LiveSceneView(props: LiveSceneViewProps) {
     conceptValidation,
     conceptPoolCount,
     latestPoolConceptTitle,
+    colorPoolCount,
+    latestColorPoolTitle,
+    scenarioPoolCount,
+    latestScenarioPoolTitle,
+    artCompositionPoolCount,
+    latestArtCompositionPoolTitle,
     canonCount,
     primaryCanonTitle,
+    colorCanonCount,
+    primaryColorCanonTitle,
+    narrativeCanonCount,
+    primaryNarrativeCanonTitle,
+    artCanonCount,
+    primaryArtCanonTitle,
     conceptMemoryCount,
     resolvedConceptCount,
     latestConceptTitle,
+    colorMemoryCount,
+    resolvedColorCount,
+    latestColorTitle,
+    storyMemoryCount,
+    resolvedScenarioCount,
+    latestScenarioTitle,
+    artMemoryCount,
+    resolvedArtCount,
+    latestArtTitle,
     promotionStatus,
     canPromoteToCanonical,
     promotionNotes,
@@ -164,6 +213,19 @@ export function LiveSceneView(props: LiveSceneViewProps) {
           <strong key={current.direction} className={styles.statusValue}>
             {current.direction}
           </strong>
+        </div>
+        <div className={styles.statusCard}>
+          <span className={styles.statusLabel}>MindSlice Clock</span>
+          <strong className={styles.statusValue}>
+            {clockDisplay
+              ? `${clockDisplay.hours}:${clockDisplay.minutes}:${clockDisplay.seconds}`
+              : "clock fail"}
+          </strong>
+          <span className={styles.statusLabel}>
+            {clockDisplay
+              ? `${clockDisplay.visualStyle} · ${clockDisplay.transition}`
+              : "display invalid"}
+          </span>
         </div>
       </div>
 
@@ -224,6 +286,16 @@ export function LiveSceneView(props: LiveSceneViewProps) {
                   "Fără regulă de contaminare activă. Sistemul rulează pe câmpul live de bază."}
               </p>
             </article>
+            <article className={styles.engineProfileCard}>
+              <span>MindSlice Clock</span>
+              <ul>
+                <li>display: {clockDisplay ? `${clockDisplay.hours}:${clockDisplay.minutes}:${clockDisplay.seconds}` : "fail"}</li>
+                <li>format: {clockDisplay?.format ?? "none"}</li>
+                <li>stil: {clockDisplay?.visualStyle ?? "none"}</li>
+                <li>ancoră: {clockDisplay?.attentionAnchor ?? "none"}</li>
+                <li>tranziție: {clockDisplay?.transition ?? "none"}</li>
+              </ul>
+            </article>
           </div>
         </section>
       ) : null}
@@ -282,26 +354,52 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             <span>Motion</span>
             <strong>{current.motion}</strong>
           </article>
+          <article>
+            <span>Clock readability</span>
+            <strong>{clockDisplay ? clockDisplay.runtime.scores.readability.toFixed(2) : "0.00"}</strong>
+          </article>
         </div>
         <div className={styles.alphaDebugColumns}>
           <article className={styles.alphaDebugCard}>
-            <span>Thought Scene Engine</span>
+            <span>MindSlice Clock Runtime</span>
             <ul>
-              <li>
-                world state:{" "}
-                {thoughtScene.world.contamination.active ? "contaminated" : "base field"}
-              </li>
-              <li>scene graph: {thoughtScene.sceneGraph.entityCount} active entities</li>
-              <li>systems: composition / attention / typography / animation</li>
-              <li>timeline: {Math.round(thoughtScene.timeline.cycleDuration / 1000)}s per slice cycle</li>
+              <li>contaminare: {clockDisplay?.runtime.contaminationMode ?? "none"}</li>
+              <li>acceptată: {clockDisplay?.runtime.acceptedContamination ? "da" : "nu"}</li>
+              <li>iterații: {clockDisplay?.runtime.iterationCount ?? 0}</li>
+              <li>format: {clockDisplay?.format ?? "none"}</li>
+              <li>stil: {clockDisplay?.visualStyle ?? "none"}</li>
+              <li>ancoră: {clockDisplay?.attentionAnchor ?? "none"}</li>
+              <li>tranziție: {clockDisplay?.transition ?? "none"}</li>
+              <li>clock valid: {clockDisplay?.runtime.isValidClockState ? "da" : "nu"}</li>
+              <li>trece legea: {clockDisplay?.runtime.lawPassed ? "da" : "nu"}</li>
+              <li>τr: {clockDisplay ? clockDisplay.runtime.thresholds.readability.toFixed(2) : "0.00"}</li>
+              <li>τa: {clockDisplay ? clockDisplay.runtime.thresholds.attention.toFixed(2) : "0.00"}</li>
+              <li>τs: {clockDisplay ? clockDisplay.runtime.thresholds.stability.toFixed(2) : "0.00"}</li>
+              <li>τp: {clockDisplay ? clockDisplay.runtime.thresholds.perception.toFixed(2) : "0.00"}</li>
+              <li>readability: {clockDisplay ? clockDisplay.runtime.scores.readability.toFixed(2) : "0.00"}</li>
+              <li>attention: {clockDisplay ? clockDisplay.runtime.scores.attention.toFixed(2) : "0.00"}</li>
+              <li>stability: {clockDisplay ? clockDisplay.runtime.scores.stability.toFixed(2) : "0.00"}</li>
+              <li>perception: {clockDisplay ? clockDisplay.runtime.scores.perception.toFixed(2) : "0.00"}</li>
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
-            <span>Visual Thought Evaluation</span>
+            <span>Motorul scenei mentale</span>
+            <ul>
+              <li>
+                starea câmpului:{" "}
+                {thoughtScene.world.contamination.active ? "contaminat" : "câmp de bază"}
+              </li>
+              <li>graf de scenă: {thoughtScene.sceneGraph.entityCount} entități active</li>
+              <li>sisteme: compoziție / atenție / tipografie / animație</li>
+              <li>timeline: {Math.round(thoughtScene.timeline.cycleDuration / 1000)}s per ciclu</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Evaluarea gândului vizual</span>
             <ul>
               <li>sense: {current.triad.art.score.toFixed(2)} · {current.triad.art.label}</li>
-              <li>structure: {current.triad.design.score.toFixed(2)} · {current.triad.design.label}</li>
-              <li>attention: {current.triad.business.score.toFixed(2)} · {current.triad.business.label}</li>
+              <li>organizare internă: {current.triad.design.score.toFixed(2)} · {current.triad.design.label}</li>
+              <li>focalizare conceptuală: {current.triad.business.score.toFixed(2)} · {current.triad.business.label}</li>
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
@@ -324,159 +422,312 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
-            <span>System Modification</span>
+            <span>Modificarea sistemului</span>
             <ul>
-              <li>modifies system: {systemState.modifiesSystem ? "yes" : "no"}</li>
-              <li>source concept: {systemState.sourceConceptTitle ?? "none"}</li>
-              <li>source stage: {systemState.sourceStage ?? "none"}</li>
-              <li>preferred influence: {systemState.preferredInfluenceMode ?? "none"}</li>
-              <li>probability bias: {systemState.probabilityBias.toFixed(2)}</li>
-              <li>attention shift: {systemState.attentionShift.toFixed(2)}</li>
+              <li>modifică sistemul: {systemState.modifiesSystem ? "da" : "nu"}</li>
+              <li>concept sursă: {systemState.sourceConceptTitle ?? "niciunul"}</li>
+              <li>stadiu sursă: {systemState.sourceStage ?? "niciunul"}</li>
+              <li>influență preferată: {systemState.preferredInfluenceMode ?? "niciuna"}</li>
+              <li>bias de probabilitate: {systemState.probabilityBias.toFixed(2)}</li>
+              <li>deplasare a focalizării: {systemState.attentionShift.toFixed(2)}</li>
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
-            <span>System Probabilities</span>
+            <span>Probabilități de sistem</span>
             <ul>
-              <li>concept reuse: {systemState.probabilities.conceptReuseWeight.toFixed(2)}</li>
-              <li>semantic priority: {systemState.probabilities.semanticPriority.toFixed(2)}</li>
-              <li>convergence bias: {systemState.probabilities.convergenceBias.toFixed(2)}</li>
+              <li>reutilizare de concept: {systemState.probabilities.conceptReuseWeight.toFixed(2)}</li>
+              <li>prioritate semantică: {systemState.probabilities.semanticPriority.toFixed(2)}</li>
+              <li>bias de convergență: {systemState.probabilities.convergenceBias.toFixed(2)}</li>
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
-            <span>Contamination Pattern</span>
+            <span>Tipar de contaminare</span>
             <ul>
-              <li>preferred mode: {systemState.contaminationPattern.preferredMode ?? "none"}</li>
+              <li>mod preferat: {systemState.contaminationPattern.preferredMode ?? "niciunul"}</li>
               <li>resistance: {systemState.contaminationPattern.resistanceWeight.toFixed(2)}</li>
               <li>recurrence: {systemState.contaminationPattern.recurrenceWeight.toFixed(2)}</li>
               <li>
-                accepts external interference: {systemState.contaminationPattern.acceptsExternalInterference ? "yes" : "no"}
+                acceptă interferență externă: {systemState.contaminationPattern.acceptsExternalInterference ? "da" : "nu"}
               </li>
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
-            <span>Attention Distribution</span>
+            <span>Distribuția focalizării</span>
             <ul>
-              <li>anchor: {systemState.attentionDistribution.anchorWeight.toFixed(2)}</li>
-              <li>peripheral: {systemState.attentionDistribution.peripheralWeight.toFixed(2)}</li>
-              <li>memory field: {systemState.attentionDistribution.memoryFieldWeight.toFixed(2)}</li>
+              <li>ancoră: {systemState.attentionDistribution.anchorWeight.toFixed(2)}</li>
+              <li>periferie: {systemState.attentionDistribution.peripheralWeight.toFixed(2)}</li>
+              <li>câmp de memorie: {systemState.attentionDistribution.memoryFieldWeight.toFixed(2)}</li>
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
             <span>Main Loop</span>
             <ul>
-              <li>IDEA_SET size: {ideaSetMainLoop.totalIdeas}</li>
-              <li>active idea index: {ideaSetMainLoop.activeIdeaIndex + 1}</li>
-              <li>resolved ideas: {ideaSetMainLoop.resolvedCount}</li>
-              <li>iterating ideas: {ideaSetMainLoop.iteratingCount}</li>
-              <li>terminated ideas: {ideaSetMainLoop.terminatedCount}</li>
+              <li>mărime IDEA_SET: {ideaSetMainLoop.totalIdeas}</li>
+              <li>index idee activă: {ideaSetMainLoop.activeIdeaIndex + 1}</li>
+              <li>idei rezolvate: {ideaSetMainLoop.resolvedCount}</li>
+              <li>idei în iterație: {ideaSetMainLoop.iteratingCount}</li>
+              <li>idei terminate: {ideaSetMainLoop.terminatedCount}</li>
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
-            <span>Debugger Funnel</span>
+            <span>Pâlnia debuggerului</span>
             <ul>
               <li>total: {engineDebuggerReport.funnel.total}</li>
-              <li>iterating: {engineDebuggerReport.funnel.iterating}</li>
-              <li>resolved: {engineDebuggerReport.funnel.resolved}</li>
-              <li>pooled: {engineDebuggerReport.funnel.pooled}</li>
-              <li>stored: {engineDebuggerReport.funnel.stored}</li>
-              <li>canonical: {engineDebuggerReport.funnel.canonical}</li>
-              <li>system-changing: {engineDebuggerReport.funnel.systemChanging}</li>
-              <li>stored debug runs: {debugRunCount}</li>
+              <li>în iterație: {engineDebuggerReport.funnel.iterating}</li>
+              <li>rezolvate: {engineDebuggerReport.funnel.resolved}</li>
+              <li>în pool: {engineDebuggerReport.funnel.pooled}</li>
+              <li>stocate: {engineDebuggerReport.funnel.stored}</li>
+              <li>canonice: {engineDebuggerReport.funnel.canonical}</li>
+              <li>care schimbă sistemul: {engineDebuggerReport.funnel.systemChanging}</li>
+              <li>rulări debug stocate: {debugRunCount}</li>
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
             <span>Process Idea</span>
             <ul>
-              <li>status: {conceptProcess.status}</li>
-              <li>next action: {conceptProcess.nextAction}</li>
-              <li>iterations: {conceptProcess.iterationCount}</li>
-              <li>memory pressure: {conceptProcess.interpretation.memoryPressure.toFixed(2)}</li>
+              <li>stare: {conceptProcess.status}</li>
+              <li>acțiune următoare: {conceptProcess.nextAction}</li>
+              <li>iterații: {conceptProcess.iterationCount}</li>
+              <li>presiune de memorie: {conceptProcess.interpretation.memoryPressure.toFixed(2)}</li>
               <li>
-                contamination pressure: {conceptProcess.interpretation.contaminationPressure.toFixed(2)}
+                presiune de contaminare: {conceptProcess.interpretation.contaminationPressure.toFixed(2)}
               </li>
               <li>
-                contamination: {conceptProcess.contamination.requestedMode} {"->"}{" "}
+                contaminare: {conceptProcess.contamination.requestedMode} {"->"}{" "}
                 {conceptProcess.contamination.appliedMode}
               </li>
-              <li>accepted: {conceptProcess.contamination.accepted ? "yes" : "no"}</li>
-              <li>iteration focus: {conceptProcess.iteration.iterationFocus}</li>
-              <li>iteration weight: {conceptProcess.iteration.nextIterationWeight.toFixed(2)}</li>
-              <li>termination: {conceptProcess.terminationReason}</li>
+              <li>acceptată: {conceptProcess.contamination.accepted ? "da" : "nu"}</li>
+              <li>focalizare a iterației: {conceptProcess.iteration.iterationFocus}</li>
+              <li>greutate a iterației: {conceptProcess.iteration.nextIterationWeight.toFixed(2)}</li>
+              <li>terminare: {conceptProcess.terminationReason}</li>
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
-            <span>Concept Formation</span>
+            <span>Formarea conceptului</span>
             <ul>
-              <li>stage: {conceptCandidate.stage}</li>
+              <li>stadiu: {conceptCandidate.stage}</li>
               <li>semantic: {conceptCandidate.coherenceSignals.semantic.toFixed(2)}</li>
-              <li>visual: {conceptCandidate.coherenceSignals.visual.toFixed(2)}</li>
+              <li>vizual: {conceptCandidate.coherenceSignals.visual.toFixed(2)}</li>
               <li>cross-modal: {conceptCandidate.coherenceSignals.crossModal.toFixed(2)}</li>
-              <li>structure axis: {conceptCandidate.evaluationAxes.structure.toFixed(2)}</li>
-              <li>sense axis: {conceptCandidate.evaluationAxes.sense.toFixed(2)}</li>
-              <li>attention axis: {conceptCandidate.evaluationAxes.attention.toFixed(2)}</li>
-              <li>coherence axis: {conceptCandidate.evaluationAxes.coherence.toFixed(2)}</li>
-              <li>thesis: {conceptCandidate.thesisDraft}</li>
-              <li>visual identity: {conceptCandidate.visualIdentityDraft}</li>
+              <li>axa de organizare internă: {conceptCandidate.evaluationAxes.structure.toFixed(2)}</li>
+              <li>axa de sens: {conceptCandidate.evaluationAxes.sense.toFixed(2)}</li>
+              <li>axa de focalizare conceptuală: {conceptCandidate.evaluationAxes.attention.toFixed(2)}</li>
+              <li>axa de coerență: {conceptCandidate.evaluationAxes.coherence.toFixed(2)}</li>
+              <li>teză: {conceptCandidate.thesisDraft}</li>
+              <li>identitate vizuală: {conceptCandidate.visualIdentityDraft}</li>
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
-            <span>Concept Validation</span>
+            <span>Validarea conceptului</span>
             <ul>
-              <li>valid: {conceptValidation.isValidConcept ? "yes" : "no"}</li>
-              <li>status: {conceptValidation.resolutionStatus}</li>
-              <li>τs structure: {conceptValidation.thresholds.structure.toFixed(2)}</li>
-              <li>τm sense: {conceptValidation.thresholds.sense.toFixed(2)}</li>
-              <li>τa attention: {conceptValidation.thresholds.attention.toFixed(2)}</li>
-              <li>τc coherence: {conceptValidation.thresholds.coherence.toFixed(2)}</li>
+              <li>valid: {conceptValidation.isValidConcept ? "da" : "nu"}</li>
+              <li>stare: {conceptValidation.resolutionStatus}</li>
+              <li>τs organizare internă: {conceptValidation.thresholds.structure.toFixed(2)}</li>
+              <li>τm sens: {conceptValidation.thresholds.sense.toFixed(2)}</li>
+              <li>τa focalizare conceptuală: {conceptValidation.thresholds.attention.toFixed(2)}</li>
+              <li>τc coerență: {conceptValidation.thresholds.coherence.toFixed(2)}</li>
               <li>
-                semantic stability: {conceptValidation.scores.semanticStability.toFixed(2)}
+                stabilitate semantică: {conceptValidation.scores.semanticStability.toFixed(2)}
               </li>
               <li>
-                visual consistency: {conceptValidation.scores.visualConsistency.toFixed(2)}
+                consistență vizuală: {conceptValidation.scores.visualConsistency.toFixed(2)}
               </li>
               <li>
                 cross-modal: {conceptValidation.scores.crossModalAlignment.toFixed(2)}
               </li>
               <li>
-                contamination: {conceptValidation.scores.contaminationResolution.toFixed(2)}
+                metabolizare contaminare: {conceptValidation.scores.contaminationResolution.toFixed(2)}
               </li>
               <li>
-                dilemma resolution: {conceptValidation.scores.authorDilemmaResolution.toFixed(2)}
+                rezolvarea dilemei: {conceptValidation.scores.authorDilemmaResolution.toFixed(2)}
               </li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>MindSlice ColorTheory Runtime</span>
+            <ul>
+              <li>contaminare: {engineDebuggerReport.colorTheory.contaminationMode}</li>
+              <li>acceptată: {engineDebuggerReport.colorTheory.acceptedContamination ? "da" : "nu"}</li>
+              <li>iterații: {engineDebuggerReport.colorTheory.iterationCount}</li>
+              <li>terminat: {engineDebuggerReport.colorTheory.terminated ? "da" : "nu"}</li>
+              <li>motiv: {engineDebuggerReport.colorTheory.terminationReason}</li>
+              <li>paletă validă: {engineDebuggerReport.colorTheory.isValidPalette ? "da" : "nu"}</li>
+              <li>trece legea: {engineDebuggerReport.colorTheory.lawPassed ? "da" : "nu"}</li>
+              <li>τh: {engineDebuggerReport.colorTheory.thresholds.hueStructure.toFixed(2)}</li>
+              <li>τv: {engineDebuggerReport.colorTheory.thresholds.valueBalance.toFixed(2)}</li>
+              <li>τs: {engineDebuggerReport.colorTheory.thresholds.saturationControl.toFixed(2)}</li>
+              <li>τr: {engineDebuggerReport.colorTheory.thresholds.colorRelations.toFixed(2)}</li>
+              <li>τa: {engineDebuggerReport.colorTheory.thresholds.attentionImpact.toFixed(2)}</li>
+              <li>hue: {engineDebuggerReport.colorTheory.scores.hueStructure.toFixed(2)}</li>
+              <li>value: {engineDebuggerReport.colorTheory.scores.valueBalance.toFixed(2)}</li>
+              <li>saturation: {engineDebuggerReport.colorTheory.scores.saturationControl.toFixed(2)}</li>
+              <li>relations: {engineDebuggerReport.colorTheory.scores.colorRelations.toFixed(2)}</li>
+              <li>attention: {engineDebuggerReport.colorTheory.scores.attentionImpact.toFixed(2)}</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>MindSlice Scenario Runtime</span>
+            <ul>
+              <li>contaminare: {engineDebuggerReport.scenario.contaminationMode}</li>
+              <li>acceptată: {engineDebuggerReport.scenario.acceptedContamination ? "da" : "nu"}</li>
+              <li>iterații: {engineDebuggerReport.scenario.iterationCount}</li>
+              <li>terminat: {engineDebuggerReport.scenario.terminated ? "da" : "nu"}</li>
+              <li>motiv: {engineDebuggerReport.scenario.terminationReason}</li>
+              <li>scenariu valid: {engineDebuggerReport.scenario.isValidScenario ? "da" : "nu"}</li>
+              <li>trece legea: {engineDebuggerReport.scenario.lawPassed ? "da" : "nu"}</li>
+              <li>τc: {engineDebuggerReport.scenario.thresholds.conflict.toFixed(2)}</li>
+              <li>τt: {engineDebuggerReport.scenario.thresholds.tension.toFixed(2)}</li>
+              <li>τp: {engineDebuggerReport.scenario.thresholds.progression.toFixed(2)}</li>
+              <li>τm: {engineDebuggerReport.scenario.thresholds.meaning.toFixed(2)}</li>
+              <li>τa: {engineDebuggerReport.scenario.thresholds.attention.toFixed(2)}</li>
+              <li>conflict: {engineDebuggerReport.scenario.scores.conflict.toFixed(2)}</li>
+              <li>tension: {engineDebuggerReport.scenario.scores.tension.toFixed(2)}</li>
+              <li>progression: {engineDebuggerReport.scenario.scores.progression.toFixed(2)}</li>
+              <li>meaning: {engineDebuggerReport.scenario.scores.meaning.toFixed(2)}</li>
+              <li>attention: {engineDebuggerReport.scenario.scores.attention.toFixed(2)}</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>MindSlice ArtComposition Runtime</span>
+            <ul>
+              <li>contaminare: {engineDebuggerReport.artComposition.contaminationMode}</li>
+              <li>acceptată: {engineDebuggerReport.artComposition.acceptedContamination ? "da" : "nu"}</li>
+              <li>iterații: {engineDebuggerReport.artComposition.iterationCount}</li>
+              <li>terminat: {engineDebuggerReport.artComposition.terminated ? "da" : "nu"}</li>
+              <li>motiv: {engineDebuggerReport.artComposition.terminationReason}</li>
+              <li>compoziție validă: {engineDebuggerReport.artComposition.isValidComposition ? "da" : "nu"}</li>
+              <li>trece legea: {engineDebuggerReport.artComposition.lawPassed ? "da" : "nu"}</li>
+              <li>focus node: {engineDebuggerReport.artComposition.focusNode}</li>
+              <li>τu: {engineDebuggerReport.artComposition.thresholds.unity.toFixed(2)}</li>
+              <li>τb: {engineDebuggerReport.artComposition.thresholds.balance.toFixed(2)}</li>
+              <li>τr: {engineDebuggerReport.artComposition.thresholds.rhythm.toFixed(2)}</li>
+              <li>τm: {engineDebuggerReport.artComposition.thresholds.movement.toFixed(2)}</li>
+              <li>τc: {engineDebuggerReport.artComposition.thresholds.contrast.toFixed(2)}</li>
+              <li>τp: {engineDebuggerReport.artComposition.thresholds.proportion.toFixed(2)}</li>
+              <li>τf: {engineDebuggerReport.artComposition.thresholds.focus.toFixed(2)}</li>
+              <li>unity: {engineDebuggerReport.artComposition.scores.unity.toFixed(2)}</li>
+              <li>balance: {engineDebuggerReport.artComposition.scores.balance.toFixed(2)}</li>
+              <li>rhythm: {engineDebuggerReport.artComposition.scores.rhythm.toFixed(2)}</li>
+              <li>movement: {engineDebuggerReport.artComposition.scores.movement.toFixed(2)}</li>
+              <li>contrast: {engineDebuggerReport.artComposition.scores.contrast.toFixed(2)}</li>
+              <li>proportion: {engineDebuggerReport.artComposition.scores.proportion.toFixed(2)}</li>
+              <li>focus: {engineDebuggerReport.artComposition.scores.focus.toFixed(2)}</li>
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
             <span>Concept Pool</span>
             <ul>
-              <li>pooled concepts: {conceptPoolCount}</li>
-              <li>latest pooled concept: {latestPoolConceptTitle ?? "none"}</li>
-              <li>pool role: staging area before memory persistence</li>
+              <li>concepte în pool: {conceptPoolCount}</li>
+              <li>ultimul concept din pool: {latestPoolConceptTitle ?? "niciunul"}</li>
+              <li>rolul pool-ului: zonă de trecere înainte de persistența în memorie</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Color Pool</span>
+            <ul>
+              <li>palete în pool: {colorPoolCount}</li>
+              <li>ultima paletă: {latestColorPoolTitle ?? "niciuna"}</li>
+              <li>rolul pool-ului: zonă de filtrare cromatică înainte de memorie</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Scenario Pool</span>
+            <ul>
+              <li>scenarii în pool: {scenarioPoolCount}</li>
+              <li>ultimul scenariu: {latestScenarioPoolTitle ?? "niciunul"}</li>
+              <li>rolul pool-ului: zonă de filtrare narativă înainte de memorie</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Art Composition Pool</span>
+            <ul>
+              <li>compoziții în pool: {artCompositionPoolCount}</li>
+              <li>ultima compoziție: {latestArtCompositionPoolTitle ?? "niciuna"}</li>
+              <li>rolul pool-ului: zonă de filtrare compozițională înainte de memorie</li>
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
             <span>Canon</span>
             <ul>
-              <li>canon concepts: {canonCount}</li>
-              <li>primary canon: {primaryCanonTitle ?? "none"}</li>
-              <li>canon role: active doctrine for system modification</li>
+              <li>concepte canonice: {canonCount}</li>
+              <li>canon principal: {primaryCanonTitle ?? "niciunul"}</li>
+              <li>rolul canonului: doctrină activă pentru modificarea sistemului</li>
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
-            <span>Concept Memory</span>
+            <span>Color Canon</span>
             <ul>
-              <li>stored concepts: {conceptMemoryCount}</li>
-              <li>resolved concepts: {resolvedConceptCount}</li>
-              <li>latest concept: {latestConceptTitle ?? "none"}</li>
-              <li>
-                memory mode: local alpha accumulation
-              </li>
+              <li>palete canonice: {colorCanonCount}</li>
+              <li>canon cromatic principal: {primaryColorCanonTitle ?? "niciunul"}</li>
+              <li>rolul canonului: doctrină cromatică activă pentru percepție</li>
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
-            <span>Concept Promotion</span>
+            <span>Narrative Canon</span>
             <ul>
-              <li>current promoted stage: {promotionStatus}</li>
-              <li>canonical ready: {canPromoteToCanonical ? "yes" : "no"}</li>
+              <li>scenarii canonice: {narrativeCanonCount}</li>
+              <li>canon narativ principal: {primaryNarrativeCanonTitle ?? "niciunul"}</li>
+              <li>rolul canonului: doctrină narativă activă pentru structură</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Art Canon</span>
+            <ul>
+              <li>compoziții canonice: {artCanonCount}</li>
+              <li>canon compozițional principal: {primaryArtCanonTitle ?? "niciuna"}</li>
+              <li>rolul canonului: doctrină compozițională activă pentru percepție</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Memoria conceptelor</span>
+            <ul>
+              <li>concepte stocate: {conceptMemoryCount}</li>
+              <li>concepte rezolvate: {resolvedConceptCount}</li>
+              <li>ultimul concept: {latestConceptTitle ?? "niciunul"}</li>
+              <li>mod de memorie: acumulare locală alpha</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Memoria culorilor</span>
+            <ul>
+              <li>palete stocate: {colorMemoryCount}</li>
+              <li>palete rezolvate: {resolvedColorCount}</li>
+              <li>ultima paletă: {latestColorTitle ?? "niciuna"}</li>
+              <li>mod de memorie: acumulare locală alpha</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Memoria scenariilor</span>
+            <ul>
+              <li>scenarii stocate: {storyMemoryCount}</li>
+              <li>scenarii rezolvate: {resolvedScenarioCount}</li>
+              <li>ultimul scenariu: {latestScenarioTitle ?? "niciunul"}</li>
+              <li>mod de memorie: acumulare locală alpha</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Memoria compozițiilor</span>
+            <ul>
+              <li>compoziții stocate: {artMemoryCount}</li>
+              <li>compoziții rezolvate: {resolvedArtCount}</li>
+              <li>ultima compoziție: {latestArtTitle ?? "niciuna"}</li>
+              <li>mod de memorie: acumulare locală alpha</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Clock Memory</span>
+            <ul>
+              <li>display-uri stocate: {clockMemoryCount}</li>
+              <li>ultimul display: {latestClockTime ?? "niciunul"}</li>
+              <li>output: {clockDisplay?.outputVisual ?? "niciun output activ"}</li>
+              <li>mod de memorie: acumulare locală alpha</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Promovarea conceptului</span>
+            <ul>
+              <li>stadiul curent promovat: {promotionStatus}</li>
+              <li>pregătit pentru canon: {canPromoteToCanonical ? "da" : "nu"}</li>
               {promotionNotes.map((note) => (
                 <li key={note}>{note}</li>
               ))}
@@ -485,7 +736,7 @@ export function LiveSceneView(props: LiveSceneViewProps) {
         </div>
         <div className={styles.alphaDebugColumns}>
           <article className={styles.alphaDebugCard}>
-            <span>Process Notes</span>
+            <span>Note de proces</span>
             <ul>
               {conceptProcess.notes.map((note) => (
                 <li key={note}>{note}</li>
@@ -493,7 +744,7 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
-            <span>System Notes</span>
+            <span>Note de sistem</span>
             <ul>
               {systemState.notes.map((note) => (
                 <li key={note}>{note}</li>
@@ -501,7 +752,7 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
-            <span>Validation Notes</span>
+            <span>Note de validare</span>
             <ul>
               {conceptValidation.notes.map((note) => (
                 <li key={note}>{note}</li>
@@ -509,35 +760,113 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
-            <span>Failure Analysis</span>
+            <span>Color Theory Notes</span>
+            <ul>
+              <li>{engineDebuggerReport.colorTheory.interpretation}</li>
+              <li>{engineDebuggerReport.colorTheory.outputText}</li>
+              <li>{engineDebuggerReport.colorTheory.outputVisual}</li>
+              <li>{engineDebuggerReport.colorTheory.lawNote}</li>
+              {engineDebuggerReport.colorTheory.systemStateUpdate ? (
+                <>
+                  <li>
+                    probability update: reuse {engineDebuggerReport.colorTheory.systemStateUpdate.probabilities.conceptReuseWeight.toFixed(2)} / semantic {engineDebuggerReport.colorTheory.systemStateUpdate.probabilities.semanticPriority.toFixed(2)} / convergence {engineDebuggerReport.colorTheory.systemStateUpdate.probabilities.convergenceBias.toFixed(2)}
+                  </li>
+                  <li>
+                    hierarchy update: anchor {engineDebuggerReport.colorTheory.systemStateUpdate.hierarchyRules.anchorWeight.toFixed(2)} / periphery {engineDebuggerReport.colorTheory.systemStateUpdate.hierarchyRules.peripheralWeight.toFixed(2)} / bias {engineDebuggerReport.colorTheory.systemStateUpdate.hierarchyRules.hierarchyBias.toFixed(2)}
+                  </li>
+                  <li>
+                    attention update: focus {engineDebuggerReport.colorTheory.systemStateUpdate.attentionBehavior.focusWeight.toFixed(2)} / memory {engineDebuggerReport.colorTheory.systemStateUpdate.attentionBehavior.memoryFieldWeight.toFixed(2)} / contamination {engineDebuggerReport.colorTheory.systemStateUpdate.attentionBehavior.contaminationLift.toFixed(2)}
+                  </li>
+                </>
+              ) : null}
+              {engineDebuggerReport.colorTheory.notes.slice(0, 6).map((note) => (
+                <li key={note}>{note}</li>
+              ))}
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Scenario Notes</span>
+            <ul>
+              <li>{engineDebuggerReport.scenario.interpretation}</li>
+              <li>{engineDebuggerReport.scenario.outputText}</li>
+              <li>{engineDebuggerReport.scenario.outputStructure}</li>
+              <li>{engineDebuggerReport.scenario.lawNote}</li>
+              {engineDebuggerReport.scenario.systemStateUpdate ? (
+                <>
+                  <li>
+                    conflict update: escalation {engineDebuggerReport.scenario.systemStateUpdate.conflictPatterns.escalationWeight.toFixed(2)}
+                  </li>
+                  <li>
+                    tension update: suspense {engineDebuggerReport.scenario.systemStateUpdate.tensionBehavior.suspenseWeight.toFixed(2)} / retention {engineDebuggerReport.scenario.systemStateUpdate.tensionBehavior.retentionWeight.toFixed(2)}
+                  </li>
+                  <li>
+                    story update: irreversibility {engineDebuggerReport.scenario.systemStateUpdate.storyProbabilities.irreversibilityBias.toFixed(2)} / symbolic {engineDebuggerReport.scenario.systemStateUpdate.storyProbabilities.symbolicDepth.toFixed(2)} / sequence {engineDebuggerReport.scenario.systemStateUpdate.storyProbabilities.sequenceBias.toFixed(2)}
+                  </li>
+                </>
+              ) : null}
+              {engineDebuggerReport.scenario.notes.slice(0, 6).map((note) => (
+                <li key={note}>{note}</li>
+              ))}
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Art Composition Notes</span>
+            <ul>
+              <li>{engineDebuggerReport.artComposition.interpretation}</li>
+              <li>{engineDebuggerReport.artComposition.outputText}</li>
+              <li>{engineDebuggerReport.artComposition.outputVisual}</li>
+              <li>{engineDebuggerReport.artComposition.lawNote}</li>
+              {engineDebuggerReport.artComposition.systemStateUpdate ? (
+                <>
+                  <li>
+                    unity update: cohesion {engineDebuggerReport.artComposition.systemStateUpdate.unityPatterns.cohesionWeight.toFixed(2)}
+                  </li>
+                  <li>
+                    balance update: redistribution {engineDebuggerReport.artComposition.systemStateUpdate.balanceLogic.redistributionWeight.toFixed(2)}
+                  </li>
+                  <li>
+                    attention update: focus {engineDebuggerReport.artComposition.systemStateUpdate.attentionBehavior.focusWeight.toFixed(2)} / path {engineDebuggerReport.artComposition.systemStateUpdate.attentionBehavior.pathWeight.toFixed(2)}
+                  </li>
+                  <li>
+                    proportion update: hierarchy {engineDebuggerReport.artComposition.systemStateUpdate.proportionRules.hierarchyWeight.toFixed(2)}
+                  </li>
+                </>
+              ) : null}
+              {engineDebuggerReport.artComposition.notes.slice(0, 6).map((note) => (
+                <li key={note}>{note}</li>
+              ))}
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Analiza eșecului</span>
             <ul>
               <li>{engineDebuggerReport.failureAnalysis.currentBlocker}</li>
               <li>{engineDebuggerReport.failureAnalysis.topFailurePattern}</li>
-              <li>next likely promotion: {engineDebuggerReport.failureAnalysis.nextLikelyPromotion}</li>
+              <li>următoarea promovare probabilă: {engineDebuggerReport.failureAnalysis.nextLikelyPromotion}</li>
               <li>{engineDebuggerReport.failureAnalysis.systemPressureSummary}</li>
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
-            <span>Comparative Runs</span>
+            <span>Rulări comparative</span>
             <ul>
               {comparativeDelta ? (
                 <>
-                  <li>resolved delta: {comparativeDelta.resolvedDelta}</li>
-                  <li>pooled delta: {comparativeDelta.pooledDelta}</li>
-                  <li>canonical delta: {comparativeDelta.canonicalDelta}</li>
+                  <li>delta rezolvate: {comparativeDelta.resolvedDelta}</li>
+                  <li>delta pool: {comparativeDelta.pooledDelta}</li>
+                  <li>delta canonice: {comparativeDelta.canonicalDelta}</li>
                 </>
               ) : (
-                <li>No previous persisted run yet.</li>
+                <li>Nu există încă o rulare anterioară persistată.</li>
               )}
               {engineDebuggerReport.comparativeRuns.slice(0, 4).map((run) => (
                 <li key={run.ideaDirection}>
-                  {run.ideaDirection}: {run.status} / strength {run.validationStrength.toFixed(2)} / blocker {run.blocker}
+                  {run.ideaDirection}: {run.status} / forță {run.validationStrength.toFixed(2)} / blocaj {run.blocker}
                 </li>
               ))}
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
-            <span>Main Loop Notes</span>
+            <span>Note Main Loop</span>
             <ul>
               {ideaSetMainLoop.notes.map((note) => (
                 <li key={note}>{note}</li>
@@ -545,7 +874,7 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
-            <span>Automatic Trace</span>
+            <span>Trasare automată</span>
             <div className={styles.modeTabs}>
               <button
                 type="button"
@@ -668,6 +997,39 @@ export function LiveSceneView(props: LiveSceneViewProps) {
                 <li>negative space</li>
               </ul>
             </div>
+            {clockDisplay ? (
+              <div
+                className={`${styles.clockField} ${liveInfluenceMode ? styles[`clockField${liveInfluenceMode}`] : ""}`}
+                style={
+                  {
+                    "--clock-accent": current.visual.accent,
+                    "--clock-ink": current.visual.ink,
+                    "--clock-background": current.visual.background,
+                  } as React.CSSProperties
+                }
+              >
+                <span className={styles.layerMarker}>LAYER · Time Field</span>
+                <span className={styles.clockMeta}>
+                  {clockDisplay.format} · {clockDisplay.visualStyle}
+                </span>
+                <div className={styles.clockDigits} aria-label="MindSlice Clock display">
+                  <span className={styles.clockHours}>{clockDisplay.hours}</span>
+                  <span className={styles.clockSeparator}>:</span>
+                  <span className={styles.clockMinutes}>{clockDisplay.minutes}</span>
+                  <span className={styles.clockSeparator}>:</span>
+                  <span className={styles.clockSeconds}>{clockDisplay.seconds}</span>
+                </div>
+                <div className={styles.clockEcho} aria-hidden="true">
+                  <span>{clockDisplay.hours}</span>
+                  <span>{clockDisplay.minutes}</span>
+                  <span>{clockDisplay.seconds}</span>
+                </div>
+                <div className={styles.clockSignalRow}>
+                  <span>anchor · {clockDisplay.attentionAnchor}</span>
+                  <span>transition · {clockDisplay.transition}</span>
+                </div>
+              </div>
+            ) : null}
             <div className={`${styles.relationField} ${liveInfluenceMode ? styles[`relationField${liveInfluenceMode}`] : ""}`} aria-hidden="true">
               <span className={styles.layerMarker}>LAYER · Relation Field</span>
               <span className={`${styles.axisLine} ${styles.axisPrimary}`} />
@@ -810,26 +1172,26 @@ export function LiveSceneView(props: LiveSceneViewProps) {
               ) : null}
             </article>
             <article>
-              <span>Mode</span>
+              <span>Mod</span>
               <strong>{interference.influenceMode}</strong>
             </article>
             <article>
-              <span>Sense</span>
+              <span>Sens</span>
               <strong>{interference.senseWeight.toFixed(2)}</strong>
             </article>
             <article>
-              <span>Structure</span>
+              <span>Organizare internă</span>
               <strong>{interference.structureWeight.toFixed(2)}</strong>
             </article>
             <article>
-              <span>Attention</span>
+              <span>Focalizare conceptuală</span>
               <strong>{interference.attentionWeight.toFixed(2)}</strong>
             </article>
           </div>
           {interference.excerpt ? <p className={styles.interferenceExcerpt}>{interference.excerpt}</p> : null}
           {interference.aiResponseText?.trim() ? (
             <div className={styles.blogAiResponse}>
-              <span className={styles.blogAiResponseLabel}>Artist AI response</span>
+              <span className={styles.blogAiResponseLabel}>Răspuns Artist AI</span>
               <p>{interference.aiResponseText}</p>
             </div>
           ) : null}

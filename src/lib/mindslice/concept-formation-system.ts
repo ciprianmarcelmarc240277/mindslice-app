@@ -1,4 +1,7 @@
+import { processCompositionIdea } from "@/lib/mindslice/concept-art-composition-system";
 import { buildConceptOutput } from "@/lib/mindslice/concept-output-system";
+import { buildConceptPalette } from "@/lib/mindslice/concept-color-theory-system";
+import { processNarrativeIdea } from "@/lib/mindslice/concept-scenario-system";
 import type { ThoughtSceneEngineState } from "@/lib/mindslice/thought-scene-engine";
 import type {
   ConceptCandidate,
@@ -314,12 +317,28 @@ export function buildConceptCandidate(
   const thesis = buildThesis(current);
   const tension = buildTension(current, interference);
   const resolutionClaim = buildResolutionClaim(current, interference, stage);
+  const palette = buildConceptPalette(current, interference, thoughtMemory);
+  const scenario = processNarrativeIdea({
+    current,
+    history,
+    interference,
+    thoughtMemory,
+  });
+  const artComposition = processCompositionIdea({
+    current,
+    palette,
+    interference,
+    thoughtMemory,
+  });
   const expression = {
     textSignature: dominantFragments.join(" / "),
     visualSignature: buildVisualIdentityDraft(current, thoughtScene),
     compositionMode: thoughtScene.world.contamination.active ? "contaminated_field" : "base_field",
     typographyMode: current.visual.mode,
     motionMode: current.motion,
+    scenario,
+    artComposition,
+    palette,
     dominantFragments,
     dominantKeywords,
   } as const;
@@ -365,6 +384,9 @@ export function buildConceptCandidate(
       validationNotes: [
         `${current.direction} rulează pe ${thoughtScene.world.contamination.active ? "câmp contaminat" : "câmp de bază"}.`,
         `Scene graph păstrează ${thoughtScene.sceneGraph.entityCount} entități active.`,
+        `Scenariul menține conflictul ${scenario.coreConflict} și progresia ${scenario.progression[0] ?? "încă instabilă"}.`,
+        `Paleta activă este condusă de ${palette.dominant}, cu accent pe ${palette.accent}.`,
+        `Compoziția activează focusul ${artComposition.focusNode} și ritmul ${artComposition.rhythmMap[0] ?? "încă instabil"}.`,
         interference
           ? `Interferența ${interference.influenceMode} este integrată în candidatul de concept.`
           : "Candidatul de concept este încă necontaminat extern.",

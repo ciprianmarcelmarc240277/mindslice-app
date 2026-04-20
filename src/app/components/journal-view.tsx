@@ -213,13 +213,13 @@ export function JournalView(props: JournalViewProps) {
                 <p className={styles.blogContentPreview}>{getPublishedEntryPreview(entry)}</p>
                 {entry.ai_response_text?.trim() ? (
                   <div className={styles.blogAiResponse}>
-                    <span className={styles.blogAiResponseLabel}>Artist AI response</span>
+                    <span className={styles.blogAiResponseLabel}>Răspuns Artist AI</span>
                     <p>{entry.ai_response_text}</p>
                   </div>
                 ) : null}
                 <strong>
-                  {entry.influence_mode} · sense {entry.sense_weight.toFixed(2)} · structure{" "}
-                  {entry.structure_weight.toFixed(2)} · attention {entry.attention_weight.toFixed(2)}
+                  {entry.influence_mode} · sens {entry.sense_weight.toFixed(2)} · organizare internă{" "}
+                  {entry.structure_weight.toFixed(2)} · focalizare conceptuală {entry.attention_weight.toFixed(2)}
                 </strong>
               </article>
             ))
@@ -254,19 +254,19 @@ export function JournalView(props: JournalViewProps) {
               <strong>{interference.title}</strong>
             </article>
             <article>
-              <span>Mode</span>
+              <span>Mod</span>
               <strong>{interference.influenceMode}</strong>
             </article>
             <article>
-              <span>Sense</span>
+              <span>Sens</span>
               <strong>{interference.senseWeight.toFixed(2)}</strong>
             </article>
             <article>
-              <span>Structure</span>
+              <span>Organizare internă</span>
               <strong>{interference.structureWeight.toFixed(2)}</strong>
             </article>
             <article>
-              <span>Attention</span>
+              <span>Focalizare conceptuală</span>
               <strong>{interference.attentionWeight.toFixed(2)}</strong>
             </article>
           </div>

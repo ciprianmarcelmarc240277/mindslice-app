@@ -215,6 +215,45 @@ export type ConceptExpression = {
   compositionMode: string;
   typographyMode: string;
   motionMode: string;
+  scenario: {
+    coreConflict: string;
+    characterDrive: string;
+    stakes: string;
+    turningPoints: string[];
+    tensionCurve: string[];
+    progression: string[];
+    resolution: string;
+    attentionFlow: string[];
+    outputText: string;
+    outputStructure: string;
+    runtime: NarrativeScenarioRuntime;
+  };
+  artComposition: {
+    unityMap: string[];
+    balanceMap: string[];
+    rhythmMap: string[];
+    movementMap: string[];
+    contrastMap: string[];
+    proportionMap: string[];
+    focusNode: string;
+    outputText: string;
+    outputVisual: string;
+    runtime: ArtCompositionRuntime;
+  };
+  palette: {
+    dominant: string;
+    secondary: string;
+    accent: string;
+    supportTones: string[];
+    hueMap: string[];
+    valueMap: string[];
+    saturationMap: string[];
+    attentionMap: string[];
+    contaminationTrace: string[];
+    outputText: string;
+    outputVisual: string;
+    runtime: ColorTheoryRuntime;
+  };
   dominantFragments: string[];
   dominantKeywords: string[];
 };
@@ -325,8 +364,97 @@ export type ConceptValidationResult = {
     crossModalAlignment: number;
     contaminationResolution: number;
     authorDilemmaResolution: number;
+    conflict: number;
+    tension: number;
+    progression: number;
+    meaning: number;
+    narrativeAttention: number;
+    unity: number;
+    balance: number;
+    rhythm: number;
+    movement: number;
+    contrast: number;
+    proportion: number;
+    focus: number;
+    hueStructure: number;
+    valueBalance: number;
+    saturationControl: number;
+    colorRelations: number;
+    attentionImpact: number;
   };
   notes: string[];
+};
+
+export type NarrativeScenarioThresholds = {
+  conflict: number;
+  tension: number;
+  progression: number;
+  meaning: number;
+  attention: number;
+};
+
+export type NarrativeScenarioScores = {
+  conflict: number;
+  tension: number;
+  progression: number;
+  meaning: number;
+  attention: number;
+};
+
+export type NarrativeScenarioRuntime = {
+  interpretation: string;
+  contaminationMode: ContaminationType;
+  acceptedContamination: boolean;
+  iterationCount: number;
+  terminated: boolean;
+  terminationReason: "threshold_reached" | "rejected_contamination" | "iteration_limit";
+  thresholds: NarrativeScenarioThresholds;
+  scores: NarrativeScenarioScores;
+  isValidScenario: boolean;
+  lawPassed: boolean;
+  lawNote: string;
+  notes: string[];
+};
+
+export type ClockThresholds = {
+  readability: number;
+  attention: number;
+  stability: number;
+  perception: number;
+};
+
+export type ClockScores = {
+  readability: number;
+  attention: number;
+  stability: number;
+  perception: number;
+};
+
+export type ClockRuntime = {
+  interpretation: string;
+  contaminationMode: ContaminationType;
+  acceptedContamination: boolean;
+  iterationCount: number;
+  terminated: boolean;
+  terminationReason: "threshold_reached" | "rejected_contamination" | "iteration_limit";
+  thresholds: ClockThresholds;
+  scores: ClockScores;
+  isValidClockState: boolean;
+  lawPassed: boolean;
+  lawNote: string;
+  notes: string[];
+};
+
+export type ClockDisplayState = {
+  hours: string;
+  minutes: string;
+  seconds: string;
+  format: "24h" | "12h";
+  visualStyle: string;
+  attentionAnchor: string;
+  transition: string;
+  outputVisual: string;
+  runtime: ClockRuntime;
 };
 
 export type ConceptMemoryEntry = {
@@ -351,6 +479,232 @@ export type CanonEntry = {
   id: string;
   concept: ConceptState;
   validation: ConceptValidationResult;
+  canonizedAt: string;
+  lastActivatedAt: string;
+  lineage: {
+    siblingCanonIds: string[];
+    sourceIdeaCanonCount: number;
+  };
+  influenceWeight: number;
+};
+
+export type ColorPaletteState = ConceptExpression["palette"];
+
+export type ColorTheoryThresholds = {
+  hueStructure: number;
+  valueBalance: number;
+  saturationControl: number;
+  colorRelations: number;
+  attentionImpact: number;
+};
+
+export type ColorTheoryScores = {
+  hueStructure: number;
+  valueBalance: number;
+  saturationControl: number;
+  colorRelations: number;
+  attentionImpact: number;
+};
+
+export type ColorTheoryRuntime = {
+  interpretation: string;
+  contaminationMode: ContaminationType;
+  acceptedContamination: boolean;
+  iterationCount: number;
+  terminated: boolean;
+  terminationReason: "threshold_reached" | "rejected_contamination" | "iteration_limit";
+  thresholds: ColorTheoryThresholds;
+  scores: ColorTheoryScores;
+  isValidPalette: boolean;
+  lawPassed: boolean;
+  lawNote: string;
+  notes: string[];
+};
+
+export type ArtCompositionThresholds = {
+  unity: number;
+  balance: number;
+  rhythm: number;
+  movement: number;
+  contrast: number;
+  proportion: number;
+  focus: number;
+};
+
+export type ArtCompositionScores = {
+  unity: number;
+  balance: number;
+  rhythm: number;
+  movement: number;
+  contrast: number;
+  proportion: number;
+  focus: number;
+};
+
+export type ArtCompositionRuntime = {
+  interpretation: string;
+  contaminationMode: ContaminationType;
+  acceptedContamination: boolean;
+  iterationCount: number;
+  terminated: boolean;
+  terminationReason: "threshold_reached" | "rejected_contamination" | "iteration_limit";
+  thresholds: ArtCompositionThresholds;
+  scores: ArtCompositionScores;
+  isValidComposition: boolean;
+  lawPassed: boolean;
+  lawNote: string;
+  notes: string[];
+};
+
+export type ColorPoolEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  palette: ColorPaletteState;
+  validation: {
+    hueStructure: number;
+    valueBalance: number;
+    saturationControl: number;
+    colorRelations: number;
+    attentionImpact: number;
+  };
+  pooledAt: string;
+  lastSeenAt: string;
+  source: "main_loop" | "active_runtime";
+};
+
+export type ArtCompositionState = ConceptExpression["artComposition"];
+export type NarrativeScenarioState = ConceptExpression["scenario"];
+
+export type ScenarioPoolEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  scenario: NarrativeScenarioState;
+  validation: {
+    conflict: number;
+    tension: number;
+    progression: number;
+    meaning: number;
+    attention: number;
+  };
+  pooledAt: string;
+  lastSeenAt: string;
+  source: "main_loop" | "active_runtime";
+};
+
+export type StoryMemoryEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  scenario: NarrativeScenarioState;
+  validation: ScenarioPoolEntry["validation"];
+  storedAt: string;
+  lastSeenAt: string;
+};
+
+export type NarrativeCanonEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  scenario: NarrativeScenarioState;
+  validation: StoryMemoryEntry["validation"];
+  canonizedAt: string;
+  lastActivatedAt: string;
+  lineage: {
+    siblingCanonIds: string[];
+    sourceIdeaCanonCount: number;
+  };
+  influenceWeight: number;
+};
+
+export type ClockMemoryEntry = {
+  id: string;
+  timeKey: string;
+  display: ClockDisplayState;
+  storedAt: string;
+  lastSeenAt: string;
+  source: "active_runtime";
+};
+
+export type ArtCompositionPoolEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  composition: ArtCompositionState;
+  validation: {
+    unity: number;
+    balance: number;
+    rhythm: number;
+    movement: number;
+    contrast: number;
+    proportion: number;
+    focus: number;
+  };
+  pooledAt: string;
+  lastSeenAt: string;
+  source: "main_loop" | "active_runtime";
+};
+
+export type ArtMemoryEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  composition: ArtCompositionState;
+  validation: ArtCompositionPoolEntry["validation"];
+  storedAt: string;
+  lastSeenAt: string;
+};
+
+export type ArtCanonEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  composition: ArtCompositionState;
+  validation: ArtMemoryEntry["validation"];
+  canonizedAt: string;
+  lastActivatedAt: string;
+  lineage: {
+    siblingCanonIds: string[];
+    sourceIdeaCanonCount: number;
+  };
+  influenceWeight: number;
+};
+
+export type ColorMemoryEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  palette: ColorPaletteState;
+  validation: ColorPoolEntry["validation"];
+  storedAt: string;
+  lastSeenAt: string;
+};
+
+export type ColorCanonEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  palette: ColorPaletteState;
+  validation: ColorPoolEntry["validation"];
   canonizedAt: string;
   lastActivatedAt: string;
   lineage: {
@@ -503,6 +857,105 @@ export type EngineFailureAnalysis = {
 export type EngineDebuggerReport = {
   trace: EngineDebugEvent[];
   activeTrace: EngineDebugEvent[];
+  colorTheory: {
+    interpretation: string;
+    contaminationMode: ContaminationType;
+    acceptedContamination: boolean;
+    iterationCount: number;
+    terminated: boolean;
+    terminationReason: string;
+    isValidPalette: boolean;
+    lawPassed: boolean;
+    lawNote: string;
+    thresholds: ColorTheoryThresholds;
+    scores: ColorTheoryScores;
+    outputText: string;
+    outputVisual: string;
+    systemStateUpdate: {
+      probabilities: {
+        conceptReuseWeight: number;
+        semanticPriority: number;
+        convergenceBias: number;
+      };
+      hierarchyRules: {
+        anchorWeight: number;
+        peripheralWeight: number;
+        hierarchyBias: number;
+      };
+      attentionBehavior: {
+        focusWeight: number;
+        memoryFieldWeight: number;
+        contaminationLift: number;
+      };
+      notes: string[];
+    } | null;
+    notes: string[];
+  };
+  artComposition: {
+    interpretation: string;
+    contaminationMode: ContaminationType;
+    acceptedContamination: boolean;
+    iterationCount: number;
+    terminated: boolean;
+    terminationReason: string;
+    isValidComposition: boolean;
+    lawPassed: boolean;
+    lawNote: string;
+    thresholds: ArtCompositionThresholds;
+    scores: ArtCompositionScores;
+    focusNode: string;
+    outputText: string;
+    outputVisual: string;
+    systemStateUpdate: {
+      unityPatterns: {
+        cohesionWeight: number;
+      };
+      balanceLogic: {
+        redistributionWeight: number;
+      };
+      attentionBehavior: {
+        focusWeight: number;
+        pathWeight: number;
+      };
+      proportionRules: {
+        hierarchyWeight: number;
+      };
+      notes: string[];
+    } | null;
+    notes: string[];
+  };
+  scenario: {
+    interpretation: string;
+    contaminationMode: ContaminationType;
+    acceptedContamination: boolean;
+    iterationCount: number;
+    terminated: boolean;
+    terminationReason: string;
+    isValidScenario: boolean;
+    lawPassed: boolean;
+    lawNote: string;
+    thresholds: NarrativeScenarioThresholds;
+    scores: NarrativeScenarioScores;
+    coreConflict: string;
+    outputText: string;
+    outputStructure: string;
+    systemStateUpdate: {
+      conflictPatterns: {
+        escalationWeight: number;
+      };
+      tensionBehavior: {
+        suspenseWeight: number;
+        retentionWeight: number;
+      };
+      storyProbabilities: {
+        irreversibilityBias: number;
+        symbolicDepth: number;
+        sequenceBias: number;
+      };
+      notes: string[];
+    } | null;
+    notes: string[];
+  };
   timeline: Array<{
     label: string;
     sequence: number;

@@ -95,6 +95,10 @@
   border: 1px solid rgba(24, 20, 17, 0.08);
 }
 
+.section :global(.visual) {
+  margin-top: 14px;
+}
+
 .artifactBox pre {
   margin: 0;
   white-space: pre-wrap;
