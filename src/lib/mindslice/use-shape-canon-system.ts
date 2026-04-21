@@ -1,29 +1,29 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { isShapeCanonical } from "@/lib/mindslice/concept-shape-theory-system";
 import {
-  ART_CANON_STORAGE_KEY,
-  ART_CANON_UPDATED_EVENT,
-  readArtCanon,
-  writeArtCanon,
-} from "@/lib/mindslice/art-canon-storage";
+  readShapeCanon,
+  SHAPE_CANON_STORAGE_KEY,
+  SHAPE_CANON_UPDATED_EVENT,
+  writeShapeCanon,
+} from "@/lib/mindslice/shape-canon-storage";
 import {
   loadPersistedMindsliceState,
   persistMindsliceState,
 } from "@/lib/mindslice/mindslice-state-persistence";
-import { isArtCanonical } from "@/lib/mindslice/concept-art-composition-system";
 import type {
-  ArtCanonEntry,
-  ArtMemoryEntry,
+  ShapeCanonEntry,
+  ShapeMemoryEntry,
 } from "@/lib/mindslice/mindslice-types";
 
-type UseArtCanonSystemOptions = {
+type UseShapeCanonSystemOptions = {
   isSignedIn: boolean;
-  artMemory: ArtMemoryEntry[];
+  shapeMemory: ShapeMemoryEntry[];
 };
 
-function buildMemoryFingerprint(artMemory: ArtMemoryEntry[]) {
-  return artMemory
+function buildMemoryFingerprint(shapeMemory: ShapeMemoryEntry[]) {
+  return shapeMemory
     .map((entry) => [entry.id, entry.stage, entry.lastSeenAt].join(":"))
     .join("|");
 }
@@ -32,29 +32,32 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-export function useArtCanonSystem({ isSignedIn, artMemory }: UseArtCanonSystemOptions) {
-  const [artCanon, setArtCanon] = useState<ArtCanonEntry[]>(() => readArtCanon());
+export function useShapeCanonSystem({
+  isSignedIn,
+  shapeMemory,
+}: UseShapeCanonSystemOptions) {
+  const [shapeCanon, setShapeCanon] = useState<ShapeCanonEntry[]>(() => readShapeCanon());
   const lastFingerprintRef = useRef<string | null>(null);
 
   useEffect(() => {
-    function syncArtCanon() {
-      setArtCanon(readArtCanon());
+    function syncShapeCanon() {
+      setShapeCanon(readShapeCanon());
     }
 
     function handleStorage(event: StorageEvent) {
-      if (event.key && event.key !== ART_CANON_STORAGE_KEY) {
+      if (event.key && event.key !== SHAPE_CANON_STORAGE_KEY) {
         return;
       }
 
-      syncArtCanon();
+      syncShapeCanon();
     }
 
     window.addEventListener("storage", handleStorage);
-    window.addEventListener(ART_CANON_UPDATED_EVENT, syncArtCanon);
+    window.addEventListener(SHAPE_CANON_UPDATED_EVENT, syncShapeCanon);
 
     return () => {
       window.removeEventListener("storage", handleStorage);
-      window.removeEventListener(ART_CANON_UPDATED_EVENT, syncArtCanon);
+      window.removeEventListener(SHAPE_CANON_UPDATED_EVENT, syncShapeCanon);
     };
   }, []);
 
@@ -65,23 +68,23 @@ export function useArtCanonSystem({ isSignedIn, artMemory }: UseArtCanonSystemOp
 
     let cancelled = false;
 
-    async function loadArtCanon() {
+    async function loadShapeCanon() {
       try {
-        const next = await loadPersistedMindsliceState<ArtCanonEntry>("canon", "art");
+        const next = await loadPersistedMindsliceState<ShapeCanonEntry>("canon", "shape");
 
         if (cancelled) {
           return;
         }
 
-        writeArtCanon(next);
+        writeShapeCanon(next);
       } catch {
         if (!cancelled) {
-          window.dispatchEvent(new Event(ART_CANON_UPDATED_EVENT));
+          window.dispatchEvent(new Event(SHAPE_CANON_UPDATED_EVENT));
         }
       }
     }
 
-    loadArtCanon();
+    loadShapeCanon();
 
     return () => {
       cancelled = true;
@@ -93,42 +96,38 @@ export function useArtCanonSystem({ isSignedIn, artMemory }: UseArtCanonSystemOp
       return;
     }
 
-    const fingerprint = buildMemoryFingerprint(artMemory);
+    const fingerprint = buildMemoryFingerprint(shapeMemory);
     if (lastFingerprintRef.current === fingerprint) {
       return;
     }
 
-    const previous = readArtCanon();
-    const canonicalEntries = artMemory
+    const previous = readShapeCanon();
+    const canonicalEntries = shapeMemory
       .filter((entry) => {
-        const sourceIdeaCanonCount = artMemory.filter(
+        const sourceIdeaCanonCount = shapeMemory.filter(
           (candidate) => candidate.sourceIdeaId === entry.sourceIdeaId,
         ).length;
-        return isArtCanonical({
-          composition: entry.composition,
+        return isShapeCanonical({
+          shape: entry.shape,
           validation: entry.validation,
           stage: entry.stage,
           sourceIdeaCanonCount,
         });
       })
       .map((entry) => {
-        const siblingCanonIds = artMemory
+        const siblingCanonIds = shapeMemory
           .filter(
-            (candidate) =>
-              candidate.sourceIdeaId === entry.sourceIdeaId &&
-              candidate.id !== entry.id,
+            (candidate) => candidate.sourceIdeaId === entry.sourceIdeaId && candidate.id !== entry.id,
           )
           .map((candidate) => candidate.id)
           .slice(0, 6);
-
         const previousEntry = previous.find((candidate) => candidate.id === entry.id);
         const sourceIdeaCanonCount = siblingCanonIds.length + 1;
         const influenceWeight = clamp(
-          entry.validation.focus * 0.24 +
-            entry.validation.movement * 0.19 +
-            entry.validation.unity * 0.16 +
-            entry.validation.balance * 0.14 +
-            entry.validation.proportion * 0.12 +
+          entry.validation.attention * 0.24 +
+            entry.validation.tension * 0.2 +
+            entry.validation.identity * 0.18 +
+            entry.validation.relation * 0.14 +
             Math.min(sourceIdeaCanonCount, 4) * 0.04,
           0,
           1,
@@ -140,7 +139,7 @@ export function useArtCanonSystem({ isSignedIn, artMemory }: UseArtCanonSystemOp
           conceptTitle: entry.conceptTitle,
           sourceIdeaId: entry.sourceIdeaId,
           stage: entry.stage,
-          composition: entry.composition,
+          shape: entry.shape,
           validation: entry.validation,
           canonizedAt: previousEntry?.canonizedAt ?? entry.storedAt,
           lastActivatedAt: entry.lastSeenAt,
@@ -149,7 +148,7 @@ export function useArtCanonSystem({ isSignedIn, artMemory }: UseArtCanonSystemOp
             sourceIdeaCanonCount,
           },
           influenceWeight,
-        } satisfies ArtCanonEntry;
+        } satisfies ShapeCanonEntry;
       });
 
     const next = [
@@ -158,23 +157,26 @@ export function useArtCanonSystem({ isSignedIn, artMemory }: UseArtCanonSystemOp
     ].slice(0, 24);
 
     lastFingerprintRef.current = fingerprint;
-    writeArtCanon(next);
+    writeShapeCanon(next);
 
-    void persistMindsliceState("canon", "art", next)
+    void persistMindsliceState("canon", "shape", next)
       .then((synced) => {
-        writeArtCanon(synced);
+        writeShapeCanon(synced);
       })
       .catch(() => {
-        // Alpha-safe: local art canon remains available if backend persistence fails.
+        // Alpha-safe: local shape canon remains available if backend persistence fails.
       });
-  }, [artMemory, isSignedIn]);
+  }, [isSignedIn, shapeMemory]);
 
-  const visibleArtCanon = useMemo(() => (isSignedIn ? artCanon : []), [artCanon, isSignedIn]);
-  const primaryArtCanon = visibleArtCanon[0] ?? null;
+  const visibleShapeCanon = useMemo(
+    () => (isSignedIn ? shapeCanon : []),
+    [isSignedIn, shapeCanon],
+  );
+  const primaryShapeCanon = visibleShapeCanon[0] ?? null;
 
   return {
-    artCanon: visibleArtCanon,
-    artCanonCount: visibleArtCanon.length,
-    primaryArtCanon,
+    shapeCanon: visibleShapeCanon,
+    shapeCanonCount: visibleShapeCanon.length,
+    primaryShapeCanon,
   };
 }

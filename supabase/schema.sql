@@ -251,6 +251,28 @@ create table if not exists public.engine_debug_runs (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.mindslice_memory_states (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null references public.profiles(user_id) on delete cascade,
+  domain text not null check (domain in ('narrative', 'art', 'structure', 'color', 'shape', 'shape_grammar', 'meta_system')),
+  entry_id text not null,
+  entry_payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint mindslice_memory_states_user_domain_entry_unique unique (user_id, domain, entry_id)
+);
+
+create table if not exists public.mindslice_canon_states (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null references public.profiles(user_id) on delete cascade,
+  domain text not null check (domain in ('narrative', 'art', 'structure', 'color', 'shape', 'shape_grammar', 'meta_system')),
+  entry_id text not null,
+  entry_payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint mindslice_canon_states_user_domain_entry_unique unique (user_id, domain, entry_id)
+);
+
 create index if not exists saved_moments_user_id_created_at_idx
   on public.saved_moments (user_id, created_at desc);
 
@@ -284,6 +306,12 @@ create index if not exists concept_artifacts_concept_id_created_at_idx
 create index if not exists engine_debug_runs_user_id_created_at_idx
   on public.engine_debug_runs (user_id, created_at desc);
 
+create index if not exists mindslice_memory_states_user_domain_updated_at_idx
+  on public.mindslice_memory_states (user_id, domain, updated_at desc);
+
+create index if not exists mindslice_canon_states_user_domain_updated_at_idx
+  on public.mindslice_canon_states (user_id, domain, updated_at desc);
+
 alter table public.profiles enable row level security;
 alter table public.saved_moments enable row level security;
 alter table public.favorites enable row level security;
@@ -296,6 +324,8 @@ alter table public.collections enable row level security;
 alter table public.concepts enable row level security;
 alter table public.concept_artifacts enable row level security;
 alter table public.engine_debug_runs enable row level security;
+alter table public.mindslice_memory_states enable row level security;
+alter table public.mindslice_canon_states enable row level security;
 
 drop policy if exists "profiles_owner_read" on public.profiles;
 create policy "profiles_owner_read"
@@ -633,5 +663,55 @@ create policy "engine_debug_runs_owner_insert"
 drop policy if exists "engine_debug_runs_owner_delete" on public.engine_debug_runs;
 create policy "engine_debug_runs_owner_delete"
   on public.engine_debug_runs
+  for delete
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_memory_states_owner_read" on public.mindslice_memory_states;
+create policy "mindslice_memory_states_owner_read"
+  on public.mindslice_memory_states
+  for select
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_memory_states_owner_insert" on public.mindslice_memory_states;
+create policy "mindslice_memory_states_owner_insert"
+  on public.mindslice_memory_states
+  for insert
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_memory_states_owner_update" on public.mindslice_memory_states;
+create policy "mindslice_memory_states_owner_update"
+  on public.mindslice_memory_states
+  for update
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''))
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_memory_states_owner_delete" on public.mindslice_memory_states;
+create policy "mindslice_memory_states_owner_delete"
+  on public.mindslice_memory_states
+  for delete
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_canon_states_owner_read" on public.mindslice_canon_states;
+create policy "mindslice_canon_states_owner_read"
+  on public.mindslice_canon_states
+  for select
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_canon_states_owner_insert" on public.mindslice_canon_states;
+create policy "mindslice_canon_states_owner_insert"
+  on public.mindslice_canon_states
+  for insert
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_canon_states_owner_update" on public.mindslice_canon_states;
+create policy "mindslice_canon_states_owner_update"
+  on public.mindslice_canon_states
+  for update
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''))
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_canon_states_owner_delete" on public.mindslice_canon_states;
+create policy "mindslice_canon_states_owner_delete"
+  on public.mindslice_canon_states
   for delete
   using (user_id = coalesce(auth.jwt() ->> 'sub', ''));

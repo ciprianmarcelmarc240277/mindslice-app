@@ -1,5 +1,6 @@
 "use client";
 
+import { normalizeLegacyConceptMemoryEntry } from "@/lib/mindslice/concept-legacy-normalization";
 import type { ConceptMemoryEntry } from "@/lib/mindslice/mindslice-types";
 
 export const CONCEPT_MEMORY_STORAGE_KEY = "mindslice:concept-memory";
@@ -17,7 +18,9 @@ export function readConceptMemory() {
     }
 
     const parsed = JSON.parse(raw) as { conceptMemory?: ConceptMemoryEntry[] };
-    return Array.isArray(parsed.conceptMemory) ? parsed.conceptMemory : [];
+    return Array.isArray(parsed.conceptMemory)
+      ? parsed.conceptMemory.map(normalizeLegacyConceptMemoryEntry)
+      : [];
   } catch {
     return [];
   }

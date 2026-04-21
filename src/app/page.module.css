@@ -886,6 +886,10 @@
   height: 100%;
   overflow: hidden;
   background: #ffffff;
+  --structure-v1: 33.333%;
+  --structure-v2: 66.666%;
+  --structure-h1: 33.333%;
+  --structure-h2: 66.666%;
 }
 
 .textStage::after {
@@ -940,6 +944,14 @@
 .guideLine,
 .focalHalo,
 .spaceFrame,
+.grammarMirrorAxis,
+.grammarMirrorMarker,
+.grammarRepeatEcho,
+.grammarTranslateTrail,
+.grammarTranslateMarker,
+.grammarRotateArc,
+.grammarGuideAccent,
+.grammarGuideVoidCut,
 .guideLabelPrimary,
 .guideLabelSecondary {
   position: absolute;
@@ -947,46 +959,51 @@
 }
 
 .thirdLine {
-  background: rgba(24, 20, 17, 0.12);
-  box-shadow: 0 0 0 1px rgba(255, 252, 247, 0.18);
+  background: rgba(181, 69, 47, 0.34);
+  box-shadow: 0 0 0 1px rgba(255, 245, 242, 0.1);
 }
 
 .guideLine {
-  height: 2px;
+  height: 1px;
   transform-origin: left center;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(181, 69, 47, 0), rgba(24, 20, 17, 0));
+  background: linear-gradient(90deg, rgba(181, 69, 47, 0), rgba(181, 69, 47, 0.68));
+  opacity: var(--grammar-guide-line-opacity, 0.78);
   box-shadow:
-    0 0 0 1px rgba(255, 252, 247, 0.14),
-    0 0 16px rgba(181, 69, 47, 0.06);
+    0 0 0 1px rgba(255, 245, 242, 0.08),
+    0 0 14px rgba(181, 69, 47, 0.08);
 }
 
 .thirdVerticalOne {
   top: 0;
-  left: 33.333%;
-  width: 2px;
+  left: var(--structure-v1);
+  width: 1px;
   height: 100%;
+  transform: translate3d(var(--grammar-guide-third-shift, 0px), 0, 0);
 }
 
 .thirdVerticalTwo {
   top: 0;
-  left: 66.666%;
-  width: 2px;
+  left: var(--structure-v2);
+  width: 1px;
   height: 100%;
+  transform: translate3d(calc(var(--grammar-guide-third-shift, 0px) * -1), 0, 0);
 }
 
 .thirdHorizontalOne {
-  top: 33.333%;
+  top: var(--structure-h1);
   left: 0;
   width: 100%;
-  height: 2px;
+  height: 1px;
+  transform: translate3d(0, calc(var(--grammar-guide-third-shift, 0px) * -1), 0);
 }
 
 .thirdHorizontalTwo {
-  top: 66.666%;
+  top: var(--structure-h2);
   left: 0;
   width: 100%;
-  height: 2px;
+  height: 1px;
+  transform: translate3d(0, var(--grammar-guide-third-shift, 0px), 0);
 }
 
 .focalHalo {
@@ -1015,12 +1032,14 @@
 }
 
 .spaceFrame {
-  border: 2px dashed rgba(34, 197, 94, 0.88);
-  border-radius: 18px;
-  background: rgba(34, 197, 94, 0.05);
+  border: 1px dashed rgba(181, 69, 47, 0.56);
+  border-radius: var(--grammar-negative-space-radius, 18px);
+  background: rgba(181, 69, 47, 0.03);
+  opacity: var(--grammar-negative-space-opacity, 0.72);
+  transform: scale(var(--grammar-guide-frame-scale, 1));
   box-shadow:
-    inset 0 0 0 1px rgba(255, 252, 247, 0.2),
-    0 0 18px rgba(34, 197, 94, 0.1);
+    inset 0 0 0 1px rgba(255, 245, 242, 0.12),
+    0 0 18px rgba(181, 69, 47, 0.08);
 }
 
 .focalHaloPrimary {
@@ -1059,7 +1078,7 @@
   font-size: 0.64rem;
   text-transform: uppercase;
   letter-spacing: 0.24em;
-  color: rgba(24, 20, 17, 0.34);
+  color: rgba(181, 69, 47, 0.56);
 }
 
 .guideLabelPrimary {
@@ -1072,6 +1091,20 @@
   left: 8%;
 }
 
+.guideLabelTemporal {
+  position: absolute;
+  right: 8%;
+  bottom: 24%;
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(181, 69, 47, 0.48);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
 .compositionGuidewhisper {
   opacity: 0.52;
 }
@@ -1079,6 +1112,1062 @@
 .compositionGuidewhisper .guideLine,
 .compositionGuidewhisper .spaceFrame {
   opacity: 0.72;
+}
+
+.structureGuidegolden .thirdLine {
+  background: rgba(181, 69, 47, 0.42);
+}
+
+.structureGuidecustom .thirdLine {
+  opacity: 0.72;
+}
+
+.structureGuidesymmetric .focalHaloPrimary,
+.structureGuidesymmetric .focalHaloSecondary {
+  border-radius: 28px;
+}
+
+.structureGuidedecentered .guideLabelPrimary,
+.structureGuidedecentered .guideLabelSecondary {
+  color: rgba(181, 69, 47, 0.44);
+}
+
+.scenarioGuideescalated .guideLine,
+.scenarioGuideescalated .thirdLine {
+  opacity: 0.92;
+  filter: saturate(1.08);
+}
+
+.scenarioGuideescalated .negativeSpaceOne,
+.scenarioGuideescalated .negativeSpaceTwo {
+  transform: rotate(-4deg) scale(1.04);
+}
+
+.scenarioGuidefocused .focalHaloPrimary,
+.scenarioGuidefocused .focalHaloSecondary {
+  box-shadow:
+    0 0 0 1px rgba(181, 69, 47, 0.18),
+    0 0 0 12px rgba(181, 69, 47, 0.04);
+}
+
+.scenarioGuidefocused .guideLabelPrimary,
+.scenarioGuidefocused .guideLabelSecondary,
+.scenarioGuidefocused .guideLabelTemporal {
+  opacity: 0.82;
+}
+
+.scenarioGuideprogressive .thirdVerticalOne,
+.scenarioGuideprogressive .thirdHorizontalOne {
+  transform: translate3d(4px, -4px, 0);
+}
+
+.scenarioGuideprogressive .thirdVerticalTwo,
+.scenarioGuideprogressive .thirdHorizontalTwo {
+  transform: translate3d(-4px, 4px, 0);
+}
+
+.scenarioGuideprogressive .guideLabelTemporal {
+  letter-spacing: 0.22em;
+}
+
+.shapeGuidegeometric .focalHaloPrimary,
+.shapeGuidegeometric .focalHaloSecondary {
+  border-radius: 18px;
+}
+
+.shapeGuideorganic .negativeSpaceOne,
+.shapeGuideorganic .negativeSpaceTwo {
+  border-radius: 38% 62% 44% 56% / 46% 42% 58% 54%;
+}
+
+.shapeGuidefragment .guideLine,
+.shapeGuidefragment .thirdLine {
+  opacity: 0.68;
+  filter: blur(0.18px);
+}
+
+.shapeGuidevoid .spaceFrame {
+  transform: scale(1.06);
+  opacity: 0.86;
+}
+
+.grammarGuidemirror .thirdVerticalOne,
+.grammarGuidemirror .thirdVerticalTwo {
+  transform: scaleY(1.06);
+}
+
+.grammarGuidemirror .thirdHorizontalOne,
+.grammarGuidemirror .thirdHorizontalTwo {
+  opacity: 0.74;
+}
+
+.grammarGuidemirror .leadingLineOne,
+.grammarGuidemirror .leadingLineThree {
+  opacity: 0.78;
+}
+
+.grammarGuidemirror .negativeSpaceOne,
+.grammarGuidemirror .negativeSpaceTwo {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 245, 242, 0.12),
+    0 0 18px rgba(181, 69, 47, 0.08),
+    0 0 0 10px rgba(181, 69, 47, 0.03);
+  animation: grammarNegativeSpaceMirrorPulse 7.6s ease-in-out infinite;
+}
+
+.grammarGuidemirror .negativeSpaceOne {
+  transform: scaleX(-1) scale(var(--grammar-guide-frame-scale, 1));
+}
+
+.grammarGuidemirror .negativeSpaceTwo {
+  transform: scaleX(-1) scale(var(--grammar-guide-frame-scale, 1));
+  animation-delay: 1.2s;
+}
+
+.grammarMirrorAxis {
+  top: 10%;
+  bottom: 10%;
+  left: 50%;
+  width: 1px;
+  background: linear-gradient(180deg, rgba(181, 69, 47, 0), rgba(181, 69, 47, 0.76), rgba(181, 69, 47, 0));
+  opacity: var(--grammar-mirror-axis-opacity, 0.3);
+  transform: translateX(-50%);
+  box-shadow:
+    0 0 0 1px rgba(255, 245, 242, 0.08),
+    0 0 16px rgba(181, 69, 47, 0.08);
+  animation: grammarMirrorAxisPulse 7.4s ease-in-out infinite;
+}
+
+.grammarMirrorMarker {
+  top: 22%;
+  width: 1.9rem;
+  height: 1.9rem;
+  border: 1px solid rgba(181, 69, 47, 0.34);
+  border-radius: 999px;
+  background: radial-gradient(circle at center, rgba(181, 69, 47, 0.12), rgba(181, 69, 47, 0.02) 72%);
+  opacity: calc(var(--grammar-mirror-axis-opacity, 0.3) * 0.86);
+  box-shadow:
+    0 0 0 1px rgba(255, 245, 242, 0.08),
+    0 0 14px rgba(181, 69, 47, 0.08);
+  animation: grammarMirrorMarkerFloat 8s ease-in-out infinite;
+}
+
+.grammarMirrorMarkerLeft {
+  left: calc(50% - 5.4rem);
+}
+
+.grammarMirrorMarkerRight {
+  right: calc(50% - 5.4rem);
+  animation-delay: 1.4s;
+}
+
+.grammarGuideadd .guideLine {
+  box-shadow:
+    0 0 0 1px rgba(255, 245, 242, 0.08),
+    0 0 14px rgba(181, 69, 47, 0.08),
+    8px 8px 0 rgba(181, 69, 47, 0.05);
+  animation: grammarGuideAddLinePulse 5.8s ease-in-out infinite;
+}
+
+.grammarGuideadd .spaceFrame {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 245, 242, 0.12),
+    0 0 18px rgba(181, 69, 47, 0.08),
+    12px 0 0 rgba(181, 69, 47, 0.04);
+  animation:
+    grammarGuideAddFramePulse 7.2s ease-in-out infinite,
+    grammarNegativeSpaceAddFloat 8.2s ease-in-out infinite;
+}
+
+.grammarGuidesubtract .spaceFrame,
+.grammarGuidesubtract .thirdLine {
+  opacity: 0.42;
+  animation: grammarGuideSubtractFade 6.4s ease-in-out infinite;
+}
+
+.grammarGuidesubtract .guideLine {
+  transform: scaleX(var(--grammar-guide-subtract-scale, 0.92));
+}
+
+.grammarGuidesubtract .thirdVerticalOne,
+.grammarGuidesubtract .thirdHorizontalOne {
+  transform: translate3d(-6px, 0, 0) scaleY(0.96);
+}
+
+.grammarGuidesubtract .thirdVerticalTwo,
+.grammarGuidesubtract .thirdHorizontalTwo {
+  transform: translate3d(6px, 0, 0) scaleY(0.96);
+}
+
+.grammarGuidesubtract .focalHaloSecondary {
+  opacity: 0.24;
+  transform: scale(0.92);
+  animation: grammarGuideSubtractHaloDrift 7.6s ease-in-out infinite;
+}
+
+.grammarGuidesubtract .spaceFrame {
+  animation: grammarNegativeSpaceSubtractTighten 7.8s ease-in-out infinite;
+}
+
+.grammarGuidescale .guideLine,
+.grammarGuidescale .thirdLine {
+  opacity: calc(var(--grammar-guide-line-opacity, 0.78) + 0.08);
+}
+
+.grammarGuidescale .focalHaloPrimary,
+.grammarGuidescale .focalHaloSecondary {
+  animation: grammarScaleHaloPulse 7.4s ease-in-out infinite;
+}
+
+.grammarGuidescale .negativeSpaceOne,
+.grammarGuidescale .negativeSpaceTwo {
+  animation: grammarNegativeSpaceScalePulse 7.8s ease-in-out infinite;
+}
+
+.grammarGuidescale .negativeSpaceTwo {
+  animation-delay: 1.2s;
+}
+
+.grammarGuiderepeat .guideLine,
+.grammarGuiderepeat .focalHalo {
+  box-shadow:
+    10px 0 0 rgba(24, 20, 17, 0.04),
+    0 0 18px rgba(181, 69, 47, 0.08);
+}
+
+.grammarGuiderepeat .thirdLine {
+  opacity: 0.76;
+}
+
+.grammarGuiderepeat .guideLabelPrimary,
+.grammarGuiderepeat .guideLabelSecondary,
+.grammarGuiderepeat .guideLabelTemporal {
+  letter-spacing: 0.28em;
+}
+
+.grammarGuiderepeat .negativeSpaceOne,
+.grammarGuiderepeat .negativeSpaceTwo {
+  animation: grammarNegativeSpaceRepeatPulse 8.2s ease-in-out infinite;
+}
+
+.grammarGuiderepeat .negativeSpaceTwo {
+  animation-delay: 1.6s;
+}
+
+.grammarGuidemerge .negativeSpaceOne,
+.grammarGuidemerge .negativeSpaceTwo {
+  animation: grammarNegativeSpaceMergePulse 7.8s ease-in-out infinite;
+}
+
+.grammarGuidemerge .negativeSpaceTwo {
+  animation-delay: 1.2s;
+}
+
+.grammarGuidesplit .negativeSpaceOne,
+.grammarGuidesplit .negativeSpaceTwo {
+  animation: grammarNegativeSpaceSplitPulse 7.8s ease-in-out infinite;
+}
+
+.grammarGuidesplit .negativeSpaceTwo {
+  animation-delay: 1.2s;
+}
+
+.grammarGuidedistort .guideLine,
+.grammarGuidedistort .thirdLine {
+  transform: skewX(var(--grammar-distort-skew, 0deg));
+  filter: blur(0.18px);
+}
+
+.grammarGuidedistort .focalHaloPrimary,
+.grammarGuidedistort .focalHaloSecondary {
+  animation: grammarDistortHaloPulse 7.4s ease-in-out infinite;
+}
+
+.grammarGuidedistort .negativeSpaceOne,
+.grammarGuidedistort .negativeSpaceTwo {
+  animation: grammarNegativeSpaceDistortPulse 7.8s ease-in-out infinite;
+}
+
+.grammarGuidedistort .negativeSpaceOne {
+  transform-origin: 42% 50%;
+}
+
+.grammarGuidedistort .negativeSpaceTwo {
+  transform-origin: 58% 50%;
+  animation-delay: 1.2s;
+}
+
+.grammarGuidetranslate .thirdVerticalOne,
+.grammarGuidetranslate .thirdHorizontalOne {
+  transform: translate3d(var(--grammar-translate-shift, 0px), calc(var(--grammar-translate-shift, 0px) * -0.5), 0);
+}
+
+.grammarGuidetranslate .thirdVerticalTwo,
+.grammarGuidetranslate .thirdHorizontalTwo {
+  transform: translate3d(calc(var(--grammar-translate-shift, 0px) * 0.6), calc(var(--grammar-translate-shift, 0px) * 0.4), 0);
+}
+
+.grammarGuidetranslate .guideLine {
+  animation: grammarTranslateGuideSlide 7.2s ease-in-out infinite;
+}
+
+.grammarGuidetranslate .negativeSpaceOne,
+.grammarGuidetranslate .negativeSpaceTwo {
+  animation: grammarNegativeSpaceTranslateDrift 8s ease-in-out infinite;
+}
+
+.grammarGuidetranslate .negativeSpaceTwo {
+  animation-delay: 1.4s;
+}
+
+.grammarGuiderotate .thirdLine,
+.grammarGuiderotate .guideLine {
+  transform: rotate(var(--grammar-rotate-angle, 0deg));
+}
+
+.grammarGuiderotate .focalHaloPrimary,
+.grammarGuiderotate .focalHaloSecondary {
+  animation: grammarRotateHaloPivot 7.2s ease-in-out infinite;
+}
+
+.grammarGuiderotate .negativeSpaceOne,
+.grammarGuiderotate .negativeSpaceTwo {
+  animation: grammarNegativeSpaceRotateSweep 7.8s ease-in-out infinite;
+}
+
+.grammarGuiderotate .negativeSpaceTwo {
+  animation-delay: 1.4s;
+}
+
+.grammarRotateArc {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  border: 1px dashed rgba(181, 69, 47, 0.34);
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  opacity: var(--grammar-rotate-opacity, 0.24);
+  animation: grammarRotateArcSweep 7.6s ease-in-out infinite;
+}
+
+.grammarRotateArcOne {
+  top: 20%;
+  right: 18%;
+}
+
+.grammarRotateArcTwo {
+  bottom: 18%;
+  left: 18%;
+  transform: rotate(180deg);
+  animation-delay: 1.6s;
+}
+
+.grammarTranslateTrail {
+  width: 4.2rem;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(181, 69, 47, 0), rgba(181, 69, 47, 0.72), rgba(181, 69, 47, 0));
+  opacity: var(--grammar-translate-opacity, 0.24);
+  animation: grammarTranslateTrailDrift 7.8s ease-in-out infinite;
+}
+
+.grammarTranslateTrailOne {
+  top: 24%;
+  left: 14%;
+  transform: rotate(-10deg);
+}
+
+.grammarTranslateTrailTwo {
+  bottom: 22%;
+  left: 34%;
+  transform: rotate(-6deg);
+  animation-delay: 1.8s;
+}
+
+.grammarTranslateMarker {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: rgba(181, 69, 47, 0.78);
+  box-shadow:
+    0 0 0 4px rgba(181, 69, 47, 0.08),
+    0 0 12px rgba(181, 69, 47, 0.1);
+  opacity: calc(var(--grammar-translate-opacity, 0.24) * 0.9);
+  animation: grammarTranslateMarkerPulse 7.2s ease-in-out infinite;
+}
+
+.grammarTranslateMarkerOne {
+  top: 23%;
+  left: 58%;
+}
+
+.grammarTranslateMarkerTwo {
+  bottom: 20%;
+  right: 16%;
+  animation-delay: 1.2s;
+}
+
+.grammarGuidefragmented .thirdVerticalOne,
+.grammarGuidefragmented .thirdHorizontalTwo {
+  transform: translate3d(-5px, 4px, 0) rotate(-1deg);
+}
+
+.grammarGuidefragmented .thirdVerticalTwo,
+.grammarGuidefragmented .thirdHorizontalOne {
+  transform: translate3d(5px, -4px, 0) rotate(1deg);
+}
+
+.grammarGuidefragmented .negativeSpaceOne,
+.grammarGuidefragmented .negativeSpaceTwo {
+  animation: grammarNegativeSpaceFragmentDrift 7.6s ease-in-out infinite;
+}
+
+.grammarGuidefragmented .negativeSpaceTwo {
+  animation-delay: 1.7s;
+}
+
+.grammarFragmentShard {
+  width: 3.2rem;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(181, 69, 47, 0), rgba(181, 69, 47, 0.74), rgba(181, 69, 47, 0));
+  opacity: var(--grammar-fragment-opacity, 0.24);
+  animation: grammarFragmentShardDrift 7.2s ease-in-out infinite;
+}
+
+.grammarFragmentShardOne {
+  top: 22%;
+  left: 18%;
+  transform: rotate(-18deg);
+}
+
+.grammarFragmentShardTwo {
+  top: 48%;
+  right: 22%;
+  transform: rotate(16deg);
+  animation-delay: 1.4s;
+}
+
+.grammarFragmentShardThree {
+  bottom: 20%;
+  left: 36%;
+  transform: rotate(-12deg);
+  animation-delay: 2.6s;
+}
+
+.grammarRepeatEcho {
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 999px;
+  border: 1px dashed rgba(181, 69, 47, 0.34);
+  opacity: var(--grammar-repeat-opacity, 0.28);
+  box-shadow:
+    0 0 0 1px rgba(255, 245, 242, 0.08),
+    0 0 12px rgba(181, 69, 47, 0.07);
+  animation: grammarRepeatEchoPulse 8.4s ease-in-out infinite;
+}
+
+.grammarRepeatEchoOne {
+  top: 16%;
+  left: 16%;
+}
+
+.grammarRepeatEchoTwo {
+  top: 32%;
+  left: 32%;
+  animation-delay: 1.4s;
+}
+
+.grammarRepeatEchoThree {
+  top: 48%;
+  left: 48%;
+  animation-delay: 2.8s;
+}
+
+.grammarGuidemerge .guideLine {
+  box-shadow:
+    0 0 0 1px rgba(255, 245, 242, 0.08),
+    0 0 16px rgba(181, 69, 47, 0.1);
+}
+
+.grammarGuidemerge .focalHaloPrimary,
+.grammarGuidemerge .focalHaloSecondary {
+  opacity: 0.72;
+}
+
+.grammarGuidesplit .guideLine {
+  opacity: 0.72;
+  filter: blur(0.12px);
+}
+
+.grammarGuidesplit .thirdVerticalOne,
+.grammarGuidesplit .thirdHorizontalOne {
+  transform: translate3d(-8px, 0, 0);
+}
+
+.grammarGuidesplit .thirdVerticalTwo,
+.grammarGuidesplit .thirdHorizontalTwo {
+  transform: translate3d(8px, 0, 0);
+}
+
+.grammarMergeBridge,
+.grammarMergeNode,
+.grammarSplitAxis,
+.grammarSplitNode {
+  position: absolute;
+  pointer-events: none;
+}
+
+.grammarMergeBridge {
+  width: 38%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(181, 69, 47, 0), rgba(181, 69, 47, 0.78), rgba(181, 69, 47, 0));
+  opacity: var(--grammar-merge-opacity, 0.24);
+  animation: grammarMergeBridgePulse 7.6s ease-in-out infinite;
+}
+
+.grammarMergeBridgeOne {
+  top: 50%;
+  left: 31%;
+  transform: translateY(-50%);
+}
+
+.grammarMergeNode {
+  top: calc(50% - 0.6rem);
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(181, 69, 47, 0.36);
+  background: radial-gradient(circle at center, rgba(181, 69, 47, 0.18), rgba(181, 69, 47, 0.02) 72%);
+  opacity: calc(var(--grammar-merge-opacity, 0.24) * 0.92);
+  box-shadow:
+    0 0 0 1px rgba(255, 245, 242, 0.08),
+    0 0 12px rgba(181, 69, 47, 0.08);
+  animation: grammarMergeNodeConverge 7.2s ease-in-out infinite;
+}
+
+.grammarMergeNodeLeft {
+  left: 24%;
+}
+
+.grammarMergeNodeRight {
+  right: 24%;
+  animation-delay: 1.3s;
+}
+
+.grammarSplitAxis {
+  top: 18%;
+  bottom: 18%;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(181, 69, 47, 0), rgba(181, 69, 47, 0.76), rgba(181, 69, 47, 0));
+  opacity: var(--grammar-split-opacity, 0.24);
+  box-shadow:
+    0 0 0 1px rgba(255, 245, 242, 0.08),
+    0 0 14px rgba(181, 69, 47, 0.08);
+  animation: grammarSplitAxisPulse 7.4s ease-in-out infinite;
+}
+
+.grammarSplitNode {
+  top: calc(50% - 0.55rem);
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(181, 69, 47, 0.36);
+  background: radial-gradient(circle at center, rgba(181, 69, 47, 0.16), rgba(181, 69, 47, 0.02) 72%);
+  opacity: calc(var(--grammar-split-opacity, 0.24) * 0.9);
+  box-shadow:
+    0 0 0 1px rgba(255, 245, 242, 0.08),
+    0 0 12px rgba(181, 69, 47, 0.08);
+  animation: grammarSplitNodeDrift 7.2s ease-in-out infinite;
+}
+
+.grammarSplitNodeLeft {
+  left: 34%;
+}
+
+.grammarSplitNodeRight {
+  right: 34%;
+  animation-delay: 1.2s;
+}
+
+.grammarGuidefragmented .guideLine,
+.grammarGuidefragmented .spaceFrame {
+  opacity: 0.54;
+  filter: blur(0.26px);
+}
+
+.grammarGuideAccent {
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(181, 69, 47, 0.52);
+  border-radius: 999px;
+  opacity: var(--grammar-guide-accent-opacity, 0.54);
+  background:
+    radial-gradient(circle at center, rgba(181, 69, 47, 0.18), rgba(181, 69, 47, 0.02) 72%);
+  box-shadow:
+    0 0 0 1px rgba(255, 245, 242, 0.08),
+    0 0 18px rgba(181, 69, 47, 0.1);
+  animation: grammarGuideAccentBloom 6.8s ease-in-out infinite;
+}
+
+.grammarGuideAccentAddOne {
+  top: 18%;
+  left: 18%;
+}
+
+.grammarGuideAccentAddTwo {
+  right: 18%;
+  bottom: 18%;
+}
+
+.grammarGuideVoidCut {
+  width: 64px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(181, 69, 47, 0), rgba(181, 69, 47, 0.72), rgba(181, 69, 47, 0));
+  opacity: var(--grammar-guide-cut-opacity, 0.34);
+  animation: grammarGuideVoidCutDrift 7s ease-in-out infinite;
+}
+
+.grammarGuideVoidCutOne {
+  top: 24%;
+  right: 14%;
+  transform: rotate(-14deg);
+}
+
+.grammarGuideVoidCutTwo {
+  bottom: 22%;
+  left: 14%;
+  transform: rotate(12deg);
+}
+
+@keyframes grammarGuideAccentBloom {
+  0%,
+  100% {
+    transform: scale(0.96);
+    box-shadow:
+      0 0 0 1px rgba(255, 245, 242, 0.08),
+      0 0 12px rgba(181, 69, 47, 0.08);
+  }
+
+  50% {
+    transform: scale(1.08);
+    box-shadow:
+      0 0 0 1px rgba(255, 245, 242, 0.1),
+      0 0 22px rgba(181, 69, 47, 0.16);
+  }
+}
+
+@keyframes grammarGuideVoidCutDrift {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-guide-cut-opacity, 0.34) * 0.82);
+  }
+
+  50% {
+    opacity: var(--grammar-guide-cut-opacity, 0.34);
+    filter: blur(0.24px);
+  }
+}
+
+@keyframes grammarGuideAddLinePulse {
+  0%,
+  100% {
+    opacity: var(--grammar-guide-line-opacity, 0.78);
+  }
+
+  50% {
+    opacity: calc(var(--grammar-guide-line-opacity, 0.78) + 0.12);
+  }
+}
+
+@keyframes grammarGuideAddFramePulse {
+  0%,
+  100% {
+    transform: scale(var(--grammar-guide-frame-scale, 1));
+  }
+
+  50% {
+    transform: scale(calc(var(--grammar-guide-frame-scale, 1) + 0.02));
+  }
+}
+
+@keyframes grammarGuideSubtractFade {
+  0%,
+  100% {
+    opacity: 0.42;
+  }
+
+  50% {
+    opacity: 0.28;
+  }
+}
+
+@keyframes grammarGuideSubtractHaloDrift {
+  0%,
+  100% {
+    transform: scale(0.92);
+  }
+
+  50% {
+    transform: scale(0.88) translate3d(-3px, 2px, 0);
+  }
+}
+
+@keyframes grammarScaleHaloPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(var(--grammar-scale-factor, 1.06));
+  }
+}
+
+@keyframes grammarNegativeSpaceScalePulse {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-negative-space-scale-opacity, 0.24) * 0.84);
+    transform: scale(var(--grammar-guide-frame-scale, 1));
+  }
+
+  50% {
+    opacity: var(--grammar-negative-space-scale-opacity, 0.24);
+    transform: scale(calc(var(--grammar-guide-frame-scale, 1) * var(--grammar-negative-space-scale-factor, 1.08)));
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 245, 242, 0.12),
+      0 0 20px rgba(181, 69, 47, 0.1),
+      0 0 0 10px rgba(181, 69, 47, 0.03);
+  }
+}
+
+@keyframes grammarMirrorAxisPulse {
+  0%,
+  100% {
+    opacity: var(--grammar-mirror-axis-opacity, 0.3);
+  }
+
+  50% {
+    opacity: calc(var(--grammar-mirror-axis-opacity, 0.3) + 0.12);
+  }
+}
+
+@keyframes grammarMirrorMarkerFloat {
+  0%,
+  100% {
+    transform: scale(0.96);
+  }
+
+  50% {
+    transform: scale(1.05) translate3d(0, -3px, 0);
+  }
+}
+
+@keyframes grammarNegativeSpaceMirrorPulse {
+  0%,
+  100% {
+    opacity: var(--grammar-negative-space-mirror-opacity, 0.24);
+  }
+
+  50% {
+    opacity: calc(var(--grammar-negative-space-mirror-opacity, 0.24) + 0.14);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 245, 242, 0.12),
+      0 0 24px rgba(181, 69, 47, 0.12),
+      0 0 0 12px rgba(181, 69, 47, 0.04);
+  }
+}
+
+@keyframes grammarRepeatEchoPulse {
+  0%,
+  100% {
+    transform: scale(0.94);
+    opacity: calc(var(--grammar-repeat-opacity, 0.28) * 0.8);
+  }
+
+  50% {
+    transform: scale(1.06);
+    opacity: var(--grammar-repeat-opacity, 0.28);
+  }
+}
+
+@keyframes grammarNegativeSpaceRepeatPulse {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-negative-space-repeat-opacity, 0.24) * 0.84);
+    transform: scale(var(--grammar-guide-frame-scale, 1));
+  }
+
+  50% {
+    opacity: var(--grammar-negative-space-repeat-opacity, 0.24);
+    transform: scale(calc(var(--grammar-guide-frame-scale, 1) + 0.03));
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 245, 242, 0.12),
+      0 0 22px rgba(181, 69, 47, 0.12),
+      10px 0 0 rgba(181, 69, 47, 0.04);
+  }
+}
+
+@keyframes grammarMergeBridgePulse {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-merge-opacity, 0.24) * 0.84);
+    transform: translateY(-50%) scaleX(0.92);
+  }
+
+  50% {
+    opacity: var(--grammar-merge-opacity, 0.24);
+    transform: translateY(-50%) scaleX(1.04);
+  }
+}
+
+@keyframes grammarMergeNodeConverge {
+  0%,
+  100% {
+    transform: scale(0.96);
+  }
+
+  50% {
+    transform: scale(1.06) translate3d(4px, 0, 0);
+  }
+}
+
+@keyframes grammarSplitAxisPulse {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-split-opacity, 0.24) * 0.84);
+  }
+
+  50% {
+    opacity: var(--grammar-split-opacity, 0.24);
+  }
+}
+
+@keyframes grammarSplitNodeDrift {
+  0%,
+  100% {
+    transform: scale(0.96);
+  }
+
+  50% {
+    transform: scale(1.04) translate3d(-5px, 0, 0);
+  }
+}
+
+@keyframes grammarNegativeSpaceMergePulse {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-negative-space-merge-opacity, 0.24) * 0.84);
+    transform: scale(var(--grammar-guide-frame-scale, 1));
+  }
+
+  50% {
+    opacity: var(--grammar-negative-space-merge-opacity, 0.24);
+    transform: scale(calc(var(--grammar-guide-frame-scale, 1) + 0.02));
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 245, 242, 0.12),
+      0 0 20px rgba(181, 69, 47, 0.1),
+      0 0 0 10px rgba(181, 69, 47, 0.03);
+  }
+}
+
+@keyframes grammarNegativeSpaceSplitPulse {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-negative-space-split-opacity, 0.24) * 0.84);
+    transform: scale(var(--grammar-guide-frame-scale, 1));
+  }
+
+  50% {
+    opacity: var(--grammar-negative-space-split-opacity, 0.24);
+    transform: scale(calc(var(--grammar-guide-frame-scale, 1) - 0.02));
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 245, 242, 0.12),
+      0 0 18px rgba(181, 69, 47, 0.1),
+      14px 0 0 rgba(181, 69, 47, 0.03),
+      -14px 0 0 rgba(181, 69, 47, 0.03);
+  }
+}
+
+@keyframes grammarDistortHaloPulse {
+  0%,
+  100% {
+    transform: skewX(0deg) scale(1);
+  }
+
+  50% {
+    transform: skewX(var(--grammar-distort-skew, -5deg)) scale(1.02);
+  }
+}
+
+@keyframes grammarNegativeSpaceDistortPulse {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-negative-space-distort-opacity, 0.24) * 0.84);
+    transform: scale(var(--grammar-guide-frame-scale, 1));
+  }
+
+  50% {
+    opacity: var(--grammar-negative-space-distort-opacity, 0.24);
+    transform: skewX(var(--grammar-negative-space-distort-skew, -6deg)) scale(calc(var(--grammar-guide-frame-scale, 1) + 0.01));
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 245, 242, 0.12),
+      0 0 18px rgba(181, 69, 47, 0.1),
+      10px 6px 0 rgba(181, 69, 47, 0.03);
+  }
+}
+
+@keyframes grammarTranslateGuideSlide {
+  0%,
+  100% {
+    opacity: var(--grammar-guide-line-opacity, 0.78);
+  }
+
+  50% {
+    opacity: calc(var(--grammar-guide-line-opacity, 0.78) + 0.08);
+    transform: translate3d(var(--grammar-translate-shift, 0px), 0, 0);
+  }
+}
+
+@keyframes grammarTranslateTrailDrift {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-translate-opacity, 0.24) * 0.82);
+  }
+
+  50% {
+    opacity: var(--grammar-translate-opacity, 0.24);
+    transform: translate3d(10px, -2px, 0);
+  }
+}
+
+@keyframes grammarTranslateMarkerPulse {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-translate-opacity, 0.24) * 0.9);
+  }
+
+  50% {
+    opacity: var(--grammar-translate-opacity, 0.24);
+    transform: scale(1.08);
+  }
+}
+
+@keyframes grammarNegativeSpaceTranslateDrift {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-negative-space-translate-opacity, 0.22) * 0.84);
+    transform: scale(var(--grammar-guide-frame-scale, 1));
+  }
+
+  50% {
+    opacity: var(--grammar-negative-space-translate-opacity, 0.22);
+    transform: translate3d(var(--grammar-translate-shift, 0px), -3px, 0) scale(var(--grammar-guide-frame-scale, 1));
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 245, 242, 0.12),
+      0 0 20px rgba(181, 69, 47, 0.11),
+      12px 0 0 rgba(181, 69, 47, 0.04);
+  }
+}
+
+@keyframes grammarRotateHaloPivot {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(var(--grammar-rotate-angle, -4deg));
+  }
+}
+
+@keyframes grammarRotateArcSweep {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-rotate-opacity, 0.24) * 0.84);
+  }
+
+  50% {
+    opacity: var(--grammar-rotate-opacity, 0.24);
+    transform: rotate(26deg);
+  }
+}
+
+@keyframes grammarNegativeSpaceRotateSweep {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-negative-space-rotate-opacity, 0.24) * 0.84);
+    transform: scale(var(--grammar-guide-frame-scale, 1));
+  }
+
+  50% {
+    opacity: var(--grammar-negative-space-rotate-opacity, 0.24);
+    transform: rotate(var(--grammar-negative-space-rotate-angle, -5deg)) scale(calc(var(--grammar-guide-frame-scale, 1) + 0.02));
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 245, 242, 0.12),
+      0 0 20px rgba(181, 69, 47, 0.1),
+      0 0 0 10px rgba(181, 69, 47, 0.03);
+  }
+}
+
+@keyframes grammarFragmentShardDrift {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-fragment-opacity, 0.24) * 0.82);
+  }
+
+  50% {
+    opacity: var(--grammar-fragment-opacity, 0.24);
+    filter: blur(0.28px);
+  }
+}
+
+@keyframes grammarNegativeSpaceFragmentDrift {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-negative-space-fragment-opacity, 0.22) * 0.82);
+    transform: scale(var(--grammar-guide-frame-scale, 1));
+  }
+
+  50% {
+    opacity: var(--grammar-negative-space-fragment-opacity, 0.22);
+    transform: scale(calc(var(--grammar-guide-frame-scale, 1) - 0.03)) rotate(-2deg);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 245, 242, 0.08),
+      0 0 14px rgba(181, 69, 47, 0.08);
+    filter: blur(0.24px);
+  }
+}
+
+@keyframes grammarNegativeSpaceAddFloat {
+  0%,
+  100% {
+    opacity: var(--grammar-negative-space-opacity, 0.72);
+  }
+
+  50% {
+    opacity: calc(var(--grammar-negative-space-opacity, 0.72) + 0.08);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 245, 242, 0.12),
+      0 0 24px rgba(181, 69, 47, 0.12),
+      14px 0 0 rgba(181, 69, 47, 0.05);
+  }
+}
+
+@keyframes grammarNegativeSpaceSubtractTighten {
+  0%,
+  100% {
+    opacity: var(--grammar-negative-space-opacity, 0.42);
+    transform: scale(var(--grammar-negative-space-subtract-scale, 0.9));
+  }
+
+  50% {
+    opacity: calc(var(--grammar-negative-space-opacity, 0.42) * 0.72);
+    transform: scale(calc(var(--grammar-negative-space-subtract-scale, 0.9) - 0.04)) translate3d(0, 2px, 0);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 245, 242, 0.08),
+      0 0 12px rgba(181, 69, 47, 0.06);
+  }
 }
 
 .compositionGuideecho .focalHaloPrimary {
@@ -1132,12 +2221,78 @@
   z-index: 4;
   display: grid;
   gap: 8px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border-radius: 16px;
   border: 1px solid rgba(24, 20, 17, 0.08);
   background: rgba(255, 251, 246, 0.6);
   backdrop-filter: blur(10px);
   max-width: 17rem;
+  overflow: hidden;
+  transform-origin: bottom left;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.compositionRulesTopAnchored {
+  transform-origin: top left;
+}
+
+.compositionRulesCollapsed {
+  transform: translateY(calc(100% - 2.35rem));
+}
+
+.compositionRulesTopAnchored.compositionRulesCollapsed {
+  transform: translateY(calc(-100% + 2.35rem));
+}
+
+.compositionRulesOpen {
+  transform: translateY(0);
+  box-shadow: 0 10px 28px rgba(24, 20, 17, 0.08);
+}
+
+.compositionRulesToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.compositionRulesToggleLabel {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(181, 69, 47, 0.62);
+}
+
+.compositionRulesBody {
+  display: grid;
+  transition:
+    max-height 180ms ease,
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.compositionRulesBodyClosed {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateY(10px);
+}
+
+.compositionRulesBodyOpen {
+  max-height: 12rem;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .compositionRulesTitle {
@@ -1164,8 +2319,6 @@
 
 .clockField {
   position: absolute;
-  top: 16px;
-  right: 16px;
   z-index: 3;
   display: grid;
   gap: 6px;
@@ -1397,6 +2550,55 @@
     0 0 24px rgba(181, 69, 47, 0.12);
 }
 
+.temporalRelationLine,
+.temporalRelationPulse {
+  position: absolute;
+  display: block;
+}
+
+.temporalRelationLine {
+  height: 1px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(181, 69, 47, 0), rgba(181, 69, 47, 0.58));
+  box-shadow: 0 0 16px rgba(181, 69, 47, 0.08);
+  opacity: 0.54;
+}
+
+.temporalRelationLineOne {
+  top: 40%;
+  left: 26%;
+  width: 18%;
+  transform: rotate(-14deg);
+}
+
+.temporalRelationLineTwo {
+  top: 68%;
+  left: 54%;
+  width: 16%;
+  transform: rotate(18deg);
+}
+
+.temporalRelationPulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 248, 240, 0.94);
+  border: 1px solid rgba(181, 69, 47, 0.26);
+  box-shadow:
+    0 0 0 4px rgba(181, 69, 47, 0.05),
+    0 0 18px rgba(181, 69, 47, 0.12);
+}
+
+.temporalRelationPulseOne {
+  top: 38%;
+  left: 42%;
+}
+
+.temporalRelationPulseTwo {
+  bottom: 16%;
+  left: 52%;
+}
+
 .relationFieldwhisper {
   opacity: 0.58;
 }
@@ -1453,12 +2655,83 @@
   box-shadow: 0 0 0 6px rgba(141, 57, 41, 0.06);
 }
 
+.scenarioRelationescalated .axisDiagonal,
+.scenarioRelationescalated .relationLineOne,
+.scenarioRelationescalated .relationLineTwo {
+  transform: rotate(30deg);
+}
+
+.scenarioRelationescalated .relationLineThree {
+  transform: rotate(-20deg);
+}
+
+.scenarioRelationescalated .relationLine,
+.scenarioRelationescalated .axisLine {
+  opacity: 0.82;
+}
+
+.scenarioRelationfocused .relationNodeCenter {
+  box-shadow:
+    0 0 0 8px rgba(181, 69, 47, 0.08),
+    0 0 32px rgba(181, 69, 47, 0.16);
+}
+
+.scenarioRelationfocused .relationNode:not(.relationNodeCenter) {
+  border-color: rgba(181, 69, 47, 0.18);
+}
+
+.scenarioRelationprogressive .axisPrimary {
+  width: 82%;
+}
+
+.scenarioRelationprogressive .relationLineOne {
+  width: 38%;
+}
+
+.scenarioRelationprogressive .relationLineTwo {
+  width: 28%;
+}
+
+.shapeRelationedge .relationNodeOne,
+.shapeRelationedge .relationNodeThree {
+  left: 12%;
+}
+
+.shapeRelationedge .relationNodeTwo,
+.shapeRelationedge .relationNodeFour {
+  right: 14%;
+}
+
+.shapeRelationscatter .relationLineOne,
+.shapeRelationscatter .relationLineTwo,
+.shapeRelationscatter .relationLineThree {
+  opacity: 0.66;
+}
+
+.grammarRelationsequenced .relationLineOne,
+.grammarRelationsequenced .relationLineTwo,
+.grammarRelationsequenced .relationLineThree {
+  box-shadow: 8px 0 0 rgba(24, 20, 17, 0.04);
+}
+
+.grammarRelationmirror .relationNodeOne,
+.grammarRelationmirror .relationNodeTwo,
+.grammarRelationmirror .relationNodeThree,
+.grammarRelationmirror .relationNodeFour {
+  transform: scale(1.12);
+}
+
 .memoryField {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 1;
-  opacity: 0.68;
+  opacity: var(--clock-memory-opacity, 0.68);
+  transform: rotate(var(--clock-memory-tilt, 0deg));
+  transform-origin: center;
+  transition:
+    transform 420ms ease,
+    opacity 320ms ease;
 }
 
 .memoryFragment,
@@ -1477,6 +2750,11 @@
   letter-spacing: 0.03em;
   filter: blur(0.45px);
   text-transform: uppercase;
+  opacity: var(--clock-memory-opacity, 0.68);
+  animation-duration: var(--clock-memory-duration, 8.6s);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
 }
 
 .memoryTrace {
@@ -1486,45 +2764,57 @@
   text-transform: uppercase;
   color: rgba(24, 20, 17, 0.22);
   filter: blur(0.25px);
+  opacity: calc(var(--clock-memory-opacity, 0.68) * 0.9);
+  animation-duration: var(--clock-memory-duration, 8.6s);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
 }
 
 .memoryFragment1 {
   top: 9%;
   left: 18%;
   transform: rotate(-8deg);
+  animation-name: driftOne;
 }
 
 .memoryFragment2 {
   top: 22%;
   right: 12%;
   transform: rotate(7deg);
+  animation-name: driftTwo;
 }
 
 .memoryFragment3 {
   bottom: 24%;
   left: 11%;
   transform: rotate(-5deg);
+  animation-name: driftThree;
 }
 
 .memoryFragment4 {
   bottom: 11%;
   right: 18%;
   transform: rotate(9deg);
+  animation-name: driftFour;
 }
 
 .memoryTrace1 {
   top: 18%;
   left: 48%;
+  animation-name: shimmerOne;
 }
 
 .memoryTrace2 {
   bottom: 30%;
   left: 36%;
+  animation-name: shimmerTwo;
 }
 
 .memoryTrace3 {
   bottom: 15%;
   right: 29%;
+  animation-name: shimmerThree;
 }
 
 .memoryFieldwhisper {
@@ -1564,10 +2854,31 @@
   color: rgba(141, 57, 41, 0.16);
 }
 
+.grammarMemorycoherent .memoryFragment,
+.grammarMemorycoherent .memoryTrace {
+  transform: scale(var(--grammar-memory-scale, 1));
+}
+
+.grammarMemoryfragmented .memoryFragment1,
+.grammarMemoryfragmented .memoryFragment3,
+.grammarMemoryfragmented .memoryTrace2 {
+  transform: translateX(var(--grammar-memory-drift, 0px)) rotate(-6deg);
+}
+
+.grammarMemoryfragmented .memoryFragment2,
+.grammarMemoryfragmented .memoryFragment4,
+.grammarMemoryfragmented .memoryTrace1,
+.grammarMemoryfragmented .memoryTrace3 {
+  transform: translateX(calc(var(--grammar-memory-drift, 0px) * -1)) rotate(6deg);
+}
+
 .textConstellation {
   position: absolute;
   inset: 0;
   z-index: 2;
+  transition:
+    transform 420ms ease,
+    opacity 320ms ease;
 }
 
 .floatingFragment,
@@ -1585,6 +2896,7 @@
   max-width: 16ch;
   font-size: clamp(1.4rem, 2vw, 2.4rem);
   letter-spacing: 0.02em;
+  opacity: calc(var(--clock-keyword-opacity, 0.7) * 0.9);
 }
 
 .floatingFragmentwhisper {
@@ -1615,6 +2927,8 @@
   font-size: 0.78rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   color: rgba(24, 20, 17, 0.48);
+  opacity: var(--clock-keyword-opacity, 0.7);
+  margin-left: var(--clock-keyword-shift, 0px);
 }
 
 .keywordParticlewhisper {
@@ -1635,64 +2949,245 @@
   filter: blur(0.4px);
 }
 
+.grammarConstellationrepeat .floatingFragment {
+  text-shadow: var(--grammar-fragment-shift, 0px) 0 0 rgba(24, 20, 17, 0.06);
+}
+
+.grammarConstellationrepeat .keywordParticle {
+  letter-spacing: var(--grammar-keyword-spacing, 0.14em);
+}
+
+.grammarConstellationfragmented .floatingFragment:nth-of-type(odd),
+.grammarConstellationfragmented .grammarParticle:nth-of-type(odd) {
+  transform: translateX(var(--grammar-fragment-shift, 0px)) rotate(-7deg);
+}
+
+.grammarConstellationfragmented .floatingFragment:nth-of-type(even),
+.grammarConstellationfragmented .grammarParticle:nth-of-type(even) {
+  transform: translateX(calc(var(--grammar-fragment-shift, 0px) * -1)) rotate(7deg);
+}
+
+.grammarParticle {
+  position: absolute;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: rgba(181, 69, 47, 0.5);
+  opacity: 0.72;
+  pointer-events: none;
+  user-select: none;
+}
+
+.grammarParticle1 {
+  top: 16%;
+  left: 18%;
+}
+
+.grammarParticle2 {
+  top: 28%;
+  right: 16%;
+}
+
+.grammarParticle3 {
+  bottom: 22%;
+  left: 24%;
+}
+
+.grammarParticle4 {
+  bottom: 16%;
+  right: 22%;
+}
+
+.strayLetter {
+  position: absolute;
+  display: block;
+  font-family: var(--display-font);
+  line-height: 1;
+  color: color-mix(in srgb, var(--clock-accent, #b5452f) 42%, rgba(24, 20, 17, 0.52));
+  opacity: calc(var(--clock-keyword-opacity, 0.7) * 0.58);
+  pointer-events: none;
+  user-select: none;
+  mix-blend-mode: multiply;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+.strayLetter1 {
+  top: 8%;
+  left: 24%;
+  font-size: clamp(0.9rem, 1vw, 1.15rem);
+  animation: shimmerOne calc(var(--clock-keyword-duration, 7.8s) * 0.9) infinite alternate;
+}
+
+.strayLetter2 {
+  top: 18%;
+  right: 22%;
+  font-size: clamp(1.2rem, 1.5vw, 1.8rem);
+  animation: driftTwo calc(var(--clock-keyword-duration, 7.8s) * 1.05) infinite alternate;
+}
+
+.strayLetter3 {
+  top: 44%;
+  left: 8%;
+  font-size: clamp(0.76rem, 0.92vw, 1rem);
+  animation: shimmerThree calc(var(--clock-keyword-duration, 7.8s) * 0.82) infinite alternate;
+}
+
+.strayLetter4 {
+  top: 58%;
+  right: 12%;
+  font-size: clamp(1.6rem, 2vw, 2.3rem);
+  animation: driftFour calc(var(--clock-keyword-duration, 7.8s) * 1.15) infinite alternate;
+}
+
+.strayLetter5 {
+  bottom: 28%;
+  left: 34%;
+  font-size: clamp(1rem, 1.2vw, 1.4rem);
+  animation: shimmerTwo calc(var(--clock-keyword-duration, 7.8s) * 0.96) infinite alternate;
+}
+
+.strayLetter6 {
+  bottom: 18%;
+  right: 34%;
+  font-size: clamp(0.84rem, 1vw, 1.1rem);
+  animation: driftOne calc(var(--clock-keyword-duration, 7.8s) * 0.88) infinite alternate;
+}
+
+.strayLetter7 {
+  bottom: 10%;
+  left: 16%;
+  font-size: clamp(1.3rem, 1.6vw, 1.9rem);
+  animation: shimmerOne calc(var(--clock-keyword-duration, 7.8s) * 1.08) infinite alternate;
+}
+
+.strayLetter8 {
+  bottom: 8%;
+  right: 16%;
+  font-size: clamp(0.72rem, 0.88vw, 0.96rem);
+  animation: shimmerThree calc(var(--clock-keyword-duration, 7.8s) * 0.78) infinite alternate;
+}
+
+.strayLetterwhisper {
+  opacity: calc(var(--clock-keyword-opacity, 0.7) * 0.42);
+}
+
+.strayLetterecho {
+  text-shadow: 8px 0 0 rgba(24, 20, 17, 0.07);
+}
+
+.strayLetterrupture {
+  letter-spacing: 0.08em;
+  color: rgba(181, 69, 47, 0.68);
+}
+
+.strayLettercounterpoint {
+  margin-left: calc(var(--clock-keyword-shift, 0px) * -0.6);
+}
+
+.strayLetterstain {
+  filter: blur(0.35px);
+  opacity: calc(var(--clock-keyword-opacity, 0.7) * 0.5);
+}
+
+.temporalParticle {
+  position: absolute;
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.54rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(181, 69, 47, 0.44);
+  opacity: 0.68;
+  mix-blend-mode: multiply;
+}
+
+.temporalParticleOne {
+  top: 18%;
+  left: 58%;
+  animation: shimmerOne 7.1s infinite alternate;
+}
+
+.temporalParticleTwo {
+  top: 54%;
+  right: 26%;
+  animation: shimmerTwo 7.8s infinite alternate;
+}
+
+.temporalParticleThree {
+  bottom: 22%;
+  left: 42%;
+  animation: shimmerThree 8.4s infinite alternate;
+}
+
+.temporalParticleFour {
+  bottom: 12%;
+  right: 18%;
+  max-width: 12ch;
+  line-height: 1.35;
+  animation: shimmerOne 8.2s infinite alternate;
+}
+
 .fragment1 {
   top: 16%;
   left: 10%;
-  animation: driftOne 9.5s infinite alternate;
+  animation: driftOne var(--clock-keyword-duration, 9.5s) infinite alternate;
 }
 
 .fragment2 {
   top: 22%;
   right: 12%;
-  animation: driftTwo 11s infinite alternate;
+  animation: driftTwo var(--clock-keyword-duration, 11s) infinite alternate;
 }
 
 .fragment3 {
   bottom: 24%;
   left: 13%;
-  animation: driftThree 10.5s infinite alternate;
+  animation: driftThree var(--clock-keyword-duration, 10.5s) infinite alternate;
 }
 
 .fragment4 {
   bottom: 14%;
   right: 14%;
-  animation: driftFour 12s infinite alternate;
+  animation: driftFour var(--clock-keyword-duration, 12s) infinite alternate;
 }
 
 .keyword1 {
   top: 12%;
   left: 34%;
-  animation: shimmerOne 7s infinite alternate;
+  animation: shimmerOne var(--clock-keyword-duration, 7s) infinite alternate;
 }
 
 .keyword2 {
   top: 33%;
   left: 21%;
-  animation: shimmerTwo 8s infinite alternate;
+  animation: shimmerTwo var(--clock-keyword-duration, 8s) infinite alternate;
 }
 
 .keyword3 {
   top: 34%;
   right: 17%;
-  animation: shimmerThree 8.5s infinite alternate;
+  animation: shimmerThree var(--clock-keyword-duration, 8.5s) infinite alternate;
 }
 
 .keyword4 {
   bottom: 31%;
   left: 52%;
-  animation: shimmerOne 7.4s infinite alternate;
+  animation: shimmerOne var(--clock-keyword-duration, 7.4s) infinite alternate;
 }
 
 .keyword5 {
   bottom: 18%;
   left: 22%;
-  animation: shimmerTwo 8.2s infinite alternate;
+  animation: shimmerTwo var(--clock-keyword-duration, 8.2s) infinite alternate;
 }
 
 .keyword6 {
   bottom: 14%;
   right: 21%;
-  animation: shimmerThree 7.8s infinite alternate;
+  animation: shimmerThree var(--clock-keyword-duration, 7.8s) infinite alternate;
 }
 
 .textStagecounterpoint .fragment1,
@@ -1721,9 +3216,6 @@
 
 .textStageCenter {
   position: absolute;
-  top: 33.333%;
-  left: 33.333%;
-  transform: translate(-50%, -50%);
   width: clamp(10rem, 18vw, 14rem);
   min-height: clamp(10rem, 18vw, 14rem);
   text-align: center;
@@ -1739,6 +3231,20 @@
   box-shadow:
     0 18px 40px rgba(24, 20, 17, 0.08),
     0 1px 0 rgba(255, 255, 255, 0.48) inset;
+  overflow: hidden;
+}
+
+.textStageCenter::before {
+  content: "";
+  position: absolute;
+  inset: auto auto 16% 56%;
+  width: 6rem;
+  height: 6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--clock-accent, #b5452f) 12%, transparent);
+  filter: blur(18px);
+  opacity: 0.28;
+  pointer-events: none;
 }
 
 .textStageCenterwhisper {
@@ -1753,7 +3259,6 @@
 
 .textStageCenterrupture {
   border-color: rgba(181, 69, 47, 0.24);
-  transform: translate(-50%, -50%) rotate(-1deg);
 }
 
 .textStageCentercounterpoint {
@@ -1767,7 +3272,156 @@
     inset 0 0 0 1px rgba(141, 57, 41, 0.08);
 }
 
+.structureCenterlocked {
+  box-shadow:
+    0 18px 40px rgba(24, 20, 17, 0.08),
+    0 0 0 12px rgba(181, 69, 47, 0.04);
+}
+
+.structureCenterdecentered {
+  box-shadow:
+    0 18px 40px rgba(24, 20, 17, 0.08),
+    16px 10px 0 rgba(24, 20, 17, 0.035);
+}
+
+.scenarioCenterirreversible {
+  border-radius: 34% 66% 58% 42% / 42% 44% 56% 58%;
+  box-shadow:
+    0 18px 40px rgba(24, 20, 17, 0.08),
+    inset 0 0 0 1px rgba(181, 69, 47, 0.08),
+    0 0 0 10px rgba(181, 69, 47, 0.03);
+}
+
+.scenarioCenterpressured {
+  box-shadow:
+    0 18px 40px rgba(24, 20, 17, 0.08),
+    10px -8px 0 rgba(181, 69, 47, 0.08);
+}
+
+.shapeCenterstable {
+  border-radius: 24px;
+}
+
+.shapeCenterunstable {
+  border-radius: 42% 58% 46% 54% / 48% 42% 58% 52%;
+}
+
+.shapeCenterexpanding {
+  box-shadow:
+    0 18px 40px rgba(24, 20, 17, 0.08),
+    0 0 0 14px rgba(181, 69, 47, 0.03);
+}
+
+.grammarCentermirror {
+  transform:
+    var(--thought-center-transform, translate(-50%, -50%))
+    scaleX(-1);
+}
+
+.grammarCentermirror strong,
+.grammarCentermirror p,
+.grammarCentermirror .clockCenterMeta,
+.grammarCentermirror .clockCenterDigits,
+.grammarCentermirror .clockCenterSignalRow,
+.grammarCentermirror .overlayLabel,
+.grammarCentermirror .grammarCenterToken {
+  transform: scaleX(-1);
+}
+
+.grammarCenteradd {
+  box-shadow:
+    0 18px 40px rgba(24, 20, 17, 0.08),
+    0 0 0 12px rgba(181, 69, 47, 0.035);
+}
+
+.grammarCentersubtract {
+  box-shadow:
+    0 18px 40px rgba(24, 20, 17, 0.08),
+    inset 0 0 0 1px rgba(24, 20, 17, 0.06);
+  transform:
+    var(--thought-center-transform, translate(-50%, -50%))
+    rotate(var(--grammar-center-tilt, 0deg))
+    scale(var(--grammar-center-subtract-scale, 0.94));
+}
+
+.grammarCenterscale {
+  box-shadow:
+    0 18px 40px rgba(24, 20, 17, 0.08),
+    0 0 0 14px rgba(181, 69, 47, 0.035);
+}
+
+.grammarCenterscale::after {
+  opacity: var(--grammar-center-scale-opacity, 0.24);
+  animation: grammarCenterScalePulse 7.4s ease-in-out infinite;
+}
+
+.grammarCenterrepeat {
+  box-shadow:
+    0 18px 40px rgba(24, 20, 17, 0.08),
+    10px 0 0 rgba(24, 20, 17, 0.04),
+    -10px 0 0 rgba(24, 20, 17, 0.04);
+}
+
+.grammarCenterrepeat::after {
+  opacity: var(--grammar-center-repeat-opacity, 0.24);
+  animation: grammarCenterRepeatPulse 7.4s ease-in-out infinite;
+}
+
+.grammarCentermerge {
+  box-shadow:
+    0 18px 40px rgba(24, 20, 17, 0.08),
+    0 0 0 10px rgba(181, 69, 47, 0.03);
+}
+
+.grammarCentermerge::after {
+  opacity: var(--grammar-center-merge-opacity, 0.24);
+  animation: grammarCenterMergePulse 7.4s ease-in-out infinite;
+}
+
+.grammarCentersplit {
+  box-shadow:
+    0 18px 40px rgba(24, 20, 17, 0.08),
+    inset 0 0 0 1px rgba(181, 69, 47, 0.08);
+}
+
+.grammarCentersplit::after {
+  opacity: var(--grammar-center-split-opacity, 0.24);
+  animation: grammarCenterSplitPulse 7.3s ease-in-out infinite;
+}
+
+.grammarCenterdistort {
+  border-radius: 40% 60% 48% 52% / 44% 40% 60% 56%;
+  filter: saturate(1.02);
+}
+
+.grammarCenterdistort::after {
+  opacity: var(--grammar-center-distort-opacity, 0.24);
+  animation: grammarCenterDistortPulse 7.4s ease-in-out infinite;
+}
+
+.grammarCentertranslate {
+  box-shadow:
+    0 18px 40px rgba(24, 20, 17, 0.08),
+    14px 0 0 rgba(24, 20, 17, 0.04);
+}
+
+.grammarCenterfragmented {
+  border-radius: 36% 64% 42% 58% / 44% 40% 60% 56%;
+}
+
+.grammarCenterfragmented::after {
+  opacity: var(--grammar-center-fragment-opacity, 0.24);
+  animation: grammarCenterFragmentPulse 7.1s ease-in-out infinite;
+}
+
+.grammarCentercoherent {
+  outline: 1px solid rgba(181, 69, 47, 0.08);
+  outline-offset: 10px;
+}
+
 .textStageCenter strong {
+  position: relative;
+  z-index: 1;
   font-family: var(--display-font);
   font-size: clamp(1rem, 1.6vw, 1.4rem);
   line-height: 1.05;
@@ -1776,11 +3430,675 @@
 }
 
 .textStageCenter p {
+  position: relative;
+  z-index: 1;
   margin: 0;
   color: var(--muted);
   line-height: 1.35;
   font-size: 0.82rem;
   max-width: 12ch;
+}
+
+.textStageCenter {
+  transform:
+    var(--thought-center-transform, translate(-50%, -50%))
+    rotate(var(--grammar-center-tilt, 0deg))
+    scale(var(--grammar-center-scale, 1));
+}
+
+.textStageCenter::after {
+  content: "";
+  position: absolute;
+  inset: 18%;
+  border-radius: inherit;
+  border: 1px dashed rgba(181, 69, 47, calc(var(--grammar-center-glow, 0.1) * 1));
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.grammarCenteradd::before {
+  opacity: var(--grammar-center-inner-opacity, 0.32);
+  animation: grammarCenterAddBloom 7.4s ease-in-out infinite;
+}
+
+.grammarCentersubtract::after {
+  opacity: var(--grammar-center-cut-opacity, 0.22);
+  animation: grammarCenterSubtractPulse 6.6s ease-in-out infinite;
+}
+
+.grammarCenterAccent,
+.grammarCenterCut,
+.grammarCenterMirrorAxis,
+.grammarCenterMirrorMarker,
+.grammarCenterRepeatEcho,
+.grammarCenterMergeBridge,
+.grammarCenterMergeNode,
+.grammarCenterSplitAxis,
+.grammarCenterSplitNode,
+.grammarCenterRotateArc,
+.grammarCenterTranslateTrail,
+.grammarCenterTranslateMarker,
+.grammarCenterFragmentShard {
+  position: absolute;
+  pointer-events: none;
+}
+
+.grammarCenterSplitAxis {
+  top: 16%;
+  bottom: 16%;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(181, 69, 47, 0), rgba(181, 69, 47, 0.72), rgba(181, 69, 47, 0));
+  opacity: var(--grammar-center-split-opacity, 0.24);
+  box-shadow:
+    0 0 0 1px rgba(255, 245, 242, 0.08),
+    0 0 12px rgba(181, 69, 47, 0.08);
+  animation: grammarCenterSplitAxisPulse 7.2s ease-in-out infinite;
+}
+
+.grammarCenterSplitNode {
+  top: calc(50% - 0.52rem);
+  width: 1.04rem;
+  height: 1.04rem;
+  border-radius: 999px;
+  border: 1px solid rgba(181, 69, 47, 0.34);
+  background: radial-gradient(circle at center, rgba(181, 69, 47, 0.16), rgba(181, 69, 47, 0.02) 72%);
+  opacity: calc(var(--grammar-center-split-opacity, 0.24) * 0.92);
+  box-shadow:
+    0 0 0 1px rgba(255, 245, 242, 0.08),
+    0 0 10px rgba(181, 69, 47, 0.08);
+  animation: grammarCenterSplitNodeDrift 7.1s ease-in-out infinite;
+}
+
+.grammarCenterSplitNodeLeft {
+  left: 28%;
+}
+
+.grammarCenterSplitNodeRight {
+  right: 28%;
+  animation-delay: 1.1s;
+}
+
+.grammarCenterMergeBridge {
+  top: 50%;
+  left: 28%;
+  width: 44%;
+  height: 1px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, rgba(181, 69, 47, 0), rgba(181, 69, 47, 0.78), rgba(181, 69, 47, 0));
+  opacity: var(--grammar-center-merge-opacity, 0.24);
+  animation: grammarCenterMergeBridgePulse 7.4s ease-in-out infinite;
+}
+
+.grammarCenterMergeNode {
+  top: calc(50% - 0.52rem);
+  width: 1.04rem;
+  height: 1.04rem;
+  border-radius: 999px;
+  border: 1px solid rgba(181, 69, 47, 0.34);
+  background: radial-gradient(circle at center, rgba(181, 69, 47, 0.16), rgba(181, 69, 47, 0.02) 72%);
+  opacity: calc(var(--grammar-center-merge-opacity, 0.24) * 0.92);
+  box-shadow:
+    0 0 0 1px rgba(255, 245, 242, 0.08),
+    0 0 10px rgba(181, 69, 47, 0.08);
+  animation: grammarCenterMergeNodeConverge 7.1s ease-in-out infinite;
+}
+
+.grammarCenterMergeNodeLeft {
+  left: 20%;
+}
+
+.grammarCenterMergeNodeRight {
+  right: 20%;
+  animation-delay: 1.1s;
+}
+
+.grammarCenterTranslateTrail {
+  width: 44%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(181, 69, 47, 0), rgba(181, 69, 47, 0.72), rgba(181, 69, 47, 0));
+  opacity: var(--grammar-center-translate-opacity, 0.24);
+  animation: grammarCenterTranslateTrailDrift 7.4s ease-in-out infinite;
+}
+
+.grammarCenterTranslateTrailOne {
+  top: 26%;
+  left: 22%;
+  transform: rotate(-8deg);
+}
+
+.grammarCenterTranslateTrailTwo {
+  bottom: 24%;
+  left: 30%;
+  transform: rotate(-4deg);
+  animation-delay: 1.6s;
+}
+
+.grammarCenterTranslateMarker {
+  width: 0.68rem;
+  height: 0.68rem;
+  border-radius: 999px;
+  background: rgba(181, 69, 47, 0.78);
+  box-shadow:
+    0 0 0 4px rgba(181, 69, 47, 0.08),
+    0 0 12px rgba(181, 69, 47, 0.1);
+  opacity: calc(var(--grammar-center-translate-opacity, 0.24) * 0.9);
+  animation: grammarCenterTranslateMarkerPulse 7.2s ease-in-out infinite;
+}
+
+.grammarCenterTranslateMarkerOne {
+  top: 25%;
+  left: 62%;
+}
+
+.grammarCenterTranslateMarkerTwo {
+  bottom: 22%;
+  right: 18%;
+  animation-delay: 1.2s;
+}
+
+.grammarCenterFragmentShard {
+  width: 42%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(181, 69, 47, 0), rgba(181, 69, 47, 0.72), rgba(181, 69, 47, 0));
+  opacity: var(--grammar-center-fragment-opacity, 0.24);
+  animation: grammarCenterFragmentDrift 7.6s ease-in-out infinite;
+}
+
+.grammarCenterFragmentShardOne {
+  top: 34%;
+  left: 28%;
+  transform: rotate(-14deg);
+}
+
+.grammarCenterFragmentShardTwo {
+  bottom: 32%;
+  left: 26%;
+  transform: rotate(12deg);
+  animation-delay: 1.8s;
+}
+
+.grammarCenterRepeatEcho {
+  inset: 18%;
+  border-radius: inherit;
+  border: 1px dashed rgba(181, 69, 47, 0.28);
+  opacity: var(--grammar-center-repeat-opacity, 0.24);
+  animation: grammarCenterRepeatEchoPulse 8s ease-in-out infinite;
+}
+
+.grammarCenterRepeatEchoOne {
+  inset: 16%;
+}
+
+.grammarCenterRepeatEchoTwo {
+  inset: 24%;
+  animation-delay: 1.6s;
+}
+
+.grammarCenterrotate {
+  animation: grammarCenterRotatePulse 7.6s ease-in-out infinite;
+}
+
+.grammarCenterRotateArc {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 999px;
+  border: 1px dashed rgba(181, 69, 47, 0.34);
+  border-color: rgba(181, 69, 47, 0.42) transparent transparent transparent;
+  opacity: var(--grammar-center-rotate-opacity, 0.24);
+  box-shadow:
+    0 0 0 1px rgba(255, 245, 242, 0.08),
+    0 0 12px rgba(181, 69, 47, 0.08);
+  animation: grammarCenterRotateArcSweep 7.6s ease-in-out infinite;
+}
+
+.grammarCenterRotateArcOne {
+  top: 18%;
+  right: 18%;
+}
+
+.grammarCenterRotateArcTwo {
+  bottom: 18%;
+  left: 18%;
+  transform: rotate(180deg);
+  animation-delay: 1.4s;
+}
+
+.grammarCenterMirrorAxis {
+  top: 16%;
+  bottom: 16%;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(181, 69, 47, 0), rgba(181, 69, 47, 0.68), rgba(181, 69, 47, 0));
+  opacity: var(--grammar-center-mirror-opacity, 0.26);
+  box-shadow:
+    0 0 0 1px rgba(255, 245, 242, 0.08),
+    0 0 14px rgba(181, 69, 47, 0.08);
+  animation: grammarCenterMirrorAxisPulse 7.2s ease-in-out infinite;
+}
+
+.grammarCenterMirrorMarker {
+  top: 24%;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(181, 69, 47, 0.3);
+  background: radial-gradient(circle at center, rgba(181, 69, 47, 0.14), rgba(181, 69, 47, 0.02) 72%);
+  opacity: calc(var(--grammar-center-mirror-opacity, 0.26) * 0.88);
+  box-shadow:
+    0 0 0 1px rgba(255, 245, 242, 0.08),
+    0 0 12px rgba(181, 69, 47, 0.08);
+  animation: grammarCenterMirrorMarkerFloat 7.8s ease-in-out infinite;
+}
+
+.grammarCenterMirrorMarkerLeft {
+  left: 18%;
+}
+
+.grammarCenterMirrorMarkerRight {
+  right: 18%;
+  animation-delay: 1.4s;
+}
+
+.grammarCenterAccent {
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(181, 69, 47, 0.34);
+  background:
+    radial-gradient(circle at center, rgba(181, 69, 47, 0.16), rgba(181, 69, 47, 0.02) 72%);
+  opacity: var(--grammar-center-inner-opacity, 0.32);
+  animation: grammarCenterAccentOrbit 7.8s ease-in-out infinite;
+}
+
+.grammarCenterAccentOne {
+  top: 18%;
+  left: 18%;
+}
+
+.grammarCenterAccentTwo {
+  right: 18%;
+  bottom: 20%;
+  animation-delay: 1.6s;
+}
+
+.grammarCenterCut {
+  width: 46%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(181, 69, 47, 0), rgba(181, 69, 47, 0.68), rgba(181, 69, 47, 0));
+  opacity: var(--grammar-center-cut-opacity, 0.22);
+  animation: grammarCenterCutDrift 6.9s ease-in-out infinite;
+}
+
+.grammarCenterCutOne {
+  top: 36%;
+  left: 28%;
+  transform: rotate(-12deg);
+}
+
+.grammarCenterCutTwo {
+  bottom: 34%;
+  left: 26%;
+  transform: rotate(10deg);
+  animation-delay: 1.2s;
+}
+
+.grammarCenterToken {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(181, 69, 47, 0.66);
+  opacity: 0.88;
+}
+
+.grammarCenterToken1 {
+  transform: translateY(-1px);
+}
+
+.grammarCenterToken2 {
+  transform: translateY(1px);
+}
+
+@keyframes grammarCenterAddBloom {
+  0%,
+  100% {
+    transform:
+      var(--thought-center-transform, translate(-50%, -50%))
+      rotate(var(--grammar-center-tilt, 0deg))
+      scale(var(--grammar-center-scale, 1));
+  }
+
+  50% {
+    transform:
+      var(--thought-center-transform, translate(-50%, -50%))
+      rotate(var(--grammar-center-tilt, 0deg))
+      scale(calc(var(--grammar-center-scale, 1) + 0.02));
+  }
+}
+
+@keyframes grammarCenterSubtractPulse {
+  0%,
+  100% {
+    opacity: var(--grammar-center-cut-opacity, 0.22);
+    transform:
+      var(--thought-center-transform, translate(-50%, -50%))
+      rotate(var(--grammar-center-tilt, 0deg))
+      scale(var(--grammar-center-subtract-scale, 0.94));
+  }
+
+  50% {
+    opacity: calc(var(--grammar-center-cut-opacity, 0.22) * 0.72);
+    transform:
+      var(--thought-center-transform, translate(-50%, -50%))
+      rotate(var(--grammar-center-tilt, 0deg))
+      scale(calc(var(--grammar-center-subtract-scale, 0.94) - 0.02));
+  }
+}
+
+@keyframes grammarCenterAccentOrbit {
+  0%,
+  100% {
+    transform: scale(0.96);
+  }
+
+  50% {
+    transform: scale(1.08) translate3d(2px, -2px, 0);
+  }
+}
+
+@keyframes grammarCenterCutDrift {
+  0%,
+  100% {
+    opacity: var(--grammar-center-cut-opacity, 0.22);
+  }
+
+  50% {
+    opacity: calc(var(--grammar-center-cut-opacity, 0.22) * 0.74);
+    filter: blur(0.24px);
+  }
+}
+
+@keyframes grammarCenterMirrorAxisPulse {
+  0%,
+  100% {
+    opacity: var(--grammar-center-mirror-opacity, 0.26);
+  }
+
+  50% {
+    opacity: calc(var(--grammar-center-mirror-opacity, 0.26) + 0.12);
+  }
+}
+
+@keyframes grammarCenterMirrorMarkerFloat {
+  0%,
+  100% {
+    transform: scale(0.96);
+  }
+
+  50% {
+    transform: scale(1.04) translate3d(0, -3px, 0);
+  }
+}
+
+@keyframes grammarCenterRepeatPulse {
+  0%,
+  100% {
+    opacity: var(--grammar-center-repeat-opacity, 0.24);
+  }
+
+  50% {
+    opacity: calc(var(--grammar-center-repeat-opacity, 0.24) + 0.12);
+  }
+}
+
+@keyframes grammarCenterRepeatEchoPulse {
+  0%,
+  100% {
+    transform: scale(0.96);
+    opacity: calc(var(--grammar-center-repeat-opacity, 0.24) * 0.82);
+  }
+
+  50% {
+    transform: scale(1.03);
+    opacity: var(--grammar-center-repeat-opacity, 0.24);
+  }
+}
+
+@keyframes grammarCenterMergePulse {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-center-merge-opacity, 0.24) * 0.82);
+  }
+
+  50% {
+    opacity: var(--grammar-center-merge-opacity, 0.24);
+  }
+}
+
+@keyframes grammarCenterMergeBridgePulse {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-center-merge-opacity, 0.24) * 0.82);
+    transform: translateY(-50%) scaleX(0.92);
+  }
+
+  50% {
+    opacity: var(--grammar-center-merge-opacity, 0.24);
+    transform: translateY(-50%) scaleX(1.04);
+  }
+}
+
+@keyframes grammarCenterMergeNodeConverge {
+  0%,
+  100% {
+    transform: scale(0.96);
+  }
+
+  50% {
+    transform: scale(1.06) translate3d(3px, 0, 0);
+  }
+}
+
+@keyframes grammarCenterSplitPulse {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-center-split-opacity, 0.24) * 0.82);
+  }
+
+  50% {
+    opacity: var(--grammar-center-split-opacity, 0.24);
+  }
+}
+
+@keyframes grammarCenterSplitAxisPulse {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-center-split-opacity, 0.24) * 0.84);
+  }
+
+  50% {
+    opacity: var(--grammar-center-split-opacity, 0.24);
+  }
+}
+
+@keyframes grammarCenterSplitNodeDrift {
+  0%,
+  100% {
+    transform: scale(0.96);
+  }
+
+  50% {
+    transform: scale(1.04) translate3d(-4px, 0, 0);
+  }
+}
+
+@keyframes grammarCenterScalePulse {
+  0%,
+  100% {
+    transform:
+      var(--thought-center-transform, translate(-50%, -50%))
+      rotate(var(--grammar-center-tilt, 0deg))
+      scale(var(--grammar-center-scale, 1));
+    opacity: calc(var(--grammar-center-scale-opacity, 0.24) * 0.82);
+  }
+
+  50% {
+    transform:
+      var(--thought-center-transform, translate(-50%, -50%))
+      rotate(var(--grammar-center-tilt, 0deg))
+      scale(calc(var(--grammar-center-scale, 1) * var(--grammar-center-scale-factor, 1.08)));
+    opacity: var(--grammar-center-scale-opacity, 0.24);
+  }
+}
+
+@keyframes grammarCenterDistortPulse {
+  0%,
+  100% {
+    transform:
+      var(--thought-center-transform, translate(-50%, -50%))
+      rotate(var(--grammar-center-tilt, 0deg))
+      scale(var(--grammar-center-scale, 1))
+      skewX(0deg);
+    opacity: calc(var(--grammar-center-distort-opacity, 0.24) * 0.82);
+  }
+
+  50% {
+    transform:
+      var(--thought-center-transform, translate(-50%, -50%))
+      rotate(var(--grammar-center-tilt, 0deg))
+      scale(calc(var(--grammar-center-scale, 1) + 0.01))
+      skewX(var(--grammar-center-distort-skew, -4deg));
+    opacity: var(--grammar-center-distort-opacity, 0.24);
+  }
+}
+
+@keyframes grammarCenterRotatePulse {
+  0%,
+  100% {
+    transform:
+      var(--thought-center-transform, translate(-50%, -50%))
+      rotate(var(--grammar-center-tilt, 0deg))
+      scale(var(--grammar-center-scale, 1));
+  }
+
+  50% {
+    transform:
+      var(--thought-center-transform, translate(-50%, -50%))
+      rotate(calc(var(--grammar-center-tilt, 0deg) + var(--grammar-center-rotate-angle, 0deg)))
+      scale(var(--grammar-center-scale, 1));
+  }
+}
+
+@keyframes grammarCenterRotateArcSweep {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-center-rotate-opacity, 0.24) * 0.84);
+  }
+
+  50% {
+    opacity: var(--grammar-center-rotate-opacity, 0.24);
+    transform: rotate(24deg);
+  }
+}
+
+@keyframes grammarCenterTranslateTrailDrift {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-center-translate-opacity, 0.24) * 0.82);
+  }
+
+  50% {
+    opacity: var(--grammar-center-translate-opacity, 0.24);
+    transform: translate3d(var(--grammar-center-translate-shift, 0px), -2px, 0);
+  }
+}
+
+@keyframes grammarCenterTranslateMarkerPulse {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-center-translate-opacity, 0.24) * 0.9);
+  }
+
+  50% {
+    opacity: var(--grammar-center-translate-opacity, 0.24);
+    transform: scale(1.08);
+  }
+}
+
+@keyframes grammarCenterFragmentPulse {
+  0%,
+  100% {
+    opacity: var(--grammar-center-fragment-opacity, 0.24);
+  }
+
+  50% {
+    opacity: calc(var(--grammar-center-fragment-opacity, 0.24) + 0.12);
+    border-style: dashed;
+  }
+}
+
+@keyframes grammarCenterFragmentDrift {
+  0%,
+  100% {
+    opacity: calc(var(--grammar-center-fragment-opacity, 0.24) * 0.82);
+  }
+
+  50% {
+    opacity: var(--grammar-center-fragment-opacity, 0.24);
+    filter: blur(0.26px);
+  }
+}
+
+.clockCenterMeta {
+  position: relative;
+  z-index: 1;
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.5rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--clock-ink, #181411) 30%, transparent);
+}
+
+.clockCenterDigits {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 0.08rem;
+  font-family: var(--display-font);
+  font-size: clamp(0.88rem, 1.3vw, 1.08rem);
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  color: color-mix(in srgb, var(--clock-accent, #b5452f) 54%, var(--clock-ink, #181411));
+  opacity: 0.72;
+}
+
+.clockCenterSeparator {
+  transform: translateY(-0.02em);
+  opacity: 0.6;
+}
+
+.clockCenterSignalRow {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.48rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--clock-ink, #181411) 32%, transparent);
 }
 
 .cornerSignature {
@@ -1887,6 +4205,33 @@
   background: rgba(255, 251, 246, 0.82);
   backdrop-filter: blur(12px);
   box-shadow: 0 12px 30px rgba(24, 20, 17, 0.08);
+  overflow: hidden;
+  transform-origin: bottom right;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.liveAiResponseOverlayCollapsed {
+  transform: translateY(0);
+}
+
+.liveAiResponseOverlayOpen {
+  transform: translateY(0);
+}
+
+.liveAiResponseToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
 }
 
 .liveAiResponseLabel {
@@ -1895,6 +4240,35 @@
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: rgba(24, 20, 17, 0.42);
+}
+
+.liveAiResponseToggleLabel {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(181, 69, 47, 0.62);
+}
+
+.liveAiResponseBody {
+  display: grid;
+  transition:
+    max-height 180ms ease,
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.liveAiResponseBodyClosed {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateY(10px);
+}
+
+.liveAiResponseBodyOpen {
+  max-height: 20rem;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .liveAiResponseStack {
@@ -2505,9 +4879,6 @@
   }
 
   .clockField {
-    top: 14px;
-    right: 14px;
-    left: auto;
     min-width: min(46vw, 9rem);
     padding: 8px 10px 8px;
   }

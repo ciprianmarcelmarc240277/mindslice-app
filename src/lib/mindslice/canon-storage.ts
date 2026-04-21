@@ -1,5 +1,6 @@
 "use client";
 
+import { normalizeLegacyCanonEntry } from "@/lib/mindslice/concept-legacy-normalization";
 import type { CanonEntry } from "@/lib/mindslice/mindslice-types";
 
 export const CANON_STORAGE_KEY = "mindslice:canon";
@@ -17,7 +18,9 @@ export function readCanon() {
     }
 
     const parsed = JSON.parse(raw) as { canon?: CanonEntry[] };
-    return Array.isArray(parsed.canon) ? parsed.canon : [];
+    return Array.isArray(parsed.canon)
+      ? parsed.canon.map(normalizeLegacyCanonEntry)
+      : [];
   } catch {
     return [];
   }

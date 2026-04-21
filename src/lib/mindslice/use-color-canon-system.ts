@@ -7,6 +7,10 @@ import {
   readColorCanon,
   writeColorCanon,
 } from "@/lib/mindslice/color-canon-storage";
+import {
+  loadPersistedMindsliceState,
+  persistMindsliceState,
+} from "@/lib/mindslice/mindslice-state-persistence";
 import { isColorCanonical } from "@/lib/mindslice/concept-color-theory-system";
 import type {
   ColorCanonEntry,
@@ -53,6 +57,36 @@ export function useColorCanonSystem({ isSignedIn, colorMemory }: UseColorCanonSy
       window.removeEventListener(COLOR_CANON_UPDATED_EVENT, syncColorCanon);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadColorCanon() {
+      try {
+        const next = await loadPersistedMindsliceState<ColorCanonEntry>("canon", "color");
+
+        if (cancelled) {
+          return;
+        }
+
+        writeColorCanon(next);
+      } catch {
+        if (!cancelled) {
+          window.dispatchEvent(new Event(COLOR_CANON_UPDATED_EVENT));
+        }
+      }
+    }
+
+    loadColorCanon();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn]);
 
   useEffect(() => {
     if (!isSignedIn) {
@@ -124,6 +158,14 @@ export function useColorCanonSystem({ isSignedIn, colorMemory }: UseColorCanonSy
 
     lastFingerprintRef.current = fingerprint;
     writeColorCanon(next);
+
+    void persistMindsliceState("canon", "color", next)
+      .then((synced) => {
+        writeColorCanon(synced);
+      })
+      .catch(() => {
+        // Alpha-safe: local color canon remains available if backend persistence fails.
+      });
   }, [colorMemory, isSignedIn]);
 
   const visibleColorCanon = useMemo(() => (isSignedIn ? colorCanon : []), [colorCanon, isSignedIn]);

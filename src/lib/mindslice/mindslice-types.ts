@@ -215,6 +215,7 @@ export type ConceptExpression = {
   compositionMode: string;
   typographyMode: string;
   motionMode: string;
+  clock: ClockDisplayState | null;
   scenario: {
     coreConflict: string;
     characterDrive: string;
@@ -239,6 +240,45 @@ export type ConceptExpression = {
     outputText: string;
     outputVisual: string;
     runtime: ArtCompositionRuntime;
+  };
+  compositionStructure: {
+    grid: string;
+    subjectPosition: string;
+    symmetryState: string;
+    centerState: string;
+    tensionZones: string[];
+    attentionMap: string[];
+    outputVisual: string;
+    outputText: string;
+    runtime: CompositionStructureRuntime;
+  };
+  shape: {
+    type: string;
+    structure: string[];
+    edges: string[];
+    mass: string;
+    voidRelation: string[];
+    behavior: string;
+    positionTendency: string;
+    tensionVectors: string[];
+    attentionProfile: string[];
+    outputVisual: string;
+    outputText: string;
+    runtime: ShapeTheoryRuntime;
+  };
+  shapeGrammar: {
+    sequence: string[];
+    rulesApplied: string[];
+    transformationMap: string[];
+    structureEvolution: string[];
+    outputVisual: string;
+    outputText: string;
+    runtime: ShapeGrammarRuntime;
+  };
+  metaSystem: {
+    outputVisual: string;
+    outputText: string;
+    runtime: MetaSystemRuntime;
   };
   palette: {
     dominant: string;
@@ -349,6 +389,7 @@ export type ConceptCandidate = {
     visual: number;
     crossModal: number;
   };
+  canonInfluence: CanonInfluenceContext;
   evaluationAxes: ConceptEvaluationAxes;
   conceptStateDraft: ConceptState;
 };
@@ -362,8 +403,22 @@ export type ConceptValidationResult = {
     semanticStability: number;
     visualConsistency: number;
     crossModalAlignment: number;
+    crossCanonCoherence: number;
+    timeArtCoherence: number;
     contaminationResolution: number;
     authorDilemmaResolution: number;
+    shapeIdentity: number;
+    shapeRelation: number;
+    shapeTension: number;
+    shapeAttention: number;
+    grammarCoherence: number;
+    grammarTransformation: number;
+    grammarRelation: number;
+    grammarExpressivePower: number;
+    metaStructure: number;
+    metaCoherence: number;
+    metaAttention: number;
+    metaIntegration: number;
     conflict: number;
     tension: number;
     progression: number;
@@ -376,6 +431,11 @@ export type ConceptValidationResult = {
     contrast: number;
     proportion: number;
     focus: number;
+    thirdsStructure: number;
+    goldenStructure: number;
+    symmetryStructure: number;
+    centerStructure: number;
+    structuralAttention: number;
     hueStructure: number;
     valueBalance: number;
     saturationControl: number;
@@ -556,6 +616,196 @@ export type ArtCompositionRuntime = {
   notes: string[];
 };
 
+export type CompositionStructureThresholds = {
+  thirds: number;
+  golden: number;
+  symmetry: number;
+  center: number;
+  attention: number;
+};
+
+export type CompositionStructureScores = {
+  thirds: number;
+  golden: number;
+  symmetry: number;
+  center: number;
+  attention: number;
+};
+
+export type CompositionStructureRuntime = {
+  interpretation: string;
+  contaminationMode: ContaminationType;
+  acceptedContamination: boolean;
+  iterationCount: number;
+  terminated: boolean;
+  terminationReason: "threshold_reached" | "rejected_contamination" | "iteration_limit";
+  thresholds: CompositionStructureThresholds;
+  scores: CompositionStructureScores;
+  isValidStructure: boolean;
+  lawPassed: boolean;
+  lawNote: string;
+  notes: string[];
+};
+
+export type ShapeTheoryThresholds = {
+  identity: number;
+  relation: number;
+  tension: number;
+  attention: number;
+};
+
+export type ShapeTheoryScores = {
+  identity: number;
+  relation: number;
+  tension: number;
+  attention: number;
+};
+
+export type ShapeTheoryRuntime = {
+  interpretation: string;
+  shapeIdeaSet: string[];
+  contaminationMode: ContaminationType;
+  acceptedContamination: boolean;
+  hardFailureMode: "soft" | "controlled";
+  hardFailureTriggered: boolean;
+  iterationCount: number;
+  terminated: boolean;
+  terminationReason: "threshold_reached" | "rejected_contamination" | "iteration_limit";
+  failed: boolean;
+  failureReason: "negative_contamination" | "validation_thresholds" | null;
+  thresholds: ShapeTheoryThresholds;
+  scores: ShapeTheoryScores;
+  isValidShape: boolean;
+  lawPassed: boolean;
+  lawNote: string;
+  notes: string[];
+};
+
+export type ShapeGrammarThresholds = {
+  coherence: number;
+  transformation: number;
+  relation: number;
+  expressivePower: number;
+};
+
+export type ShapeGrammarScores = {
+  coherence: number;
+  transformation: number;
+  relation: number;
+  expressivePower: number;
+};
+
+export type ShapeGrammarRuntime = {
+  seedShape: string;
+  ruleset: string[];
+  constraints: string[];
+  hardFailureMode: "soft" | "controlled";
+  hardFailureTriggered: boolean;
+  iterationCount: number;
+  maxIterations: number;
+  terminated: boolean;
+  terminationReason: "threshold_reached" | "transformation_rejection" | "iteration_limit" | "law_rejection";
+  failed: boolean;
+  failureReason: "invalid_grammar" | "transformation_rejection" | "law_rejection" | null;
+  thresholds: ShapeGrammarThresholds;
+  scores: ShapeGrammarScores;
+  lawPassed: boolean;
+  lawNote: string;
+  systemStateUpdate: {
+    rulePriorities: {
+      dominantRule: string;
+      adaptiveBias: number;
+      rankedRules: string[];
+      constraintBias: number;
+      suppressedRules: string[];
+      recoveredRules: string[];
+    };
+    transformationLogic: {
+      acceptedWeight: number;
+      rejectedWeight: number;
+    };
+    sequenceBehavior: {
+      continuityWeight: number;
+      varianceWeight: number;
+    };
+    notes: string[];
+  };
+  notes: string[];
+};
+
+export type MetaSystemThresholds = {
+  structure: number;
+  coherence: number;
+  attention: number;
+  integration: number;
+};
+
+export type MetaSystemScores = {
+  structure: number;
+  coherence: number;
+  attention: number;
+  integration: number;
+};
+
+export type MetaSystemRuntime = {
+  framework: {
+    intent: string;
+    domain: string[];
+    constraints: string[];
+    goal: string;
+    priority: string;
+  };
+  labyrinth: {
+    axes: string[];
+    variations: string[];
+    relations: string[];
+  };
+  conductor: {
+    mode: "conductor";
+    targetModules: string[];
+    labyrinthPressure: number;
+    pipelinePressure: number;
+    relationPressure: number;
+    notes: string[];
+  };
+  activePipeline: string[];
+  designState: {
+    executedModules: string[];
+    reorderedPipeline: string[];
+    suppressedModules: string[];
+    suppressionNotes: string[];
+    recoveredModules: string[];
+    recoveryNotes: string[];
+    moduleWeights: Record<string, number>;
+    reweightNotes: string[];
+    failed: boolean;
+    failureModule: string | null;
+    failureReason: string | null;
+    moduleNotes: string[];
+  };
+  memory: {
+    globalWeight: number;
+    domainWeights: Record<string, number>;
+    appliedDomains: string[];
+    influenceWeight: number;
+    influenceNotes: string[];
+  };
+  validationPassed: boolean;
+  failed: boolean;
+  failureReason: "design_failure" | "validation_thresholds" | "law_rejection" | null;
+  canon: {
+    globalCandidate: boolean;
+    domainCandidates: string[];
+    influenceWeight: number;
+    influenceNotes: string[];
+  };
+  thresholds: MetaSystemThresholds;
+  scores: MetaSystemScores;
+  lawPassed: boolean;
+  lawNote: string;
+  notes: string[];
+};
+
 export type ColorPoolEntry = {
   id: string;
   conceptId: string;
@@ -577,6 +827,7 @@ export type ColorPoolEntry = {
 
 export type ArtCompositionState = ConceptExpression["artComposition"];
 export type NarrativeScenarioState = ConceptExpression["scenario"];
+export type CompositionStructureState = ConceptExpression["compositionStructure"];
 
 export type ScenarioPoolEntry = {
   id: string;
@@ -685,6 +936,173 @@ export type ArtCanonEntry = {
   influenceWeight: number;
 };
 
+export type StructurePoolEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  structure: CompositionStructureState;
+  validation: {
+    thirds: number;
+    golden: number;
+    symmetry: number;
+    center: number;
+    attention: number;
+  };
+  pooledAt: string;
+  lastSeenAt: string;
+  source: "main_loop" | "active_runtime";
+};
+
+export type StructureMemoryEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  structure: CompositionStructureState;
+  validation: StructurePoolEntry["validation"];
+  storedAt: string;
+  lastSeenAt: string;
+};
+
+export type StructureCanonEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  structure: CompositionStructureState;
+  validation: StructureMemoryEntry["validation"];
+  canonizedAt: string;
+  lastActivatedAt: string;
+  lineage: {
+    siblingCanonIds: string[];
+    sourceIdeaCanonCount: number;
+  };
+  influenceWeight: number;
+};
+
+export type ShapeTheoryState = ConceptExpression["shape"];
+export type ShapeGrammarState = ConceptExpression["shapeGrammar"];
+export type MetaSystemState = ConceptExpression["metaSystem"];
+
+export type ShapeGrammarMemoryEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  grammar: ShapeGrammarState;
+  validation: {
+    coherence: number;
+    transformation: number;
+    relation: number;
+    expressivePower: number;
+  };
+  storedAt: string;
+  lastSeenAt: string;
+};
+
+export type ShapeGrammarCanonEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  grammar: ShapeGrammarState;
+  validation: ShapeGrammarMemoryEntry["validation"];
+  canonizedAt: string;
+  lastActivatedAt: string;
+  lineage: {
+    siblingCanonIds: string[];
+    sourceIdeaCanonCount: number;
+  };
+  influenceWeight: number;
+};
+
+export type ShapePoolEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  shape: ShapeTheoryState;
+  validation: {
+    identity: number;
+    relation: number;
+    tension: number;
+    attention: number;
+  };
+  pooledAt: string;
+  lastSeenAt: string;
+  source: "main_loop" | "active_runtime";
+};
+
+export type ShapeMemoryEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  shape: ShapeTheoryState;
+  validation: ShapePoolEntry["validation"];
+  storedAt: string;
+  lastSeenAt: string;
+};
+
+export type ShapeCanonEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  shape: ShapeTheoryState;
+  validation: ShapeMemoryEntry["validation"];
+  canonizedAt: string;
+  lastActivatedAt: string;
+  lineage: {
+    siblingCanonIds: string[];
+    sourceIdeaCanonCount: number;
+  };
+  influenceWeight: number;
+};
+
+export type MetaSystemMemoryEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  metaSystem: MetaSystemState;
+  validation: {
+    structure: number;
+    coherence: number;
+    attention: number;
+    integration: number;
+  };
+  storedAt: string;
+  lastSeenAt: string;
+};
+
+export type MetaSystemCanonEntry = {
+  id: string;
+  conceptId: string;
+  conceptTitle: string;
+  sourceIdeaId: string;
+  stage: ConceptStage;
+  metaSystem: MetaSystemState;
+  validation: MetaSystemMemoryEntry["validation"];
+  canonizedAt: string;
+  lastActivatedAt: string;
+  lineage: {
+    siblingCanonIds: string[];
+    sourceIdeaCanonCount: number;
+  };
+  influenceWeight: number;
+};
+
 export type ColorMemoryEntry = {
   id: string;
   conceptId: string;
@@ -714,6 +1132,27 @@ export type ColorCanonEntry = {
   influenceWeight: number;
 };
 
+export type CanonDomain = "narrative" | "art" | "structure" | "color";
+
+export type CanonInfluenceWeights = {
+  narrative: number;
+  art: number;
+  structure: number;
+  color: number;
+};
+
+export type CanonInfluenceContext = {
+  narrative: NarrativeCanonEntry | null;
+  art: ArtCanonEntry | null;
+  structure: StructureCanonEntry | null;
+  color: ColorCanonEntry | null;
+  activeWeights: CanonInfluenceWeights;
+  normalizedWeights: CanonInfluenceWeights;
+  dominantCanon: CanonDomain | null;
+  totalInfluence: number;
+  notes: string[];
+};
+
 export type ConceptArtifact = {
   id: string;
   concept_id: string;
@@ -729,6 +1168,9 @@ export type ConceptPromotionResult = {
   passesSystemLaw: boolean;
   canPromoteToResolved: boolean;
   canPromoteToCanonical: boolean;
+  subCanonSupportScore: number;
+  activeSubcanonCount: number;
+  supportedBySubcanons: CanonDomain[];
   systemEffect: SystemModificationState;
   promotedConcept: ConceptState;
   notes: string[];
@@ -924,6 +1366,183 @@ export type EngineDebuggerReport = {
     } | null;
     notes: string[];
   };
+  structure: {
+    interpretation: string;
+    contaminationMode: ContaminationType;
+    acceptedContamination: boolean;
+    iterationCount: number;
+    terminated: boolean;
+    terminationReason: string;
+    isValidStructure: boolean;
+    lawPassed: boolean;
+    lawNote: string;
+    thresholds: CompositionStructureThresholds;
+    scores: CompositionStructureScores;
+    grid: string;
+    subjectPosition: string;
+    symmetryState: string;
+    centerState: string;
+    outputText: string;
+    outputVisual: string;
+    systemStateUpdate: {
+      gridPreferences: {
+        thirdsWeight: number;
+        goldenWeight: number;
+      };
+      alignmentLogic: {
+        symmetryWeight: number;
+        centerWeight: number;
+      };
+      attentionFlow: {
+        anchorWeight: number;
+        tensionWeight: number;
+      };
+      notes: string[];
+    } | null;
+    notes: string[];
+  };
+  shape: {
+    interpretation: string;
+    shapeIdeaSet: string[];
+    contaminationMode: ContaminationType;
+    acceptedContamination: boolean;
+    hardFailureMode: "soft" | "controlled";
+    hardFailureTriggered: boolean;
+    iterationCount: number;
+    terminated: boolean;
+    terminationReason: string;
+    failed: boolean;
+    failureReason: string | null;
+    isValidShape: boolean;
+    lawPassed: boolean;
+    lawNote: string;
+    thresholds: ShapeTheoryThresholds;
+    scores: ShapeTheoryScores;
+    type: string;
+    mass: string;
+    behavior: string;
+    positionTendency: string;
+    outputText: string;
+    outputVisual: string;
+    systemStateUpdate: {
+      formPatterns: {
+        identityWeight: number;
+      };
+      edgeLogic: {
+        pressureWeight: number;
+      };
+      tensionBehavior: {
+        expansionWeight: number;
+        containmentWeight: number;
+      };
+      attentionDistribution: {
+        focusWeight: number;
+        fieldWeight: number;
+      };
+      notes: string[];
+    } | null;
+    notes: string[];
+  };
+  shapeGrammar: {
+    seedShape: string;
+    ruleset: string[];
+    rulesApplied: string[];
+    constraints: string[];
+    hardFailureMode: "soft" | "controlled";
+    hardFailureTriggered: boolean;
+    iterationCount: number;
+    maxIterations: number;
+    terminated: boolean;
+    terminationReason: string;
+    failed: boolean;
+    failureReason: string | null;
+    thresholds: ShapeGrammarThresholds;
+    scores: ShapeGrammarScores;
+    lawPassed: boolean;
+    lawNote: string;
+    outputText: string;
+    outputVisual: string;
+    systemStateUpdate: {
+      rulePriorities: {
+        dominantRule: string;
+        adaptiveBias: number;
+        rankedRules: string[];
+        constraintBias: number;
+        suppressedRules: string[];
+        recoveredRules: string[];
+      };
+      transformationLogic: {
+        acceptedWeight: number;
+        rejectedWeight: number;
+      };
+      sequenceBehavior: {
+        continuityWeight: number;
+        varianceWeight: number;
+      };
+      notes: string[];
+    };
+    notes: string[];
+  };
+  metaSystem: {
+    framework: {
+      intent: string;
+      domain: string[];
+      constraints: string[];
+      goal: string;
+      priority: string;
+    };
+    labyrinth: {
+      axes: string[];
+      variations: string[];
+      relations: string[];
+    };
+    conductor: {
+      mode: "conductor";
+      targetModules: string[];
+      labyrinthPressure: number;
+      pipelinePressure: number;
+      relationPressure: number;
+      notes: string[];
+    };
+    activePipeline: string[];
+    designState: {
+      executedModules: string[];
+      reorderedPipeline: string[];
+      suppressedModules: string[];
+      suppressionNotes: string[];
+      recoveredModules: string[];
+      recoveryNotes: string[];
+      moduleWeights: Record<string, number>;
+      reweightNotes: string[];
+      failed: boolean;
+      failureModule: string | null;
+      failureReason: string | null;
+      moduleNotes: string[];
+    };
+    memory: {
+      globalWeight: number;
+      domainWeights: Record<string, number>;
+      appliedDomains: string[];
+      influenceWeight: number;
+      influenceNotes: string[];
+    };
+    validationPassed: boolean;
+    failed: boolean;
+    failureReason: string | null;
+    canon: {
+      globalCandidate: boolean;
+      domainCandidates: string[];
+      influenceWeight: number;
+      influenceNotes: string[];
+    };
+    thresholds: MetaSystemThresholds;
+    scores: MetaSystemScores;
+    lawPassed: boolean;
+    lawNote: string;
+    outputText: string;
+    outputVisual: string;
+    notes: string[];
+  };
   scenario: {
     interpretation: string;
     contaminationMode: ContaminationType;
@@ -956,6 +1575,13 @@ export type EngineDebuggerReport = {
     } | null;
     notes: string[];
   };
+  canonInfluence: {
+    dominantCanon: CanonDomain | null;
+    totalInfluence: number;
+    activeWeights: CanonInfluenceWeights;
+    normalizedWeights: CanonInfluenceWeights;
+    notes: string[];
+  };
   timeline: Array<{
     label: string;
     sequence: number;
@@ -967,6 +1593,7 @@ export type EngineDebuggerReport = {
     status: ConceptProcessStatus;
     blocker: string;
     validationStrength: number;
+    canonWeightPressure: number;
     reachedPool: boolean;
     reachedCanon: boolean;
   }>;

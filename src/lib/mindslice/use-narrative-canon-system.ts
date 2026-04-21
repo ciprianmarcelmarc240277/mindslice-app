@@ -7,6 +7,10 @@ import {
   readNarrativeCanon,
   writeNarrativeCanon,
 } from "@/lib/mindslice/narrative-canon-storage";
+import {
+  loadPersistedMindsliceState,
+  persistMindsliceState,
+} from "@/lib/mindslice/mindslice-state-persistence";
 import { isNarrativeCanonical } from "@/lib/mindslice/concept-scenario-system";
 import type { NarrativeCanonEntry, StoryMemoryEntry } from "@/lib/mindslice/mindslice-types";
 
@@ -51,6 +55,36 @@ export function useNarrativeCanonSystem({
       window.removeEventListener(NARRATIVE_CANON_UPDATED_EVENT, syncNarrativeCanon);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadNarrativeCanon() {
+      try {
+        const next = await loadPersistedMindsliceState<NarrativeCanonEntry>("canon", "narrative");
+
+        if (cancelled) {
+          return;
+        }
+
+        writeNarrativeCanon(next);
+      } catch {
+        if (!cancelled) {
+          window.dispatchEvent(new Event(NARRATIVE_CANON_UPDATED_EVENT));
+        }
+      }
+    }
+
+    loadNarrativeCanon();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn]);
 
   useEffect(() => {
     if (!isSignedIn) {
@@ -122,6 +156,14 @@ export function useNarrativeCanonSystem({
 
     lastFingerprintRef.current = fingerprint;
     writeNarrativeCanon(next);
+
+    void persistMindsliceState("canon", "narrative", next)
+      .then((synced) => {
+        writeNarrativeCanon(synced);
+      })
+      .catch(() => {
+        // Alpha-safe: local narrative canon remains available if backend persistence fails.
+      });
   }, [isSignedIn, storyMemory]);
 
   const visibleNarrativeCanon = useMemo(

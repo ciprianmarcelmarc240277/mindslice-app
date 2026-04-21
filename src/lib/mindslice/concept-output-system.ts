@@ -72,6 +72,13 @@ function buildVisualArtifact(
     `Semnătura vizuală urmărește ${expression.visualSignature}.`,
     expression.scenario.outputText,
     expression.artComposition.outputText,
+    expression.compositionStructure.outputText,
+    expression.shape.outputText,
+    expression.shapeGrammar.outputText,
+    expression.metaSystem.outputText,
+    expression.clock
+      ? `Timpul se inserează prin ${expression.clock.visualStyle}, cu ancoră ${expression.clock.attentionAnchor}.`
+      : "Timpul nu este încă o axă activă în acest artefact.",
     interference
       ? `Contaminarea ${interference.influenceMode} modifică ritmul fără să anuleze centrul.`
       : "Centrul vizual este construit fără contaminare externă.",
@@ -81,9 +88,16 @@ function buildVisualArtifact(
     `Stage ${stage}`,
     `Typography ${expression.typographyMode}`,
     `Motion ${expression.motionMode}`,
+    expression.clock
+      ? `Clock ${expression.clock.visualStyle} / ${expression.clock.attentionAnchor} / ${expression.clock.transition}`
+      : "Clock none",
+    `Shape ${expression.shape.outputVisual}`,
+    `Shape grammar ${expression.shapeGrammar.outputVisual}`,
+    `Meta ${expression.metaSystem.outputVisual}`,
     `Palette ${expression.palette.dominant} / ${expression.palette.secondary} / ${expression.palette.accent}`,
     `Scenario ${expression.scenario.outputStructure}`,
     `Focus ${expression.artComposition.focusNode}`,
+    `Structure ${expression.compositionStructure.outputVisual}`,
     `Fragments ${expression.dominantFragments.join(", ")}`,
     `Keywords ${expression.dominantKeywords.join(", ")}`,
   ].join(" · ");
@@ -95,6 +109,13 @@ function buildVisualArtifact(
     `Composition: ${expression.compositionMode}`,
     `Scenario: ${expression.scenario.outputStructure}`,
     `Art composition: ${expression.artComposition.outputVisual}`,
+    `Screen structure: ${expression.compositionStructure.outputVisual}`,
+    `Shape theory: ${expression.shape.outputVisual}`,
+    `Shape grammar: ${expression.shapeGrammar.outputVisual}`,
+    `Meta orchestration: ${expression.metaSystem.outputVisual}`,
+    expression.clock
+      ? `Clock field: ${expression.clock.outputVisual}`
+      : "Clock field: inactive",
     `Typography mode: ${expression.typographyMode}`,
     `Motion mode: ${expression.motionMode}`,
     `Mood: ${current.mood}`,

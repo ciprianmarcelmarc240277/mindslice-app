@@ -1,6 +1,8 @@
 import { processIdea } from "@/lib/mindslice/concept-process-system";
 import { buildThoughtSceneEngine } from "@/lib/mindslice/thought-scene-engine";
 import type {
+  CanonInfluenceContext,
+  ClockDisplayState,
   HistoryEntry,
   IdeaLoopEntryResult,
   IdeaSetMainLoopResult,
@@ -18,6 +20,8 @@ type RunIdeaSetMainLoopInput = {
   interference: LiveInterference | null;
   influenceMode: InfluenceMode | null;
   liveAiResponseLines: string[];
+  canonInfluence: CanonInfluenceContext;
+  clockDisplay: ClockDisplayState | null;
 };
 
 function buildIdeaLoopEntry(
@@ -29,6 +33,8 @@ function buildIdeaLoopEntry(
   interference: LiveInterference | null,
   influenceMode: InfluenceMode | null,
   liveAiResponseLines: string[],
+  canonInfluence: CanonInfluenceContext,
+  clockDisplay: ClockDisplayState | null,
 ): IdeaLoopEntryResult {
   const thoughtScene = buildThoughtSceneEngine({
     current: idea,
@@ -51,6 +57,8 @@ function buildIdeaLoopEntry(
       thoughtMemory,
       interference,
       influenceMode,
+      canonInfluence,
+      clockDisplay,
     }),
   };
 }
@@ -63,6 +71,8 @@ export function runIdeaSetMainLoop({
   interference,
   influenceMode,
   liveAiResponseLines,
+  canonInfluence,
+  clockDisplay,
 }: RunIdeaSetMainLoopInput): IdeaSetMainLoopResult {
   const safeIdeaSet = ideaSet.length ? ideaSet : [];
   const safeActiveIdeaIndex =
@@ -80,6 +90,8 @@ export function runIdeaSetMainLoop({
       interference,
       influenceMode,
       liveAiResponseLines,
+      canonInfluence,
+      clockDisplay,
     ),
   );
 
@@ -120,6 +132,8 @@ export function runIdeaSetMainLoop({
       interference,
       influenceMode,
       liveAiResponseLines,
+      canonInfluence,
+      clockDisplay,
     );
 
     return {
@@ -152,6 +166,7 @@ export function runIdeaSetMainLoop({
       `iterating: ${iteratingCount}`,
       `terminated: ${terminatedCount}`,
       `active idea: ${activeEntry.ideaDirection}`,
+      ...canonInfluence.notes.map((note) => `canon influence: ${note}`),
     ],
   };
 }

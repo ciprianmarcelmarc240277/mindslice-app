@@ -71,10 +71,21 @@ export function useCanonSystem({ isSignedIn, conceptMemory }: UseCanonSystemOpti
 
         const previousEntry = previous.find((candidate) => candidate.id === entry.id);
         const sourceIdeaCanonCount = siblingCanonIds.length + 1;
+        const subcanonClusterStrength = clamp(
+          entry.validation.scores.crossCanonCoherence * 0.34 +
+            entry.validation.scores.narrativeAttention * 0.16 +
+            entry.validation.scores.focus * 0.16 +
+            entry.validation.scores.structuralAttention * 0.16 +
+            entry.validation.scores.attentionImpact * 0.18,
+          0,
+          1,
+        );
         const influenceWeight = clamp(
           entry.concept.confidence.overall * 0.45 +
             entry.validation.scores.crossModalAlignment * 0.2 +
-            entry.validation.scores.authorDilemmaResolution * 0.2 +
+            entry.validation.scores.crossCanonCoherence * 0.15 +
+            entry.validation.scores.authorDilemmaResolution * 0.12 +
+            subcanonClusterStrength * 0.12 +
             Math.min(sourceIdeaCanonCount, 4) * 0.04,
           0,
           1,

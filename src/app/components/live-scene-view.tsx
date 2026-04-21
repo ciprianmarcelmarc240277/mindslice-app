@@ -67,12 +67,24 @@ type LiveSceneViewProps = {
   latestScenarioPoolTitle: string | null;
   artCompositionPoolCount: number;
   latestArtCompositionPoolTitle: string | null;
+  structurePoolCount: number;
+  latestStructurePoolTitle: string | null;
+  shapePoolCount: number;
+  latestShapePoolTitle: string | null;
   canonCount: number;
   primaryCanonTitle: string | null;
   colorCanonCount: number;
   primaryColorCanonTitle: string | null;
   narrativeCanonCount: number;
   primaryNarrativeCanonTitle: string | null;
+  structureCanonCount: number;
+  primaryStructureCanonTitle: string | null;
+  shapeCanonCount: number;
+  primaryShapeCanonTitle: string | null;
+  shapeGrammarCanonCount: number;
+  primaryShapeGrammarCanonTitle: string | null;
+  metaSystemCanonCount: number;
+  primaryMetaSystemCanonTitle: string | null;
   artCanonCount: number;
   primaryArtCanonTitle: string | null;
   conceptMemoryCount: number;
@@ -87,6 +99,18 @@ type LiveSceneViewProps = {
   artMemoryCount: number;
   resolvedArtCount: number;
   latestArtTitle: string | null;
+  structureMemoryCount: number;
+  resolvedStructureCount: number;
+  latestStructureTitle: string | null;
+  shapeMemoryCount: number;
+  resolvedShapeCount: number;
+  latestShapeTitle: string | null;
+  shapeGrammarMemoryCount: number;
+  resolvedShapeGrammarCount: number;
+  latestShapeGrammarTitle: string | null;
+  metaSystemMemoryCount: number;
+  resolvedMetaSystemCount: number;
+  latestMetaSystemTitle: string | null;
   promotionStatus: string;
   canPromoteToCanonical: boolean;
   promotionNotes: string[];
@@ -136,12 +160,24 @@ export function LiveSceneView(props: LiveSceneViewProps) {
     latestScenarioPoolTitle,
     artCompositionPoolCount,
     latestArtCompositionPoolTitle,
+    structurePoolCount,
+    latestStructurePoolTitle,
+    shapePoolCount,
+    latestShapePoolTitle,
     canonCount,
     primaryCanonTitle,
     colorCanonCount,
     primaryColorCanonTitle,
     narrativeCanonCount,
     primaryNarrativeCanonTitle,
+    structureCanonCount,
+    primaryStructureCanonTitle,
+    shapeCanonCount,
+    primaryShapeCanonTitle,
+    shapeGrammarCanonCount,
+    primaryShapeGrammarCanonTitle,
+    metaSystemCanonCount,
+    primaryMetaSystemCanonTitle,
     artCanonCount,
     primaryArtCanonTitle,
     conceptMemoryCount,
@@ -156,6 +192,18 @@ export function LiveSceneView(props: LiveSceneViewProps) {
     artMemoryCount,
     resolvedArtCount,
     latestArtTitle,
+    structureMemoryCount,
+    resolvedStructureCount,
+    latestStructureTitle,
+    shapeMemoryCount,
+    resolvedShapeCount,
+    latestShapeTitle,
+    shapeGrammarMemoryCount,
+    resolvedShapeGrammarCount,
+    latestShapeGrammarTitle,
+    metaSystemMemoryCount,
+    resolvedMetaSystemCount,
+    latestMetaSystemTitle,
     promotionStatus,
     canPromoteToCanonical,
     promotionNotes,
@@ -166,6 +214,8 @@ export function LiveSceneView(props: LiveSceneViewProps) {
   const [activeTraceLevel, setActiveTraceLevel] = useState<"all" | "info" | "warning" | "success">(
     "all",
   );
+  const [isCompositionRulesOpen, setIsCompositionRulesOpen] = useState(false);
+  const [isAiResponseOpen, setIsAiResponseOpen] = useState(false);
   const filteredActiveTrace = useMemo(
     () =>
       engineDebuggerReport.activeTrace.filter((event) => {
@@ -181,6 +231,1084 @@ export function LiveSceneView(props: LiveSceneViewProps) {
       }),
     [activeTraceLevel, activeTracePhase, engineDebuggerReport.activeTrace],
   );
+  const clockGuideKinetics = useMemo(() => {
+    if (!clockDisplay) {
+      return {
+        leadingLines: leadingLineStyles,
+        focalHalos: focalHaloStyles,
+      };
+    }
+
+    const isMemoryTrail = clockDisplay.transition === "memory_trail";
+    const isLiquidStep = clockDisplay.transition === "liquid_step";
+    const isSecondsPulse = clockDisplay.attentionAnchor === "seconds_pulse";
+    const isExtendedAnchor = clockDisplay.attentionAnchor === "hours_minutes_seconds";
+    const haloScalePrimary = isExtendedAnchor ? 1.14 : isSecondsPulse ? 1.08 : 1.02;
+    const haloScaleSecondary = isMemoryTrail ? 1.18 : isLiquidStep ? 1.1 : 1.04;
+    const lineRotationOne = isLiquidStep ? "rotate(6deg)" : isMemoryTrail ? "rotate(-4deg)" : "none";
+    const lineRotationTwo = isSecondsPulse ? "rotate(-5deg)" : isExtendedAnchor ? "rotate(3deg)" : "none";
+    const lineRotationThree = isMemoryTrail ? "rotate(9deg)" : isLiquidStep ? "rotate(-7deg)" : "none";
+
+    return {
+      leadingLines: [
+        {
+          ...leadingLineStyles[0],
+          transform: [leadingLineStyles[0]?.transform, lineRotationOne].filter(Boolean).join(" ").trim(),
+        },
+        {
+          ...leadingLineStyles[1],
+          transform: [leadingLineStyles[1]?.transform, lineRotationTwo].filter(Boolean).join(" ").trim(),
+        },
+        {
+          ...leadingLineStyles[2],
+          transform: [leadingLineStyles[2]?.transform, lineRotationThree].filter(Boolean).join(" ").trim(),
+        },
+      ] as ThoughtSceneEngineState["sceneGraph"]["leadingLines"],
+      focalHalos: {
+        primary: {
+          ...focalHaloStyles.primary,
+          transform: `${focalHaloStyles.primary?.transform ?? ""} scale(${haloScalePrimary})`.trim(),
+        },
+        secondary: {
+          ...focalHaloStyles.secondary,
+          transform: `${focalHaloStyles.secondary?.transform ?? ""} scale(${haloScaleSecondary})`.trim(),
+        },
+      } as ThoughtSceneEngineState["sceneGraph"]["focalHalos"],
+    };
+  }, [clockDisplay, focalHaloStyles, leadingLineStyles]);
+  const clockNegativeSpaceKinetics = useMemo(() => {
+    const shapeGrammar = engineDebuggerReport.shapeGrammar;
+    const grammarPrimaryTransform = [
+      shapeGrammar.rulesApplied.includes("add") ? "scale(1.08) translate3d(-6px, -4px, 0)" : "",
+      shapeGrammar.rulesApplied.includes("subtract") ? "scale(0.94) translate3d(8px, 6px, 0)" : "",
+      shapeGrammar.ruleset.includes("scale") ? "scale(1.06)" : "",
+      shapeGrammar.ruleset.includes("mirror") ? "scaleX(-1)" : "",
+      shapeGrammar.ruleset.includes("merge") ? "scale(1.03) translate3d(6px, 0, 0)" : "",
+      shapeGrammar.ruleset.includes("split") ? "scale(0.98) translate3d(-8px, 0, 0)" : "",
+      shapeGrammar.ruleset.includes("distort") ? "skew(-4deg, 2deg)" : "",
+      shapeGrammar.ruleset.includes("rotate") ? "rotate(-4deg)" : "",
+      shapeGrammar.ruleset.includes("fragment") ? "skew(-3deg, 2deg)" : "",
+      shapeGrammar.scores.coherence >= 0.72 ? "scale(1.05)" : "",
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    const grammarSecondaryTransform = [
+      shapeGrammar.rulesApplied.includes("add") ? "scale(1.06) translate3d(8px, 4px, 0)" : "",
+      shapeGrammar.rulesApplied.includes("subtract") ? "scale(0.9) translate3d(-10px, -6px, 0)" : "",
+      shapeGrammar.ruleset.includes("scale") ? "scale(1.05)" : "",
+      shapeGrammar.ruleset.includes("repeat") ? "scale(1.07)" : "",
+      shapeGrammar.ruleset.includes("merge") ? "scale(1.03) translate3d(-6px, 0, 0)" : "",
+      shapeGrammar.ruleset.includes("split") ? "scale(0.98) translate3d(8px, 0, 0)" : "",
+      shapeGrammar.ruleset.includes("distort") ? "skew(4deg, -2deg)" : "",
+      shapeGrammar.ruleset.includes("rotate") ? "rotate(5deg)" : "",
+      shapeGrammar.ruleset.includes("translate") ? "translateX(10px)" : "",
+      shapeGrammar.ruleset.includes("fragment") ? "rotate(6deg) scale(0.96)" : "",
+      shapeGrammar.scores.expressivePower >= 0.72 ? "skew(2deg, -2deg)" : "",
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+
+    if (!clockDisplay) {
+      return {
+        primary: {
+          ...negativeSpaceStyles.primary,
+          transform: [negativeSpaceStyles.primary?.transform, grammarPrimaryTransform]
+            .filter(Boolean)
+            .join(" ")
+            .trim(),
+        },
+        secondary: {
+          ...negativeSpaceStyles.secondary,
+          transform: [negativeSpaceStyles.secondary?.transform, grammarSecondaryTransform]
+            .filter(Boolean)
+            .join(" ")
+            .trim(),
+        },
+      } as ThoughtSceneEngineState["sceneGraph"]["negativeSpace"];
+    }
+
+    const isMemoryTrail = clockDisplay.transition === "memory_trail";
+    const isLiquidStep = clockDisplay.transition === "liquid_step";
+    const isExtendedAnchor = clockDisplay.attentionAnchor === "hours_minutes_seconds";
+    const isSecondsPulse = clockDisplay.attentionAnchor === "seconds_pulse";
+
+    return {
+      primary: {
+        ...negativeSpaceStyles.primary,
+        transform: [
+          negativeSpaceStyles.primary?.transform,
+          isMemoryTrail ? "rotate(-5deg) scale(1.04)" : isLiquidStep ? "rotate(3deg) scale(1.02)" : isExtendedAnchor ? "scale(1.06)" : "scale(1.01)",
+          grammarPrimaryTransform,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .trim(),
+      },
+      secondary: {
+        ...negativeSpaceStyles.secondary,
+        transform: [
+          negativeSpaceStyles.secondary?.transform,
+          isSecondsPulse ? "rotate(6deg) scale(1.05)" : isMemoryTrail ? "rotate(4deg) scale(1.03)" : isLiquidStep ? "rotate(-3deg) scale(1.02)" : "scale(1.01)",
+          grammarSecondaryTransform,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .trim(),
+      },
+    } as ThoughtSceneEngineState["sceneGraph"]["negativeSpace"];
+  }, [clockDisplay, engineDebuggerReport.shapeGrammar, negativeSpaceStyles]);
+  const clockMotionDesign = useMemo(() => {
+    if (!clockDisplay) {
+      return {
+        memoryFieldStyle: {} as React.CSSProperties,
+        textConstellationStyle: {} as React.CSSProperties,
+      };
+    }
+
+    const memoryDuration =
+      clockDisplay.transition === "liquid_step"
+        ? "6.4s"
+        : clockDisplay.transition === "memory_trail"
+          ? "10.8s"
+          : clockDisplay.attentionAnchor === "seconds_pulse"
+            ? "7.2s"
+            : "8.6s";
+    const keywordDuration =
+      clockDisplay.attentionAnchor === "hours_minutes_seconds"
+        ? "6.8s"
+        : clockDisplay.attentionAnchor === "seconds_pulse"
+          ? "5.9s"
+          : "7.8s";
+    const memoryOpacity =
+      clockDisplay.transition === "memory_trail" ? 0.82 : clockDisplay.visualStyle.includes("fractured") ? 0.72 : 0.68;
+    const keywordOpacity =
+      clockDisplay.attentionAnchor === "seconds_pulse" ? 0.78 : clockDisplay.visualStyle.includes("soft_orbit") ? 0.62 : 0.7;
+
+    return {
+      memoryFieldStyle: {
+        "--clock-memory-duration": memoryDuration,
+        "--clock-memory-tilt": clockDisplay.transition === "memory_trail" ? "1.8deg" : clockDisplay.transition === "liquid_step" ? "-1.2deg" : "0.6deg",
+        "--clock-memory-opacity": String(memoryOpacity),
+      } as React.CSSProperties,
+      textConstellationStyle: {
+        "--clock-keyword-duration": keywordDuration,
+        "--clock-keyword-shift": clockDisplay.attentionAnchor === "seconds_pulse" ? "8px" : clockDisplay.attentionAnchor === "hours_minutes_seconds" ? "-6px" : "4px",
+        "--clock-keyword-opacity": String(keywordOpacity),
+      } as React.CSSProperties,
+    };
+  }, [clockDisplay]);
+  const strayLetters = useMemo(() => {
+    const visibleTexts = [
+      current.thought,
+      thoughtCenterFragment,
+      ...current.fragments,
+      ...current.keywords.slice(0, 6),
+    ]
+      .join(" ")
+      .trim();
+
+    const glyphs = Array.from(visibleTexts).filter((character) => /[\p{L}\p{N}]/u.test(character));
+
+    if (glyphs.length === 0) {
+      return [];
+    }
+
+    const selectedLetters: string[] = [];
+    const step = Math.max(1, Math.floor(glyphs.length / 8));
+
+    for (let index = 0; index < glyphs.length && selectedLetters.length < 8; index += step) {
+      const nextLetter = glyphs[index];
+      if (nextLetter) {
+        selectedLetters.push(nextLetter);
+      }
+    }
+
+    return selectedLetters;
+  }, [current.fragments, current.keywords, current.thought, thoughtCenterFragment]);
+  const structureSceneConfig = useMemo(() => {
+    const structure = engineDebuggerReport.structure;
+    const scenario = engineDebuggerReport.scenario;
+    const shape = engineDebuggerReport.shape;
+    const shapeGrammar = engineDebuggerReport.shapeGrammar;
+    const scenarioTension = scenario.scores.tension;
+    const scenarioConflict = scenario.scores.conflict;
+    const scenarioProgression = scenario.scores.progression;
+    const scenarioAttention = scenario.scores.attention;
+
+    const narrativeHorizontalShift = Math.round((scenarioConflict - 0.5) * 9);
+    const narrativeVerticalShift = Math.round((scenarioProgression - 0.5) * 8);
+    const tensionGuideOffset = Math.round((scenarioTension - 0.5) * 7);
+    const attentionGuideOffset = Math.round((scenarioAttention - 0.5) * 6);
+    const shapeHorizontalShift =
+      shape.positionTendency === "edge" ? 7 : shape.positionTendency === "drift" ? 5 : shape.positionTendency === "scatter" ? -4 : 0;
+    const shapeVerticalShift =
+      shape.behavior === "expanding" ? -5 : shape.behavior === "contracting" ? 4 : shape.behavior === "unstable" ? -2 : 0;
+
+    const baseGuideStops = structure.grid === "golden"
+      ? { v1: "38.2%", v2: "61.8%", h1: "38.2%", h2: "61.8%" }
+      : structure.grid === "custom"
+        ? { v1: "29%", v2: "71%", h1: "31%", h2: "69%" }
+        : { v1: "33.333%", v2: "66.666%", h1: "33.333%", h2: "66.666%" };
+
+    const adjustPercent = (value: string, offset: number) => {
+      const numeric = Number.parseFloat(value);
+      if (Number.isNaN(numeric)) {
+        return value;
+      }
+
+      return `${Math.min(82, Math.max(18, numeric + offset)).toFixed(3)}%`;
+    };
+
+    const guideStops = {
+      v1: adjustPercent(baseGuideStops.v1, -tensionGuideOffset),
+      v2: adjustPercent(baseGuideStops.v2, tensionGuideOffset),
+      h1: adjustPercent(baseGuideStops.h1, -attentionGuideOffset),
+      h2: adjustPercent(baseGuideStops.h2, attentionGuideOffset),
+    };
+
+    const baseSubjectAnchor = (() => {
+      switch (structure.subjectPosition) {
+        case "upper-right-third":
+          return { left: "68%", top: "31%" };
+        case "left-third-entry":
+          return { left: "32%", top: "40%" };
+        case "center-lock":
+          return { left: "50%", top: "50%" };
+        case "offset-center":
+        default:
+          return { left: "43%", top: "47%" };
+      }
+    })();
+
+    const subjectAnchor = {
+      left: adjustPercent(baseSubjectAnchor.left, narrativeHorizontalShift + shapeHorizontalShift),
+      top: adjustPercent(baseSubjectAnchor.top, -narrativeVerticalShift + shapeVerticalShift),
+    };
+
+    const clockPlacement = (() => {
+      const attentionAnchor = clockDisplay?.attentionAnchor ?? "hours_minutes";
+      const transition = clockDisplay?.transition ?? "stable_tick";
+      const visualStyle = clockDisplay?.visualStyle ?? "anchored_field";
+
+      const absolutePlacement = (
+        placement: {
+          top?: string;
+          right?: string;
+          bottom?: string;
+          left?: string;
+          transform?: string;
+        },
+        label: string,
+      ) => ({
+        style: {
+          top: placement.top ?? "auto",
+          right: placement.right ?? "auto",
+          bottom: placement.bottom ?? "auto",
+          left: placement.left ?? "auto",
+          transform: placement.transform ?? "none",
+        },
+        label,
+      });
+
+      if (
+        structure.centerState === "centered_intentional" &&
+        (attentionAnchor === "hours_minutes_seconds" || structure.symmetryState === "symmetry_precise")
+      ) {
+        return absolutePlacement(
+          {
+            top: "18px",
+            left: "50%",
+            transform: "translateX(-50%)",
+          },
+          "top-center axis",
+        );
+      }
+
+      if (transition === "memory_trail") {
+        if (structure.subjectPosition === "upper-right-third") {
+          return absolutePlacement(
+            {
+              left: "18px",
+              bottom: "18px",
+            },
+            "memory trail lower-left",
+          );
+        }
+
+        if (structure.subjectPosition === "left-third-entry") {
+          return absolutePlacement(
+            {
+              right: "18px",
+              bottom: "18px",
+            },
+            "memory trail lower-right",
+          );
+        }
+
+        return absolutePlacement(
+          {
+            left: "18px",
+            bottom: "18px",
+          },
+          "memory trail lower-left",
+        );
+      }
+
+      if (transition === "liquid_step") {
+        return absolutePlacement(
+          {
+            top: "50%",
+            right: "18px",
+            transform: "translateY(-50%)",
+          },
+          "right-mid drift",
+        );
+      }
+
+      if (attentionAnchor === "seconds_pulse") {
+        if (structure.subjectPosition === "upper-right-third") {
+          return absolutePlacement(
+            {
+              right: "18px",
+              bottom: "18px",
+            },
+            "lower-right pulse",
+          );
+        }
+
+        if (structure.subjectPosition === "left-third-entry") {
+          return absolutePlacement(
+            {
+              left: "18px",
+              bottom: "18px",
+            },
+            "lower-left pulse",
+          );
+        }
+
+        return absolutePlacement(
+          {
+            right: "18px",
+            bottom: "18px",
+          },
+          "lower-right pulse",
+        );
+      }
+
+      if (attentionAnchor === "hours_minutes_seconds") {
+        if (visualStyle.includes("fractured")) {
+          return absolutePlacement(
+            {
+              left: "18px",
+              top: "18px",
+            },
+            "fractured top-left",
+          );
+        }
+
+        return absolutePlacement(
+          {
+            left: "50%",
+            bottom: "18px",
+            transform: "translateX(-50%)",
+          },
+          "lower-center cadence",
+        );
+      }
+
+      if (visualStyle.includes("soft_orbit")) {
+        return absolutePlacement(
+          {
+            left: "18px",
+            top: "50%",
+            transform: "translateY(-50%)",
+          },
+          "left-mid orbit",
+        );
+      }
+
+      if (visualStyle.includes("fractured")) {
+        return absolutePlacement(
+          {
+            left: "18px",
+            top: "18px",
+          },
+          "fractured top-left",
+        );
+      }
+
+      if (attentionAnchor === "hours_minutes" && visualStyle.includes("anchored")) {
+        if (structure.centerState === "soft_center" || structure.subjectPosition === "offset-center") {
+          return absolutePlacement(
+            {
+              left: "18px",
+              top: "18px",
+            },
+            "anchored top-left",
+          );
+        }
+
+        return absolutePlacement(
+          {
+            left: "18px",
+            bottom: "18px",
+          },
+          "anchored lower-left",
+        );
+      }
+
+      if (structure.subjectPosition === "upper-right-third") {
+        return absolutePlacement(
+          {
+            top: "18px",
+            left: "16px",
+          },
+          "counterweight top-left",
+        );
+      }
+
+      if (structure.subjectPosition === "left-third-entry") {
+        return absolutePlacement(
+          {
+            top: "16px",
+            right: "16px",
+          },
+          "counterweight top-right",
+        );
+      }
+
+      if (structure.centerState === "decentered_tension") {
+        return absolutePlacement(
+          {
+            right: "18px",
+            bottom: "18px",
+          },
+          "tension lower-right",
+        );
+      }
+
+      return absolutePlacement(
+        {
+          left: "18px",
+          bottom: "18px",
+        },
+        "stable lower-left",
+      );
+    })();
+
+    const rulesAnchor = (() => {
+      const topPlacement =
+        scenarioProgression >= 0.74 || scenarioAttention >= 0.76;
+
+      if (structure.subjectPosition === "upper-right-third") {
+        return topPlacement
+          ? { top: "18px", right: "18px", bottom: "auto", left: "auto" }
+          : { bottom: "18px", right: "18px", top: "auto", left: "auto" };
+      }
+
+      if (structure.subjectPosition === "left-third-entry") {
+        return topPlacement
+          ? { top: "18px", left: "18px", bottom: "auto", right: "auto" }
+          : { bottom: "18px", left: "18px", top: "auto", right: "auto" };
+      }
+
+      return topPlacement
+        ? { top: "18px", left: "18px", bottom: "auto", right: "auto" }
+        : { bottom: "18px", left: "18px", top: "auto", right: "auto" };
+    })();
+
+    const guideClass = [
+      structure.grid === "golden" ? styles.structureGuidegolden : "",
+      structure.grid === "custom" ? styles.structureGuidecustom : "",
+      structure.symmetryState === "symmetry_precise" ? styles.structureGuidesymmetric : "",
+      structure.centerState === "decentered_tension" ? styles.structureGuidedecentered : "",
+      scenarioConflict >= 0.74 ? styles.scenarioGuideescalated : "",
+      scenarioAttention >= 0.74 ? styles.scenarioGuidefocused : "",
+      scenarioProgression >= 0.72 ? styles.scenarioGuideprogressive : "",
+    ].filter(Boolean).join(" ");
+
+    const centerClass = [
+      structure.centerState === "centered_intentional" ? styles.structureCenterlocked : "",
+      structure.centerState === "decentered_tension" ? styles.structureCenterdecentered : "",
+      scenarioProgression >= 0.74 ? styles.scenarioCenterirreversible : "",
+      scenarioConflict >= 0.78 ? styles.scenarioCenterpressured : "",
+      shape.behavior === "stable" ? styles.shapeCenterstable : "",
+      shape.behavior === "unstable" ? styles.shapeCenterunstable : "",
+      shape.behavior === "expanding" ? styles.shapeCenterexpanding : "",
+    ].filter(Boolean).join(" ");
+    const relationClass = [
+      scenarioConflict >= 0.74 ? styles.scenarioRelationescalated : "",
+      scenarioAttention >= 0.74 ? styles.scenarioRelationfocused : "",
+      scenarioProgression >= 0.72 ? styles.scenarioRelationprogressive : "",
+      shape.positionTendency === "edge" ? styles.shapeRelationedge : "",
+      shape.positionTendency === "scatter" ? styles.shapeRelationscatter : "",
+    ].filter(Boolean).join(" ");
+    const shapeGuideClass = [
+      shape.type === "geometric" ? styles.shapeGuidegeometric : "",
+      shape.type === "organic" ? styles.shapeGuideorganic : "",
+      shape.type === "fragment" ? styles.shapeGuidefragment : "",
+      shape.type === "void" ? styles.shapeGuidevoid : "",
+    ].filter(Boolean).join(" ");
+    const grammarGuideClass = [
+      shapeGrammar.rulesApplied.includes("add") ? styles.grammarGuideadd : "",
+      shapeGrammar.rulesApplied.includes("subtract") ? styles.grammarGuidesubtract : "",
+      shapeGrammar.ruleset.includes("scale") ? styles.grammarGuidescale : "",
+      shapeGrammar.ruleset.includes("mirror") ? styles.grammarGuidemirror : "",
+      shapeGrammar.ruleset.includes("repeat") ? styles.grammarGuiderepeat : "",
+      shapeGrammar.ruleset.includes("merge") ? styles.grammarGuidemerge : "",
+      shapeGrammar.ruleset.includes("split") ? styles.grammarGuidesplit : "",
+      shapeGrammar.ruleset.includes("distort") ? styles.grammarGuidedistort : "",
+      shapeGrammar.ruleset.includes("translate") ? styles.grammarGuidetranslate : "",
+      shapeGrammar.ruleset.includes("rotate") ? styles.grammarGuiderotate : "",
+      shapeGrammar.ruleset.includes("fragment") || shapeGrammar.failureReason === "transformation_rejection"
+        ? styles.grammarGuidefragmented
+        : "",
+    ].filter(Boolean).join(" ");
+    const grammarRelationClass = [
+      shapeGrammar.scores.relation >= 0.72 ? styles.grammarRelationsequenced : "",
+      shapeGrammar.ruleset.includes("mirror") ? styles.grammarRelationmirror : "",
+    ].filter(Boolean).join(" ");
+    const grammarMemoryClass = [
+      shapeGrammar.scores.coherence >= 0.72 ? styles.grammarMemorycoherent : "",
+      shapeGrammar.ruleset.includes("fragment") ? styles.grammarMemoryfragmented : "",
+    ].filter(Boolean).join(" ");
+    const grammarConstellationClass = [
+      shapeGrammar.ruleset.includes("repeat") ? styles.grammarConstellationrepeat : "",
+      shapeGrammar.ruleset.includes("fragment") ? styles.grammarConstellationfragmented : "",
+    ].filter(Boolean).join(" ");
+    const grammarCenterClass = [
+      shapeGrammar.rulesApplied.includes("add") ? styles.grammarCenteradd : "",
+      shapeGrammar.rulesApplied.includes("subtract") ? styles.grammarCentersubtract : "",
+      shapeGrammar.ruleset.includes("scale") ? styles.grammarCenterscale : "",
+      shapeGrammar.ruleset.includes("repeat") ? styles.grammarCenterrepeat : "",
+      shapeGrammar.ruleset.includes("merge") ? styles.grammarCentermerge : "",
+      shapeGrammar.ruleset.includes("split") ? styles.grammarCentersplit : "",
+      shapeGrammar.ruleset.includes("distort") ? styles.grammarCenterdistort : "",
+      shapeGrammar.ruleset.includes("rotate") ? styles.grammarCenterrotate : "",
+      shapeGrammar.ruleset.includes("translate") ? styles.grammarCentertranslate : "",
+      shapeGrammar.ruleset.includes("fragment") ? styles.grammarCenterfragmented : "",
+      shapeGrammar.scores.coherence >= 0.72 ? styles.grammarCentercoherent : "",
+    ].filter(Boolean).join(" ");
+    const grammarMemoryStyle = {
+      "--grammar-memory-scale": shapeGrammar.scores.coherence >= 0.72 ? "1.04" : "0.98",
+      "--grammar-memory-drift": shapeGrammar.ruleset.includes("translate") ? "10px" : shapeGrammar.ruleset.includes("rotate") ? "-8px" : "4px",
+    } as React.CSSProperties;
+    const grammarConstellationStyle = {
+      "--grammar-fragment-shift": shapeGrammar.ruleset.includes("repeat") ? "12px" : "5px",
+      "--grammar-keyword-spacing": shapeGrammar.scores.expressivePower >= 0.72 ? "0.22em" : "0.14em",
+    } as React.CSSProperties;
+    const grammarCenterStyle = {
+      "--grammar-center-tilt": shapeGrammar.ruleset.includes("rotate") ? "-4deg" : "0deg",
+      "--grammar-center-scale": shapeGrammar.scores.expressivePower >= 0.72 ? "1.05" : "1",
+      "--grammar-center-subtract-scale": shapeGrammar.rulesApplied.includes("subtract") ? "0.94" : "1",
+      "--grammar-center-glow": shapeGrammar.ruleset.includes("repeat") ? "0.14" : shapeGrammar.ruleset.includes("fragment") ? "0.09" : "0.11",
+      "--grammar-center-inner-opacity": shapeGrammar.rulesApplied.includes("add") ? "0.82" : "0.32",
+      "--grammar-center-cut-opacity": shapeGrammar.rulesApplied.includes("subtract") ? "0.72" : "0.22",
+      "--grammar-center-scale-opacity": shapeGrammar.ruleset.includes("scale") ? "0.82" : "0.24",
+      "--grammar-center-scale-factor": shapeGrammar.ruleset.includes("scale") ? "1.08" : "1",
+      "--grammar-center-mirror-opacity": shapeGrammar.ruleset.includes("mirror") ? "0.78" : "0.26",
+      "--grammar-center-repeat-opacity": shapeGrammar.ruleset.includes("repeat") ? "0.78" : "0.24",
+      "--grammar-center-merge-opacity": shapeGrammar.ruleset.includes("merge") ? "0.82" : "0.24",
+      "--grammar-center-split-opacity": shapeGrammar.ruleset.includes("split") ? "0.82" : "0.24",
+      "--grammar-center-distort-opacity": shapeGrammar.ruleset.includes("distort") ? "0.8" : "0.24",
+      "--grammar-center-distort-skew": shapeGrammar.ruleset.includes("distort") ? "-4deg" : "0deg",
+      "--grammar-center-rotate-opacity": shapeGrammar.ruleset.includes("rotate") ? "0.8" : "0.24",
+      "--grammar-center-rotate-angle": shapeGrammar.ruleset.includes("rotate") ? "-5deg" : "0deg",
+      "--grammar-center-fragment-opacity": shapeGrammar.ruleset.includes("fragment") ? "0.78" : "0.24",
+      "--grammar-center-translate-opacity": shapeGrammar.ruleset.includes("translate") ? "0.78" : "0.24",
+      "--grammar-center-translate-shift": shapeGrammar.ruleset.includes("translate") ? "10px" : "0px",
+    } as React.CSSProperties;
+    const thoughtCenterTransform = (() => {
+      if (liveInfluenceMode === "rupture") {
+        return "translate(-50%, -50%) rotate(-1deg)";
+      }
+
+      return "translate(-50%, -50%)";
+    })();
+
+    return {
+      structure,
+      guideStyle: {
+        "--structure-v1": guideStops.v1,
+        "--structure-v2": guideStops.v2,
+        "--structure-h1": guideStops.h1,
+        "--structure-h2": guideStops.h2,
+        "--grammar-guide-accent-opacity": shapeGrammar.rulesApplied.includes("add") ? "0.92" : "0.54",
+        "--grammar-guide-cut-opacity": shapeGrammar.rulesApplied.includes("subtract") ? "0.72" : "0.34",
+        "--grammar-guide-third-shift": shapeGrammar.rulesApplied.includes("add") ? "6px" : shapeGrammar.rulesApplied.includes("subtract") ? "-4px" : "0px",
+        "--grammar-guide-frame-scale": shapeGrammar.rulesApplied.includes("add") ? "1.05" : shapeGrammar.rulesApplied.includes("subtract") ? "0.96" : "1",
+        "--grammar-guide-subtract-scale": shapeGrammar.rulesApplied.includes("subtract") ? "0.92" : "1",
+        "--grammar-guide-line-opacity": shapeGrammar.rulesApplied.includes("subtract") ? "0.46" : "0.78",
+        "--grammar-negative-space-opacity": shapeGrammar.rulesApplied.includes("add") ? "0.9" : shapeGrammar.rulesApplied.includes("subtract") ? "0.42" : "0.72",
+        "--grammar-negative-space-radius": shapeGrammar.rulesApplied.includes("add") ? "24px" : shapeGrammar.rulesApplied.includes("subtract") ? "12px" : "18px",
+        "--grammar-negative-space-subtract-scale": shapeGrammar.rulesApplied.includes("subtract") ? "0.9" : "1",
+        "--grammar-scale-opacity": shapeGrammar.ruleset.includes("scale") ? "0.84" : "0.24",
+        "--grammar-scale-factor": shapeGrammar.ruleset.includes("scale") ? "1.06" : "1",
+        "--grammar-negative-space-scale-factor": shapeGrammar.ruleset.includes("scale") ? "1.08" : "1",
+        "--grammar-negative-space-mirror-opacity": shapeGrammar.ruleset.includes("mirror") ? "0.78" : "0.24",
+        "--grammar-mirror-axis-opacity": shapeGrammar.ruleset.includes("mirror") ? "0.82" : "0.3",
+        "--grammar-repeat-opacity": shapeGrammar.ruleset.includes("repeat") ? "0.82" : "0.28",
+        "--grammar-merge-opacity": shapeGrammar.ruleset.includes("merge") ? "0.84" : "0.24",
+        "--grammar-split-opacity": shapeGrammar.ruleset.includes("split") ? "0.84" : "0.24",
+        "--grammar-distort-opacity": shapeGrammar.ruleset.includes("distort") ? "0.82" : "0.24",
+        "--grammar-distort-skew": shapeGrammar.ruleset.includes("distort") ? "-5deg" : "0deg",
+        "--grammar-negative-space-scale-opacity": shapeGrammar.ruleset.includes("scale") ? "0.8" : "0.24",
+        "--grammar-negative-space-split-opacity": shapeGrammar.ruleset.includes("split") ? "0.78" : "0.24",
+        "--grammar-negative-space-merge-opacity": shapeGrammar.ruleset.includes("merge") ? "0.78" : "0.24",
+        "--grammar-negative-space-distort-opacity": shapeGrammar.ruleset.includes("distort") ? "0.78" : "0.24",
+        "--grammar-negative-space-distort-skew": shapeGrammar.ruleset.includes("distort") ? "-6deg" : "0deg",
+        "--grammar-negative-space-repeat-opacity": shapeGrammar.ruleset.includes("repeat") ? "0.76" : "0.24",
+        "--grammar-negative-space-rotate-opacity": shapeGrammar.ruleset.includes("rotate") ? "0.78" : "0.24",
+        "--grammar-negative-space-rotate-angle": shapeGrammar.ruleset.includes("rotate") ? "-5deg" : "0deg",
+        "--grammar-fragment-opacity": shapeGrammar.ruleset.includes("fragment") ? "0.78" : "0.24",
+        "--grammar-negative-space-fragment-opacity": shapeGrammar.ruleset.includes("fragment") ? "0.76" : "0.22",
+        "--grammar-translate-opacity": shapeGrammar.ruleset.includes("translate") ? "0.8" : "0.24",
+        "--grammar-translate-shift": shapeGrammar.ruleset.includes("translate") ? "10px" : "0px",
+        "--grammar-negative-space-translate-opacity": shapeGrammar.ruleset.includes("translate") ? "0.76" : "0.22",
+        "--grammar-rotate-opacity": shapeGrammar.ruleset.includes("rotate") ? "0.8" : "0.24",
+        "--grammar-rotate-angle": shapeGrammar.ruleset.includes("rotate") ? "-4deg" : "0deg",
+      } as React.CSSProperties,
+      thoughtCenterStyle: {
+        left: subjectAnchor.left,
+        top: subjectAnchor.top,
+        right: "auto",
+        bottom: "auto",
+        marginLeft: 0,
+        marginTop: 0,
+        "--thought-center-transform": thoughtCenterTransform,
+      } as React.CSSProperties,
+      clockStyle: clockPlacement.style as React.CSSProperties,
+      clockPlacementLabel: clockPlacement.label,
+      rulesStyle: rulesAnchor as React.CSSProperties,
+      guideClass: [guideClass, shapeGuideClass, grammarGuideClass].filter(Boolean).join(" "),
+      centerClass: [centerClass, grammarCenterClass].filter(Boolean).join(" "),
+      relationClass: [relationClass, grammarRelationClass].filter(Boolean).join(" "),
+      grammarMemoryClass,
+      grammarMemoryStyle,
+      grammarConstellationClass,
+      grammarConstellationStyle,
+      grammarCenterStyle,
+      shapeGrammar,
+    };
+  }, [
+    clockDisplay?.attentionAnchor,
+    clockDisplay?.transition,
+    clockDisplay?.visualStyle,
+    engineDebuggerReport.shapeGrammar,
+    engineDebuggerReport.scenario,
+    engineDebuggerReport.shape,
+    engineDebuggerReport.structure,
+    liveInfluenceMode,
+  ]);
+
+  const sliceCanvasSection = (
+    <div className={styles.canvasCard}>
+      <span className={styles.panelMarker}>PANEL · Slice Canvas</span>
+      <div className={styles.visualStage}>
+        <div className={`${styles.textStage} ${liveInfluenceMode ? styles[`textStage${liveInfluenceMode}`] : ""}`}>
+          <div
+            className={`${styles.compositionGuide} ${
+              liveInfluenceMode ? styles[`compositionGuide${liveInfluenceMode}`] : ""
+            } ${structureSceneConfig.guideClass}`}
+            style={structureSceneConfig.guideStyle}
+            aria-hidden="true"
+          >
+            <span className={styles.layerMarker}>LAYER · Composition Guide</span>
+            <span className={`${styles.thirdLine} ${styles.thirdVerticalOne}`} />
+            <span className={`${styles.thirdLine} ${styles.thirdVerticalTwo}`} />
+            <span className={`${styles.thirdLine} ${styles.thirdHorizontalOne}`} />
+            <span className={`${styles.thirdLine} ${styles.thirdHorizontalTwo}`} />
+            {structureSceneConfig.shapeGrammar.ruleset.includes("mirror") ? (
+              <>
+                <span className={styles.grammarMirrorAxis} />
+                <span className={`${styles.grammarMirrorMarker} ${styles.grammarMirrorMarkerLeft}`} />
+                <span className={`${styles.grammarMirrorMarker} ${styles.grammarMirrorMarkerRight}`} />
+              </>
+            ) : null}
+            {structureSceneConfig.shapeGrammar.ruleset.includes("repeat") ? (
+              <>
+                <span className={`${styles.grammarRepeatEcho} ${styles.grammarRepeatEchoOne}`} />
+                <span className={`${styles.grammarRepeatEcho} ${styles.grammarRepeatEchoTwo}`} />
+                <span className={`${styles.grammarRepeatEcho} ${styles.grammarRepeatEchoThree}`} />
+              </>
+            ) : null}
+            {structureSceneConfig.shapeGrammar.ruleset.includes("translate") ? (
+              <>
+                <span className={`${styles.grammarTranslateTrail} ${styles.grammarTranslateTrailOne}`} />
+                <span className={`${styles.grammarTranslateTrail} ${styles.grammarTranslateTrailTwo}`} />
+                <span className={`${styles.grammarTranslateMarker} ${styles.grammarTranslateMarkerOne}`} />
+                <span className={`${styles.grammarTranslateMarker} ${styles.grammarTranslateMarkerTwo}`} />
+              </>
+            ) : null}
+            {structureSceneConfig.shapeGrammar.ruleset.includes("rotate") ? (
+              <>
+                <span className={`${styles.grammarRotateArc} ${styles.grammarRotateArcOne}`} />
+                <span className={`${styles.grammarRotateArc} ${styles.grammarRotateArcTwo}`} />
+              </>
+            ) : null}
+            {structureSceneConfig.shapeGrammar.ruleset.includes("fragment") ? (
+              <>
+                <span className={`${styles.grammarFragmentShard} ${styles.grammarFragmentShardOne}`} />
+                <span className={`${styles.grammarFragmentShard} ${styles.grammarFragmentShardTwo}`} />
+                <span className={`${styles.grammarFragmentShard} ${styles.grammarFragmentShardThree}`} />
+              </>
+            ) : null}
+            <span className={`${styles.guideLine} ${styles.leadingLineOne}`} style={clockGuideKinetics.leadingLines[0]} />
+            <span className={`${styles.guideLine} ${styles.leadingLineTwo}`} style={clockGuideKinetics.leadingLines[1]} />
+            <span className={`${styles.guideLine} ${styles.leadingLineThree}`} style={clockGuideKinetics.leadingLines[2]} />
+            {structureSceneConfig.shapeGrammar.rulesApplied.includes("add") ? (
+              <>
+                <span className={`${styles.grammarGuideAccent} ${styles.grammarGuideAccentAddOne}`} />
+                <span className={`${styles.grammarGuideAccent} ${styles.grammarGuideAccentAddTwo}`} />
+              </>
+            ) : null}
+            {structureSceneConfig.shapeGrammar.rulesApplied.includes("subtract") ? (
+              <>
+                <span className={`${styles.grammarGuideVoidCut} ${styles.grammarGuideVoidCutOne}`} />
+                <span className={`${styles.grammarGuideVoidCut} ${styles.grammarGuideVoidCutTwo}`} />
+              </>
+            ) : null}
+            {structureSceneConfig.shapeGrammar.ruleset.includes("merge") ? (
+              <>
+                <span className={`${styles.grammarMergeBridge} ${styles.grammarMergeBridgeOne}`} />
+                <span className={`${styles.grammarMergeNode} ${styles.grammarMergeNodeLeft}`} />
+                <span className={`${styles.grammarMergeNode} ${styles.grammarMergeNodeRight}`} />
+              </>
+            ) : null}
+            {structureSceneConfig.shapeGrammar.ruleset.includes("split") ? (
+              <>
+                <span className={styles.grammarSplitAxis} />
+                <span className={`${styles.grammarSplitNode} ${styles.grammarSplitNodeLeft}`} />
+                <span className={`${styles.grammarSplitNode} ${styles.grammarSplitNodeRight}`} />
+              </>
+            ) : null}
+            <span className={`${styles.focalHalo} ${styles.focalHaloPrimary}`} style={clockGuideKinetics.focalHalos.primary}>
+              <span className={styles.focalHaloNumber}>1</span>
+            </span>
+            <span className={`${styles.focalHalo} ${styles.focalHaloSecondary}`} style={clockGuideKinetics.focalHalos.secondary}>
+              <span className={styles.focalHaloNumber}>2</span>
+            </span>
+            <span className={`${styles.spaceFrame} ${styles.negativeSpaceOne}`} style={clockNegativeSpaceKinetics.primary} />
+            <span className={`${styles.spaceFrame} ${styles.negativeSpaceTwo}`} style={clockNegativeSpaceKinetics.secondary} />
+            <span className={styles.guideLabelPrimary}>focus</span>
+            <span className={styles.guideLabelSecondary}>thirds</span>
+            {clockDisplay ? (
+              <span className={styles.guideLabelTemporal}>
+                {clockDisplay.attentionAnchor.replaceAll("_", " ")}
+              </span>
+            ) : null}
+          </div>
+          <div
+            className={`${styles.compositionRules} ${
+              isCompositionRulesOpen ? styles.compositionRulesOpen : styles.compositionRulesCollapsed
+            } ${structureSceneConfig.rulesStyle.top !== "auto" ? styles.compositionRulesTopAnchored : ""}`}
+            style={structureSceneConfig.rulesStyle}
+          >
+            <button
+              type="button"
+              className={styles.compositionRulesToggle}
+              onClick={() => setIsCompositionRulesOpen((currentValue) => !currentValue)}
+              aria-expanded={isCompositionRulesOpen}
+            >
+              <span className={styles.compositionRulesTitle}>composition rules</span>
+              <span className={styles.compositionRulesToggleLabel}>
+                {isCompositionRulesOpen ? "ascunde" : "arată"}
+              </span>
+            </button>
+            <div
+              className={`${styles.compositionRulesBody} ${
+                isCompositionRulesOpen ? styles.compositionRulesBodyOpen : styles.compositionRulesBodyClosed
+              }`}
+              aria-hidden={!isCompositionRulesOpen}
+            >
+              <ul>
+                <li>grid · {structureSceneConfig.structure.grid}</li>
+                <li>subject · {structureSceneConfig.structure.subjectPosition}</li>
+                <li>symmetry · {structureSceneConfig.structure.symmetryState}</li>
+                <li>center · {structureSceneConfig.structure.centerState}</li>
+                <li>grammar · {structureSceneConfig.shapeGrammar.ruleset.slice(0, 2).join(" / ") || "none"}</li>
+                {clockDisplay ? <li>clock · {structureSceneConfig.clockPlacementLabel}</li> : null}
+              </ul>
+            </div>
+          </div>
+          <div
+            className={`${styles.relationField} ${liveInfluenceMode ? styles[`relationField${liveInfluenceMode}`] : ""} ${structureSceneConfig.relationClass}`}
+            aria-hidden="true"
+          >
+            <span className={styles.layerMarker}>LAYER · Relation Field</span>
+            <span className={`${styles.axisLine} ${styles.axisPrimary}`} />
+            <span className={`${styles.axisLine} ${styles.axisSecondary}`} />
+            <span className={`${styles.axisLine} ${styles.axisDiagonal}`} />
+            <span className={`${styles.relationLine} ${styles.relationLineOne}`} />
+            <span className={`${styles.relationLine} ${styles.relationLineTwo}`} />
+            <span className={`${styles.relationLine} ${styles.relationLineThree}`} />
+            <span className={`${styles.relationNode} ${styles.relationNodeOne}`} />
+            <span className={`${styles.relationNode} ${styles.relationNodeTwo}`} />
+            <span className={`${styles.relationNode} ${styles.relationNodeThree}`} />
+            <span className={`${styles.relationNode} ${styles.relationNodeFour}`} />
+            <span className={`${styles.relationNode} ${styles.relationNodeCenter}`} />
+            {clockDisplay ? (
+              <>
+                <span className={`${styles.temporalRelationLine} ${styles.temporalRelationLineOne}`} />
+                <span className={`${styles.temporalRelationLine} ${styles.temporalRelationLineTwo}`} />
+                <span className={`${styles.temporalRelationPulse} ${styles.temporalRelationPulseOne}`} />
+                <span className={`${styles.temporalRelationPulse} ${styles.temporalRelationPulseTwo}`} />
+              </>
+            ) : null}
+          </div>
+          <div className={styles.textFieldBackdrop} />
+          <div
+            className={`${styles.memoryField} ${liveInfluenceMode ? styles[`memoryField${liveInfluenceMode}`] : ""} ${structureSceneConfig.grammarMemoryClass}`}
+            style={{ ...clockMotionDesign.memoryFieldStyle, ...structureSceneConfig.grammarMemoryStyle }}
+            aria-hidden="true"
+          >
+            <span className={styles.layerMarker}>LAYER · Memory Field</span>
+            {current.fragments.slice(0, 4).map((fragment, index) => (
+              <span
+                key={`${current.direction}-memory-fragment-${fragment}`}
+                className={`${styles.memoryFragment} ${styles[`memoryFragment${index + 1}`]}`}
+              >
+                {fragment}
+              </span>
+            ))}
+            {current.keywords.slice(0, 3).map((keyword, index) => (
+              <span
+                key={`${current.direction}-memory-keyword-${keyword}`}
+                className={`${styles.memoryTrace} ${styles[`memoryTrace${index + 1}`]}`}
+              >
+                {keyword}
+              </span>
+            ))}
+          </div>
+          <div
+            className={`${styles.textConstellation} ${structureSceneConfig.grammarConstellationClass}`}
+            style={{ ...clockMotionDesign.textConstellationStyle, ...structureSceneConfig.grammarConstellationStyle }}
+            aria-hidden="true"
+          >
+            <span className={styles.layerMarker}>LAYER · Text Constellation</span>
+            {current.fragments.map((fragment, index) => (
+              <span
+                key={`${current.direction}-fragment-${fragment}`}
+                className={`${styles.floatingFragment} ${styles[`fragment${index + 1}`]} ${
+                  liveInfluenceMode ? styles[`floatingFragment${liveInfluenceMode}`] : ""
+                }`}
+              >
+                {fragment}
+              </span>
+            ))}
+            {current.keywords.slice(0, 6).map((keyword, index) => (
+              <span
+                key={`${current.direction}-keyword-${keyword}`}
+                className={`${styles.keywordParticle} ${styles[`keyword${index + 1}`]} ${
+                  liveInfluenceMode ? styles[`keywordParticle${liveInfluenceMode}`] : ""
+                }`}
+              >
+                {keyword}
+              </span>
+            ))}
+            {strayLetters.map((letter, index) => (
+              <span
+                key={`${current.direction}-stray-letter-${index}-${letter}`}
+                className={`${styles.strayLetter} ${styles[`strayLetter${index + 1}`]} ${
+                  liveInfluenceMode ? styles[`strayLetter${liveInfluenceMode}`] : ""
+                }`}
+              >
+                {letter}
+              </span>
+            ))}
+            {structureSceneConfig.shapeGrammar.rulesApplied.slice(0, 4).map((rule, index) => (
+              <span
+                key={`${current.direction}-grammar-rule-${rule}-${index}`}
+                className={`${styles.grammarParticle} ${styles[`grammarParticle${(index % 4) + 1}`]}`}
+              >
+                {rule}
+              </span>
+            ))}
+            {clockDisplay ? (
+              <>
+                <span className={`${styles.temporalParticle} ${styles.temporalParticleOne}`}>
+                  {clockDisplay.hours}
+                </span>
+                <span className={`${styles.temporalParticle} ${styles.temporalParticleTwo}`}>
+                  {clockDisplay.minutes}
+                </span>
+                <span className={`${styles.temporalParticle} ${styles.temporalParticleThree}`}>
+                  {clockDisplay.seconds}
+                </span>
+                <span className={`${styles.temporalParticle} ${styles.temporalParticleFour}`}>
+                  {clockDisplay.transition.replaceAll("_", " ")}
+                </span>
+              </>
+            ) : null}
+          </div>
+          <div
+            className={`${styles.textStageCenter} ${liveInfluenceMode ? styles[`textStageCenter${liveInfluenceMode}`] : ""} ${structureSceneConfig.centerClass}`}
+            style={
+              {
+                ...structureSceneConfig.thoughtCenterStyle,
+                ...structureSceneConfig.grammarCenterStyle,
+                "--clock-accent": current.visual.accent,
+                "--clock-ink": current.visual.ink,
+                "--clock-background": current.visual.background,
+              } as React.CSSProperties
+            }
+          >
+            <span className={styles.centerLayerMarker}>LAYER · Thought Center</span>
+            {structureSceneConfig.shapeGrammar.ruleset.includes("mirror") ? (
+              <>
+                <span className={styles.grammarCenterMirrorAxis} aria-hidden="true" />
+                <span className={`${styles.grammarCenterMirrorMarker} ${styles.grammarCenterMirrorMarkerLeft}`} aria-hidden="true" />
+                <span className={`${styles.grammarCenterMirrorMarker} ${styles.grammarCenterMirrorMarkerRight}`} aria-hidden="true" />
+              </>
+            ) : null}
+            {structureSceneConfig.shapeGrammar.ruleset.includes("repeat") ? (
+              <>
+                <span className={`${styles.grammarCenterRepeatEcho} ${styles.grammarCenterRepeatEchoOne}`} aria-hidden="true" />
+                <span className={`${styles.grammarCenterRepeatEcho} ${styles.grammarCenterRepeatEchoTwo}`} aria-hidden="true" />
+              </>
+            ) : null}
+            {structureSceneConfig.shapeGrammar.ruleset.includes("merge") ? (
+              <>
+                <span className={styles.grammarCenterMergeBridge} aria-hidden="true" />
+                <span className={`${styles.grammarCenterMergeNode} ${styles.grammarCenterMergeNodeLeft}`} aria-hidden="true" />
+                <span className={`${styles.grammarCenterMergeNode} ${styles.grammarCenterMergeNodeRight}`} aria-hidden="true" />
+              </>
+            ) : null}
+            {structureSceneConfig.shapeGrammar.ruleset.includes("split") ? (
+              <>
+                <span className={styles.grammarCenterSplitAxis} aria-hidden="true" />
+                <span className={`${styles.grammarCenterSplitNode} ${styles.grammarCenterSplitNodeLeft}`} aria-hidden="true" />
+                <span className={`${styles.grammarCenterSplitNode} ${styles.grammarCenterSplitNodeRight}`} aria-hidden="true" />
+              </>
+            ) : null}
+            {structureSceneConfig.shapeGrammar.ruleset.includes("rotate") ? (
+              <>
+                <span className={`${styles.grammarCenterRotateArc} ${styles.grammarCenterRotateArcOne}`} aria-hidden="true" />
+                <span className={`${styles.grammarCenterRotateArc} ${styles.grammarCenterRotateArcTwo}`} aria-hidden="true" />
+              </>
+            ) : null}
+            {structureSceneConfig.shapeGrammar.ruleset.includes("translate") ? (
+              <>
+                <span className={`${styles.grammarCenterTranslateTrail} ${styles.grammarCenterTranslateTrailOne}`} aria-hidden="true" />
+                <span className={`${styles.grammarCenterTranslateTrail} ${styles.grammarCenterTranslateTrailTwo}`} aria-hidden="true" />
+                <span className={`${styles.grammarCenterTranslateMarker} ${styles.grammarCenterTranslateMarkerOne}`} aria-hidden="true" />
+                <span className={`${styles.grammarCenterTranslateMarker} ${styles.grammarCenterTranslateMarkerTwo}`} aria-hidden="true" />
+              </>
+            ) : null}
+            {structureSceneConfig.shapeGrammar.ruleset.includes("fragment") ? (
+              <>
+                <span className={`${styles.grammarCenterFragmentShard} ${styles.grammarCenterFragmentShardOne}`} aria-hidden="true" />
+                <span className={`${styles.grammarCenterFragmentShard} ${styles.grammarCenterFragmentShardTwo}`} aria-hidden="true" />
+              </>
+            ) : null}
+            {structureSceneConfig.shapeGrammar.rulesApplied.includes("add") ? (
+              <>
+                <span className={`${styles.grammarCenterAccent} ${styles.grammarCenterAccentOne}`} aria-hidden="true" />
+                <span className={`${styles.grammarCenterAccent} ${styles.grammarCenterAccentTwo}`} aria-hidden="true" />
+              </>
+            ) : null}
+            {structureSceneConfig.shapeGrammar.rulesApplied.includes("subtract") ? (
+              <>
+                <span className={`${styles.grammarCenterCut} ${styles.grammarCenterCutOne}`} aria-hidden="true" />
+                <span className={`${styles.grammarCenterCut} ${styles.grammarCenterCutTwo}`} aria-hidden="true" />
+              </>
+            ) : null}
+            {clockDisplay ? (
+              <>
+                <span
+                  className={`${styles.clockCenterMeta} ${
+                    liveInfluenceMode ? styles[`clockCenterMeta${liveInfluenceMode}`] : ""
+                  }`}
+                >
+                  {clockDisplay.format} · {clockDisplay.visualStyle.replaceAll("_", " ")}
+                </span>
+                <div className={styles.clockCenterDigits} aria-label="MindSlice Clock design trace">
+                  <span>{clockDisplay.hours}</span>
+                  <span className={styles.clockCenterSeparator}>:</span>
+                  <span>{clockDisplay.minutes}</span>
+                  <span className={styles.clockCenterSeparator}>:</span>
+                  <span>{clockDisplay.seconds}</span>
+                </div>
+                <div className={styles.clockCenterSignalRow}>
+                  <span>{clockDisplay.attentionAnchor.replaceAll("_", " ")}</span>
+                  <span>{clockDisplay.transition.replaceAll("_", " ")}</span>
+                </div>
+              </>
+            ) : null}
+            <span className={styles.overlayLabel}>Din fișierul Slices</span>
+            <strong>{current.direction}</strong>
+            {structureSceneConfig.shapeGrammar.rulesApplied.slice(0, 2).map((rule, index) => (
+              <span
+                key={`${current.direction}-center-grammar-${rule}-${index}`}
+                className={`${styles.grammarCenterToken} ${styles[`grammarCenterToken${index + 1}`]}`}
+              >
+                {rule}
+              </span>
+            ))}
+            <p>{thoughtCenterFragment}</p>
+          </div>
+        </div>
+      </div>
+      <div className={styles.cornerSignature}>
+        <strong>O felie de gândire</strong>
+        <span>Marc, Ciprian-Marcel</span>
+      </div>
+      <div className={`${styles.thoughtOverlay} ${interference ? styles.thoughtOverlayInterference : ""}`}>
+        {isThoughtOverlayVisible ? (
+          <>
+            <div className={styles.thoughtOverlayLabelPlate}>
+              <span className={styles.overlayLabel}>Acum mă gândesc la</span>
+            </div>
+            <div key={thoughtAnimationKey} className={styles.thoughtOverlayTextStack}>
+              {thoughtLines.map((line, index) => (
+                <div key={`${thoughtAnimationKey}-${index}-${line}`} className={styles.thoughtOverlayTextPlate}>
+                  <p className={styles.typewriterText}>
+                    {line}
+                    {index === thoughtLines.length - 1 ? (
+                      <span className={styles.typewriterCaret} aria-hidden="true" />
+                    ) : null}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : null}
+      </div>
+      {liveAiResponseLines.length ? (
+        <div
+          className={`${styles.liveAiResponseOverlay} ${
+            isAiResponseOpen ? styles.liveAiResponseOverlayOpen : styles.liveAiResponseOverlayCollapsed
+          }`}
+        >
+          <button
+            type="button"
+            className={styles.liveAiResponseToggle}
+            onClick={() => setIsAiResponseOpen((currentValue) => !currentValue)}
+            aria-expanded={isAiResponseOpen}
+          >
+            <span className={styles.liveAiResponseLabel}>Artist AI răspunde</span>
+            <span className={styles.liveAiResponseToggleLabel}>
+              {isAiResponseOpen ? "ascunde" : "arată"}
+            </span>
+          </button>
+          <div
+            className={`${styles.liveAiResponseBody} ${
+              isAiResponseOpen ? styles.liveAiResponseBodyOpen : styles.liveAiResponseBodyClosed
+            }`}
+            aria-hidden={!isAiResponseOpen}
+          >
+            <div className={styles.liveAiResponseStack}>
+              {liveAiResponseLines.map((line, index) => (
+                <p key={`${interference?.sourceId}-ai-response-${index}-${line}`}>{line}</p>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
 
   return (
     <>
@@ -195,6 +1323,8 @@ export function LiveSceneView(props: LiveSceneViewProps) {
           separat de scenă: îl bruiază, îl îndoaie și îi mută centrul de greutate.
         </p>
       </section>
+
+      {sliceCanvasSection}
 
       <div className={styles.statusBar}>
         <span className={styles.panelMarker}>PANEL · Live Status Bar</span>
@@ -536,6 +1666,20 @@ export function LiveSceneView(props: LiveSceneViewProps) {
                 cross-modal: {conceptValidation.scores.crossModalAlignment.toFixed(2)}
               </li>
               <li>
+                cross-canon coherence: {conceptValidation.scores.crossCanonCoherence.toFixed(2)}
+              </li>
+              <li>
+                time-art coherence: {conceptValidation.scores.timeArtCoherence.toFixed(2)}
+              </li>
+              <li>shape identity: {conceptValidation.scores.shapeIdentity.toFixed(2)}</li>
+              <li>shape relation: {conceptValidation.scores.shapeRelation.toFixed(2)}</li>
+              <li>shape tension: {conceptValidation.scores.shapeTension.toFixed(2)}</li>
+              <li>shape attention: {conceptValidation.scores.shapeAttention.toFixed(2)}</li>
+              <li>grammar coherence: {conceptValidation.scores.grammarCoherence.toFixed(2)}</li>
+              <li>grammar transform: {conceptValidation.scores.grammarTransformation.toFixed(2)}</li>
+              <li>grammar relation: {conceptValidation.scores.grammarRelation.toFixed(2)}</li>
+              <li>grammar expressive: {conceptValidation.scores.grammarExpressivePower.toFixed(2)}</li>
+              <li>
                 metabolizare contaminare: {conceptValidation.scores.contaminationResolution.toFixed(2)}
               </li>
               <li>
@@ -615,6 +1759,125 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
+            <span>MindSlice CompositionStructure Runtime</span>
+            <ul>
+              <li>contaminare: {engineDebuggerReport.structure.contaminationMode}</li>
+              <li>acceptată: {engineDebuggerReport.structure.acceptedContamination ? "da" : "nu"}</li>
+              <li>iterații: {engineDebuggerReport.structure.iterationCount}</li>
+              <li>terminat: {engineDebuggerReport.structure.terminated ? "da" : "nu"}</li>
+              <li>motiv: {engineDebuggerReport.structure.terminationReason}</li>
+              <li>structură validă: {engineDebuggerReport.structure.isValidStructure ? "da" : "nu"}</li>
+              <li>trece legea: {engineDebuggerReport.structure.lawPassed ? "da" : "nu"}</li>
+              <li>grid: {engineDebuggerReport.structure.grid}</li>
+              <li>subject: {engineDebuggerReport.structure.subjectPosition}</li>
+              <li>τt: {engineDebuggerReport.structure.thresholds.thirds.toFixed(2)}</li>
+              <li>τg: {engineDebuggerReport.structure.thresholds.golden.toFixed(2)}</li>
+              <li>τs: {engineDebuggerReport.structure.thresholds.symmetry.toFixed(2)}</li>
+              <li>τc: {engineDebuggerReport.structure.thresholds.center.toFixed(2)}</li>
+              <li>τa: {engineDebuggerReport.structure.thresholds.attention.toFixed(2)}</li>
+              <li>thirds: {engineDebuggerReport.structure.scores.thirds.toFixed(2)}</li>
+              <li>golden: {engineDebuggerReport.structure.scores.golden.toFixed(2)}</li>
+              <li>symmetry: {engineDebuggerReport.structure.scores.symmetry.toFixed(2)}</li>
+              <li>center: {engineDebuggerReport.structure.scores.center.toFixed(2)}</li>
+              <li>attention: {engineDebuggerReport.structure.scores.attention.toFixed(2)}</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>MindSlice ShapeTheory Runtime</span>
+            <ul>
+              <li>contaminare: {engineDebuggerReport.shape.contaminationMode}</li>
+              <li>acceptată: {engineDebuggerReport.shape.acceptedContamination ? "da" : "nu"}</li>
+              <li>hard fail mode: {engineDebuggerReport.shape.hardFailureMode}</li>
+              <li>hard fail triggered: {engineDebuggerReport.shape.hardFailureTriggered ? "da" : "nu"}</li>
+              <li>shape ideas: {engineDebuggerReport.shape.shapeIdeaSet.length}</li>
+              <li>iterații: {engineDebuggerReport.shape.iterationCount}</li>
+              <li>terminat: {engineDebuggerReport.shape.terminated ? "da" : "nu"}</li>
+              <li>motiv: {engineDebuggerReport.shape.terminationReason}</li>
+              <li>fail: {engineDebuggerReport.shape.failed ? "da" : "nu"}</li>
+              <li>fail reason: {engineDebuggerReport.shape.failureReason ?? "none"}</li>
+              <li>formă validă: {engineDebuggerReport.shape.isValidShape ? "da" : "nu"}</li>
+              <li>trece legea: {engineDebuggerReport.shape.lawPassed ? "da" : "nu"}</li>
+              <li>type: {engineDebuggerReport.shape.type}</li>
+              <li>mass: {engineDebuggerReport.shape.mass}</li>
+              <li>behavior: {engineDebuggerReport.shape.behavior}</li>
+              <li>position: {engineDebuggerReport.shape.positionTendency}</li>
+              <li>τi: {engineDebuggerReport.shape.thresholds.identity.toFixed(2)}</li>
+              <li>τr: {engineDebuggerReport.shape.thresholds.relation.toFixed(2)}</li>
+              <li>τt: {engineDebuggerReport.shape.thresholds.tension.toFixed(2)}</li>
+              <li>τa: {engineDebuggerReport.shape.thresholds.attention.toFixed(2)}</li>
+              <li>identity: {engineDebuggerReport.shape.scores.identity.toFixed(2)}</li>
+              <li>relation: {engineDebuggerReport.shape.scores.relation.toFixed(2)}</li>
+              <li>tension: {engineDebuggerReport.shape.scores.tension.toFixed(2)}</li>
+              <li>attention: {engineDebuggerReport.shape.scores.attention.toFixed(2)}</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>MindSlice ShapeGrammar Runtime</span>
+            <ul>
+              <li>seed: {engineDebuggerReport.shapeGrammar.seedShape}</li>
+              <li>rules: {engineDebuggerReport.shapeGrammar.ruleset.length}</li>
+              <li>constraints: {engineDebuggerReport.shapeGrammar.constraints.length}</li>
+              <li>hard fail mode: {engineDebuggerReport.shapeGrammar.hardFailureMode}</li>
+              <li>hard fail triggered: {engineDebuggerReport.shapeGrammar.hardFailureTriggered ? "da" : "nu"}</li>
+              <li>iterații: {engineDebuggerReport.shapeGrammar.iterationCount}</li>
+              <li>max: {engineDebuggerReport.shapeGrammar.maxIterations}</li>
+              <li>terminated: {engineDebuggerReport.shapeGrammar.terminated ? "da" : "nu"}</li>
+              <li>termination: {engineDebuggerReport.shapeGrammar.terminationReason}</li>
+              <li>fail: {engineDebuggerReport.shapeGrammar.failed ? "da" : "nu"}</li>
+              <li>motiv: {engineDebuggerReport.shapeGrammar.failureReason ?? "none"}</li>
+              <li>lege: {engineDebuggerReport.shapeGrammar.lawPassed ? "da" : "nu"}</li>
+              <li>coherence: {engineDebuggerReport.shapeGrammar.scores.coherence.toFixed(2)}</li>
+              <li>transform: {engineDebuggerReport.shapeGrammar.scores.transformation.toFixed(2)}</li>
+              <li>relation: {engineDebuggerReport.shapeGrammar.scores.relation.toFixed(2)}</li>
+              <li>expressive: {engineDebuggerReport.shapeGrammar.scores.expressivePower.toFixed(2)}</li>
+              <li>dominant rule: {engineDebuggerReport.shapeGrammar.systemStateUpdate.rulePriorities.dominantRule}</li>
+              <li>priority queue: {engineDebuggerReport.shapeGrammar.systemStateUpdate.rulePriorities.rankedRules.join(" / ") || "none"}</li>
+              <li>constraint bias: {engineDebuggerReport.shapeGrammar.systemStateUpdate.rulePriorities.constraintBias.toFixed(2)}</li>
+              <li>suppressed: {engineDebuggerReport.shapeGrammar.systemStateUpdate.rulePriorities.suppressedRules.join(" / ") || "none"}</li>
+              <li>recovered: {engineDebuggerReport.shapeGrammar.systemStateUpdate.rulePriorities.recoveredRules.join(" / ") || "none"}</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>MindSlice MetaSystem</span>
+            <ul>
+              <li>intent: {engineDebuggerReport.metaSystem.framework.intent}</li>
+              <li>domains: {engineDebuggerReport.metaSystem.framework.domain.join(" / ") || "none"}</li>
+              <li>mode: {engineDebuggerReport.metaSystem.conductor.mode}</li>
+              <li>targets: {engineDebuggerReport.metaSystem.conductor.targetModules.join(" > ") || "none"}</li>
+              <li>labyrinth pressure: {engineDebuggerReport.metaSystem.conductor.labyrinthPressure.toFixed(2)}</li>
+              <li>pipeline pressure: {engineDebuggerReport.metaSystem.conductor.pipelinePressure.toFixed(2)}</li>
+              <li>relation pressure: {engineDebuggerReport.metaSystem.conductor.relationPressure.toFixed(2)}</li>
+              <li>conductor notes: {engineDebuggerReport.metaSystem.conductor.notes.join(" / ") || "none"}</li>
+              <li>pipeline: {engineDebuggerReport.metaSystem.activePipeline.join(" > ") || "none"}</li>
+              <li>executed: {engineDebuggerReport.metaSystem.designState.executedModules.join(" > ") || "none"}</li>
+              <li>reordered: {engineDebuggerReport.metaSystem.designState.reorderedPipeline.join(" > ") || "none"}</li>
+              <li>suppressed: {engineDebuggerReport.metaSystem.designState.suppressedModules.join(" / ") || "none"}</li>
+              <li>suppression: {engineDebuggerReport.metaSystem.designState.suppressionNotes.join(" / ") || "none"}</li>
+              <li>recovered: {engineDebuggerReport.metaSystem.designState.recoveredModules.join(" / ") || "none"}</li>
+              <li>recovery: {engineDebuggerReport.metaSystem.designState.recoveryNotes.join(" / ") || "none"}</li>
+              <li>weights: {Object.entries(engineDebuggerReport.metaSystem.designState.moduleWeights).map(([key, value]) => `${key}:${value.toFixed(2)}`).join(" / ") || "none"}</li>
+              <li>reweight: {engineDebuggerReport.metaSystem.designState.reweightNotes.join(" / ") || "none"}</li>
+              <li>design fail: {engineDebuggerReport.metaSystem.designState.failed ? "da" : "nu"}</li>
+              <li>failure module: {engineDebuggerReport.metaSystem.designState.failureModule ?? "none"}</li>
+              <li>failure reason: {engineDebuggerReport.metaSystem.designState.failureReason ?? "none"}</li>
+              <li>meta fail: {engineDebuggerReport.metaSystem.failed ? "da" : "nu"}</li>
+              <li>meta fail reason: {engineDebuggerReport.metaSystem.failureReason ?? "none"}</li>
+              <li>validation: {engineDebuggerReport.metaSystem.validationPassed ? "da" : "nu"}</li>
+              <li>lege: {engineDebuggerReport.metaSystem.lawPassed ? "da" : "nu"}</li>
+              <li>structure: {engineDebuggerReport.metaSystem.scores.structure.toFixed(2)}</li>
+              <li>coherence: {engineDebuggerReport.metaSystem.scores.coherence.toFixed(2)}</li>
+              <li>attention: {engineDebuggerReport.metaSystem.scores.attention.toFixed(2)}</li>
+              <li>integration: {engineDebuggerReport.metaSystem.scores.integration.toFixed(2)}</li>
+              <li>memory: {engineDebuggerReport.metaSystem.memory.globalWeight.toFixed(2)}</li>
+              <li>memory influence: {engineDebuggerReport.metaSystem.memory.influenceWeight.toFixed(2)}</li>
+              <li>memory notes: {engineDebuggerReport.metaSystem.memory.influenceNotes.join(" / ") || "none"}</li>
+              <li>global canon: {engineDebuggerReport.metaSystem.canon.globalCandidate ? "candidate" : "nu"}</li>
+              <li>domain canon: {engineDebuggerReport.metaSystem.canon.domainCandidates.join(" / ") || "none"}</li>
+              <li>canon influence: {engineDebuggerReport.metaSystem.canon.influenceWeight.toFixed(2)}</li>
+              <li>canon notes: {engineDebuggerReport.metaSystem.canon.influenceNotes.join(" / ") || "none"}</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
             <span>Concept Pool</span>
             <ul>
               <li>concepte în pool: {conceptPoolCount}</li>
@@ -644,6 +1907,22 @@ export function LiveSceneView(props: LiveSceneViewProps) {
               <li>compoziții în pool: {artCompositionPoolCount}</li>
               <li>ultima compoziție: {latestArtCompositionPoolTitle ?? "niciuna"}</li>
               <li>rolul pool-ului: zonă de filtrare compozițională înainte de memorie</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Structure Pool</span>
+            <ul>
+              <li>structuri în pool: {structurePoolCount}</li>
+              <li>ultima structură: {latestStructurePoolTitle ?? "niciuna"}</li>
+              <li>rolul pool-ului: zonă de filtrare a suprafeței înainte de memorie</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Shape Pool</span>
+            <ul>
+              <li>forme în pool: {shapePoolCount}</li>
+              <li>ultima formă: {latestShapePoolTitle ?? "niciuna"}</li>
+              <li>rolul pool-ului: zonă de filtrare formală înainte de memorie</li>
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
@@ -679,6 +1958,38 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
+            <span>Structure Canon</span>
+            <ul>
+              <li>structuri canonice: {structureCanonCount}</li>
+              <li>canon structural principal: {primaryStructureCanonTitle ?? "niciuna"}</li>
+              <li>rolul canonului: doctrină de ecran activă pentru poziționare</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Shape Canon</span>
+            <ul>
+              <li>forme canonice: {shapeCanonCount}</li>
+              <li>canon formal principal: {primaryShapeCanonTitle ?? "niciuna"}</li>
+              <li>rolul canonului: doctrină formală activă pentru percepția spațială</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Shape Grammar Canon</span>
+            <ul>
+              <li>gramatici canonice: {shapeGrammarCanonCount}</li>
+              <li>canon gramatical principal: {primaryShapeGrammarCanonTitle ?? "niciuna"}</li>
+              <li>rolul canonului: doctrină de transformare activă pentru evoluția formelor</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>MetaSystem Canon</span>
+            <ul>
+              <li>metasisteme canonice: {metaSystemCanonCount}</li>
+              <li>canon metasistemic principal: {primaryMetaSystemCanonTitle ?? "niciunul"}</li>
+              <li>rolul canonului: doctrină de orchestrare activă pentru toate subsistemele</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
             <span>Memoria conceptelor</span>
             <ul>
               <li>concepte stocate: {conceptMemoryCount}</li>
@@ -711,6 +2022,42 @@ export function LiveSceneView(props: LiveSceneViewProps) {
               <li>compoziții stocate: {artMemoryCount}</li>
               <li>compoziții rezolvate: {resolvedArtCount}</li>
               <li>ultima compoziție: {latestArtTitle ?? "niciuna"}</li>
+              <li>mod de memorie: acumulare locală alpha</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Memoria structurilor</span>
+            <ul>
+              <li>structuri stocate: {structureMemoryCount}</li>
+              <li>structuri rezolvate: {resolvedStructureCount}</li>
+              <li>ultima structură: {latestStructureTitle ?? "niciuna"}</li>
+              <li>mod de memorie: acumulare locală alpha</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Memoria formelor</span>
+            <ul>
+              <li>forme stocate: {shapeMemoryCount}</li>
+              <li>forme rezolvate: {resolvedShapeCount}</li>
+              <li>ultima formă: {latestShapeTitle ?? "niciuna"}</li>
+              <li>mod de memorie: acumulare locală alpha</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Memoria gramaticilor de formă</span>
+            <ul>
+              <li>gramatici stocate: {shapeGrammarMemoryCount}</li>
+              <li>gramatici rezolvate: {resolvedShapeGrammarCount}</li>
+              <li>ultima gramatică: {latestShapeGrammarTitle ?? "niciuna"}</li>
+              <li>mod de memorie: acumulare locală alpha</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Memoria MetaSystem</span>
+            <ul>
+              <li>metasisteme stocate: {metaSystemMemoryCount}</li>
+              <li>metasisteme rezolvate: {resolvedMetaSystemCount}</li>
+              <li>ultimul metasistem: {latestMetaSystemTitle ?? "niciunul"}</li>
               <li>mod de memorie: acumulare locală alpha</li>
             </ul>
           </article>
@@ -838,6 +2185,31 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
+            <span>Structure Notes</span>
+            <ul>
+              <li>{engineDebuggerReport.structure.interpretation}</li>
+              <li>{engineDebuggerReport.structure.outputText}</li>
+              <li>{engineDebuggerReport.structure.outputVisual}</li>
+              <li>{engineDebuggerReport.structure.lawNote}</li>
+              {engineDebuggerReport.structure.systemStateUpdate ? (
+                <>
+                  <li>
+                    grid update: thirds {engineDebuggerReport.structure.systemStateUpdate.gridPreferences.thirdsWeight.toFixed(2)} / golden {engineDebuggerReport.structure.systemStateUpdate.gridPreferences.goldenWeight.toFixed(2)}
+                  </li>
+                  <li>
+                    alignment update: symmetry {engineDebuggerReport.structure.systemStateUpdate.alignmentLogic.symmetryWeight.toFixed(2)} / center {engineDebuggerReport.structure.systemStateUpdate.alignmentLogic.centerWeight.toFixed(2)}
+                  </li>
+                  <li>
+                    attention update: anchor {engineDebuggerReport.structure.systemStateUpdate.attentionFlow.anchorWeight.toFixed(2)} / tension {engineDebuggerReport.structure.systemStateUpdate.attentionFlow.tensionWeight.toFixed(2)}
+                  </li>
+                </>
+              ) : null}
+              {engineDebuggerReport.structure.notes.slice(0, 6).map((note) => (
+                <li key={note}>{note}</li>
+              ))}
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
             <span>Analiza eșecului</span>
             <ul>
               <li>{engineDebuggerReport.failureAnalysis.currentBlocker}</li>
@@ -860,8 +2232,24 @@ export function LiveSceneView(props: LiveSceneViewProps) {
               )}
               {engineDebuggerReport.comparativeRuns.slice(0, 4).map((run) => (
                 <li key={run.ideaDirection}>
-                  {run.ideaDirection}: {run.status} / forță {run.validationStrength.toFixed(2)} / blocaj {run.blocker}
+                  {run.ideaDirection}: {run.status} / forță {run.validationStrength.toFixed(2)} / presiune canon {run.canonWeightPressure.toFixed(2)} / blocaj {run.blocker}
                 </li>
+              ))}
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>Ponderi canonice</span>
+            <ul>
+              <li>canon dominant: {engineDebuggerReport.canonInfluence.dominantCanon ?? "none"}</li>
+              <li>influență totală: {engineDebuggerReport.canonInfluence.totalInfluence.toFixed(2)}</li>
+              <li>
+                raw weights: N {engineDebuggerReport.canonInfluence.activeWeights.narrative.toFixed(2)} / A {engineDebuggerReport.canonInfluence.activeWeights.art.toFixed(2)} / S {engineDebuggerReport.canonInfluence.activeWeights.structure.toFixed(2)} / C {engineDebuggerReport.canonInfluence.activeWeights.color.toFixed(2)}
+              </li>
+              <li>
+                normalized: N {engineDebuggerReport.canonInfluence.normalizedWeights.narrative.toFixed(2)} / A {engineDebuggerReport.canonInfluence.normalizedWeights.art.toFixed(2)} / S {engineDebuggerReport.canonInfluence.normalizedWeights.structure.toFixed(2)} / C {engineDebuggerReport.canonInfluence.normalizedWeights.color.toFixed(2)}
+              </li>
+              {engineDebuggerReport.canonInfluence.notes.slice(0, 3).map((note) => (
+                <li key={note}>{note}</li>
               ))}
             </ul>
           </article>
@@ -958,182 +2346,6 @@ export function LiveSceneView(props: LiveSceneViewProps) {
           </article>
         </div>
       </section>
-
-      <div className={styles.canvasCard}>
-        <span className={styles.panelMarker}>PANEL · Slice Canvas</span>
-        <div className={styles.visualStage}>
-          <div className={`${styles.textStage} ${liveInfluenceMode ? styles[`textStage${liveInfluenceMode}`] : ""}`}>
-            <div
-              className={`${styles.compositionGuide} ${
-                liveInfluenceMode ? styles[`compositionGuide${liveInfluenceMode}`] : ""
-              }`}
-              aria-hidden="true"
-            >
-              <span className={styles.layerMarker}>LAYER · Composition Guide</span>
-              <span className={`${styles.thirdLine} ${styles.thirdVerticalOne}`} />
-              <span className={`${styles.thirdLine} ${styles.thirdVerticalTwo}`} />
-              <span className={`${styles.thirdLine} ${styles.thirdHorizontalOne}`} />
-              <span className={`${styles.thirdLine} ${styles.thirdHorizontalTwo}`} />
-              <span className={`${styles.guideLine} ${styles.leadingLineOne}`} style={leadingLineStyles[0]} />
-              <span className={`${styles.guideLine} ${styles.leadingLineTwo}`} style={leadingLineStyles[1]} />
-              <span className={`${styles.guideLine} ${styles.leadingLineThree}`} style={leadingLineStyles[2]} />
-              <span className={`${styles.focalHalo} ${styles.focalHaloPrimary}`} style={focalHaloStyles.primary}>
-                <span className={styles.focalHaloNumber}>1</span>
-              </span>
-              <span className={`${styles.focalHalo} ${styles.focalHaloSecondary}`} style={focalHaloStyles.secondary}>
-                <span className={styles.focalHaloNumber}>2</span>
-              </span>
-              <span className={`${styles.spaceFrame} ${styles.negativeSpaceOne}`} style={negativeSpaceStyles.primary} />
-              <span className={`${styles.spaceFrame} ${styles.negativeSpaceTwo}`} style={negativeSpaceStyles.secondary} />
-              <span className={styles.guideLabelPrimary}>focus</span>
-              <span className={styles.guideLabelSecondary}>thirds</span>
-            </div>
-            <div className={styles.compositionRules} aria-hidden="true">
-              <span className={styles.compositionRulesTitle}>composition rules</span>
-              <ul>
-                <li>rule of thirds</li>
-                <li>focal hierarchy</li>
-                <li>leading lines</li>
-                <li>negative space</li>
-              </ul>
-            </div>
-            {clockDisplay ? (
-              <div
-                className={`${styles.clockField} ${liveInfluenceMode ? styles[`clockField${liveInfluenceMode}`] : ""}`}
-                style={
-                  {
-                    "--clock-accent": current.visual.accent,
-                    "--clock-ink": current.visual.ink,
-                    "--clock-background": current.visual.background,
-                  } as React.CSSProperties
-                }
-              >
-                <span className={styles.layerMarker}>LAYER · Time Field</span>
-                <span className={styles.clockMeta}>
-                  {clockDisplay.format} · {clockDisplay.visualStyle}
-                </span>
-                <div className={styles.clockDigits} aria-label="MindSlice Clock display">
-                  <span className={styles.clockHours}>{clockDisplay.hours}</span>
-                  <span className={styles.clockSeparator}>:</span>
-                  <span className={styles.clockMinutes}>{clockDisplay.minutes}</span>
-                  <span className={styles.clockSeparator}>:</span>
-                  <span className={styles.clockSeconds}>{clockDisplay.seconds}</span>
-                </div>
-                <div className={styles.clockEcho} aria-hidden="true">
-                  <span>{clockDisplay.hours}</span>
-                  <span>{clockDisplay.minutes}</span>
-                  <span>{clockDisplay.seconds}</span>
-                </div>
-                <div className={styles.clockSignalRow}>
-                  <span>anchor · {clockDisplay.attentionAnchor}</span>
-                  <span>transition · {clockDisplay.transition}</span>
-                </div>
-              </div>
-            ) : null}
-            <div className={`${styles.relationField} ${liveInfluenceMode ? styles[`relationField${liveInfluenceMode}`] : ""}`} aria-hidden="true">
-              <span className={styles.layerMarker}>LAYER · Relation Field</span>
-              <span className={`${styles.axisLine} ${styles.axisPrimary}`} />
-              <span className={`${styles.axisLine} ${styles.axisSecondary}`} />
-              <span className={`${styles.axisLine} ${styles.axisDiagonal}`} />
-              <span className={`${styles.relationLine} ${styles.relationLineOne}`} />
-              <span className={`${styles.relationLine} ${styles.relationLineTwo}`} />
-              <span className={`${styles.relationLine} ${styles.relationLineThree}`} />
-              <span className={`${styles.relationNode} ${styles.relationNodeOne}`} />
-              <span className={`${styles.relationNode} ${styles.relationNodeTwo}`} />
-              <span className={`${styles.relationNode} ${styles.relationNodeThree}`} />
-              <span className={`${styles.relationNode} ${styles.relationNodeFour}`} />
-              <span className={`${styles.relationNode} ${styles.relationNodeCenter}`} />
-            </div>
-            <div className={styles.textFieldBackdrop} />
-            <div className={`${styles.memoryField} ${liveInfluenceMode ? styles[`memoryField${liveInfluenceMode}`] : ""}`} aria-hidden="true">
-              <span className={styles.layerMarker}>LAYER · Memory Field</span>
-              {current.fragments.slice(0, 4).map((fragment, index) => (
-                <span
-                  key={`${current.direction}-memory-fragment-${fragment}`}
-                  className={`${styles.memoryFragment} ${styles[`memoryFragment${index + 1}`]}`}
-                >
-                  {fragment}
-                </span>
-              ))}
-              {current.keywords.slice(0, 3).map((keyword, index) => (
-                <span
-                  key={`${current.direction}-memory-keyword-${keyword}`}
-                  className={`${styles.memoryTrace} ${styles[`memoryTrace${index + 1}`]}`}
-                >
-                  {keyword}
-                </span>
-              ))}
-            </div>
-            <div className={styles.textConstellation} aria-hidden="true">
-              <span className={styles.layerMarker}>LAYER · Text Constellation</span>
-              {current.fragments.map((fragment, index) => (
-                <span
-                  key={`${current.direction}-fragment-${fragment}`}
-                  className={`${styles.floatingFragment} ${styles[`fragment${index + 1}`]} ${
-                    liveInfluenceMode ? styles[`floatingFragment${liveInfluenceMode}`] : ""
-                  }`}
-                >
-                  {fragment}
-                </span>
-              ))}
-              {current.keywords.slice(0, 6).map((keyword, index) => (
-                <span
-                  key={`${current.direction}-keyword-${keyword}`}
-                  className={`${styles.keywordParticle} ${styles[`keyword${index + 1}`]} ${
-                    liveInfluenceMode ? styles[`keywordParticle${liveInfluenceMode}`] : ""
-                  }`}
-                >
-                  {keyword}
-                </span>
-              ))}
-            </div>
-            <div
-              className={`${styles.textStageCenter} ${liveInfluenceMode ? styles[`textStageCenter${liveInfluenceMode}`] : ""}`}
-              style={thoughtCenterAnchor}
-            >
-              <span className={styles.centerLayerMarker}>LAYER · Thought Center</span>
-              <span className={styles.overlayLabel}>Din fișierul Slices</span>
-              <strong>{current.direction}</strong>
-              <p>{thoughtCenterFragment}</p>
-            </div>
-          </div>
-        </div>
-        <div className={styles.cornerSignature}>
-          <strong>O felie de gândire</strong>
-          <span>Marc, Ciprian-Marcel</span>
-        </div>
-        <div className={`${styles.thoughtOverlay} ${interference ? styles.thoughtOverlayInterference : ""}`}>
-          {isThoughtOverlayVisible ? (
-            <>
-              <div className={styles.thoughtOverlayLabelPlate}>
-                <span className={styles.overlayLabel}>Acum mă gândesc la</span>
-              </div>
-              <div key={thoughtAnimationKey} className={styles.thoughtOverlayTextStack}>
-                {thoughtLines.map((line, index) => (
-                  <div key={`${thoughtAnimationKey}-${index}-${line}`} className={styles.thoughtOverlayTextPlate}>
-                    <p className={styles.typewriterText}>
-                      {line}
-                      {index === thoughtLines.length - 1 ? (
-                        <span className={styles.typewriterCaret} aria-hidden="true" />
-                      ) : null}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : null}
-        </div>
-        {liveAiResponseLines.length ? (
-          <div className={styles.liveAiResponseOverlay}>
-            <span className={styles.liveAiResponseLabel}>Artist AI răspunde</span>
-            <div className={styles.liveAiResponseStack}>
-              {liveAiResponseLines.map((line, index) => (
-                <p key={`${interference?.sourceId}-ai-response-${index}-${line}`}>{line}</p>
-              ))}
-            </div>
-          </div>
-        ) : null}
-      </div>
 
       {interference ? (
         <section className={styles.interferencePanel}>

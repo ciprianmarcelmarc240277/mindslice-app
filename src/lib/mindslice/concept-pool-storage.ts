@@ -1,5 +1,6 @@
 "use client";
 
+import { normalizeLegacyConceptPoolEntry } from "@/lib/mindslice/concept-legacy-normalization";
 import type { ConceptPoolEntry } from "@/lib/mindslice/mindslice-types";
 
 export const CONCEPT_POOL_STORAGE_KEY = "mindslice:concept-pool";
@@ -17,7 +18,9 @@ export function readConceptPool() {
     }
 
     const parsed = JSON.parse(raw) as { conceptPool?: ConceptPoolEntry[] };
-    return Array.isArray(parsed.conceptPool) ? parsed.conceptPool : [];
+    return Array.isArray(parsed.conceptPool)
+      ? parsed.conceptPool.map(normalizeLegacyConceptPoolEntry)
+      : [];
   } catch {
     return [];
   }

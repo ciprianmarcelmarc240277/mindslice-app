@@ -7,6 +7,10 @@ import {
   readArtMemory,
   writeArtMemory,
 } from "@/lib/mindslice/art-memory-storage";
+import {
+  loadPersistedMindsliceState,
+  persistMindsliceState,
+} from "@/lib/mindslice/mindslice-state-persistence";
 import type {
   ArtCompositionPoolEntry,
   ArtMemoryEntry,
@@ -62,6 +66,36 @@ export function useArtMemorySystem({
   }, []);
 
   useEffect(() => {
+    if (!isSignedIn) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadArtMemory() {
+      try {
+        const next = await loadPersistedMindsliceState<ArtMemoryEntry>("memory", "art");
+
+        if (cancelled) {
+          return;
+        }
+
+        writeArtMemory(next);
+      } catch {
+        if (!cancelled) {
+          window.dispatchEvent(new Event(ART_MEMORY_UPDATED_EVENT));
+        }
+      }
+    }
+
+    loadArtMemory();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn]);
+
+  useEffect(() => {
     if (!isSignedIn || !isActive || !activeArtCompositionPoolEntry) {
       return;
     }
@@ -93,6 +127,14 @@ export function useArtMemorySystem({
     ].slice(0, 24);
 
     writeArtMemory(next);
+
+    void persistMindsliceState("memory", "art", next)
+      .then((synced) => {
+        writeArtMemory(synced);
+      })
+      .catch(() => {
+        // Alpha-safe: local art memory remains available if backend persistence fails.
+      });
   }, [activeArtCompositionPoolEntry, isActive, isSignedIn]);
 
   const visibleArtMemory = useMemo(() => (isSignedIn ? artMemory : []), [artMemory, isSignedIn]);

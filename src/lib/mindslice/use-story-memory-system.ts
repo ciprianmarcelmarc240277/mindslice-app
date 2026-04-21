@@ -7,6 +7,10 @@ import {
   readStoryMemory,
   writeStoryMemory,
 } from "@/lib/mindslice/story-memory-storage";
+import {
+  loadPersistedMindsliceState,
+  persistMindsliceState,
+} from "@/lib/mindslice/mindslice-state-persistence";
 import type { ScenarioPoolEntry, StoryMemoryEntry } from "@/lib/mindslice/mindslice-types";
 
 type UseStoryMemorySystemOptions = {
@@ -59,6 +63,36 @@ export function useStoryMemorySystem({
   }, []);
 
   useEffect(() => {
+    if (!isSignedIn) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadStoryMemory() {
+      try {
+        const next = await loadPersistedMindsliceState<StoryMemoryEntry>("memory", "narrative");
+
+        if (cancelled) {
+          return;
+        }
+
+        writeStoryMemory(next);
+      } catch {
+        if (!cancelled) {
+          window.dispatchEvent(new Event(STORY_MEMORY_UPDATED_EVENT));
+        }
+      }
+    }
+
+    loadStoryMemory();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn]);
+
+  useEffect(() => {
     if (!isSignedIn || !isActive || !activeScenarioPoolEntry) {
       return;
     }
@@ -86,6 +120,14 @@ export function useStoryMemorySystem({
     const next = [nextEntry, ...previous.filter((entry) => entry.id !== activeScenarioPoolEntry.id)].slice(0, 24);
 
     writeStoryMemory(next);
+
+    void persistMindsliceState("memory", "narrative", next)
+      .then((synced) => {
+        writeStoryMemory(synced);
+      })
+      .catch(() => {
+        // Alpha-safe: local story memory remains available if backend persistence fails.
+      });
   }, [activeScenarioPoolEntry, isActive, isSignedIn]);
 
   const visibleStoryMemory = useMemo(() => (isSignedIn ? storyMemory : []), [isSignedIn, storyMemory]);

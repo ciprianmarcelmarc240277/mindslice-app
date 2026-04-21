@@ -7,6 +7,10 @@ import {
   readColorMemory,
   writeColorMemory,
 } from "@/lib/mindslice/color-memory-storage";
+import {
+  loadPersistedMindsliceState,
+  persistMindsliceState,
+} from "@/lib/mindslice/mindslice-state-persistence";
 import type {
   ColorMemoryEntry,
   ColorPoolEntry,
@@ -62,6 +66,36 @@ export function useColorMemorySystem({
   }, []);
 
   useEffect(() => {
+    if (!isSignedIn) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadColorMemory() {
+      try {
+        const next = await loadPersistedMindsliceState<ColorMemoryEntry>("memory", "color");
+
+        if (cancelled) {
+          return;
+        }
+
+        writeColorMemory(next);
+      } catch {
+        if (!cancelled) {
+          window.dispatchEvent(new Event(COLOR_MEMORY_UPDATED_EVENT));
+        }
+      }
+    }
+
+    loadColorMemory();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn]);
+
+  useEffect(() => {
     if (!isSignedIn || !isActive || !activeColorPoolEntry) {
       return;
     }
@@ -92,6 +126,14 @@ export function useColorMemorySystem({
     ].slice(0, 24);
 
     writeColorMemory(next);
+
+    void persistMindsliceState("memory", "color", next)
+      .then((synced) => {
+        writeColorMemory(synced);
+      })
+      .catch(() => {
+        // Alpha-safe: local color memory remains available if backend persistence fails.
+      });
   }, [activeColorPoolEntry, isActive, isSignedIn]);
 
   const visibleColorMemory = useMemo(

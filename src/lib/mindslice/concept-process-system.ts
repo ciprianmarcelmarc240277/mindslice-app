@@ -6,6 +6,8 @@ import { evaluateTerminationCondition } from "@/lib/mindslice/concept-terminatio
 import { validateConceptCandidate } from "@/lib/mindslice/concept-validation-system";
 import type { ThoughtSceneEngineState } from "@/lib/mindslice/thought-scene-engine";
 import type {
+  CanonInfluenceContext,
+  ClockDisplayState,
   HistoryEntry,
   InfluenceMode,
   LiveInterference,
@@ -22,6 +24,8 @@ type ProcessIdeaInput = {
   thoughtMemory: ThoughtMemoryEntry[];
   interference: LiveInterference | null;
   influenceMode: InfluenceMode | null;
+  canonInfluence: CanonInfluenceContext;
+  clockDisplay: ClockDisplayState | null;
 };
 
 export function processIdea(input: ProcessIdeaInput): ProcessIdeaResult {
@@ -33,6 +37,8 @@ export function processIdea(input: ProcessIdeaInput): ProcessIdeaResult {
     thoughtMemory,
     interference,
     influenceMode,
+    canonInfluence,
+    clockDisplay,
   } = input;
 
   const interpretation = interpretIdea({
@@ -56,6 +62,8 @@ export function processIdea(input: ProcessIdeaInput): ProcessIdeaResult {
     history,
     thoughtMemory,
     interference: contamination.accepted ? interference : null,
+    canonInfluence,
+    clockDisplay,
   });
   const validation = validateConceptCandidate(candidate);
   const iterationCount = Math.max(history.length, 1);
@@ -87,6 +95,7 @@ export function processIdea(input: ProcessIdeaInput): ProcessIdeaResult {
     ...contaminationResult.notes,
     `contamination: ${contamination.rationale}`,
     `evaluare: organizare internă ${validation.axes.structure.toFixed(2)} / sens ${validation.axes.sense.toFixed(2)} / focalizare conceptuală ${validation.axes.attention.toFixed(2)} / coerență ${validation.axes.coherence.toFixed(2)}`,
+    ...canonInfluence.notes.map((note) => `canon: ${note}`),
     `decizie: ${nextAction}`,
     ...iteration.notes,
   ];

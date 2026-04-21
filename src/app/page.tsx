@@ -25,12 +25,23 @@ import { useCanonSystem } from "@/lib/mindslice/use-canon-system";
 import { useColorPoolSystem } from "@/lib/mindslice/use-color-pool-system";
 import { useScenarioPoolSystem } from "@/lib/mindslice/use-scenario-pool-system";
 import { useArtCompositionPoolSystem } from "@/lib/mindslice/use-art-composition-pool-system";
+import { useStructurePoolSystem } from "@/lib/mindslice/use-structure-pool-system";
+import { useShapePoolSystem } from "@/lib/mindslice/use-shape-pool-system";
 import { useArtMemorySystem } from "@/lib/mindslice/use-art-memory-system";
+import { useStructureMemorySystem } from "@/lib/mindslice/use-structure-memory-system";
+import { useShapeMemorySystem } from "@/lib/mindslice/use-shape-memory-system";
 import { useStoryMemorySystem } from "@/lib/mindslice/use-story-memory-system";
 import { useNarrativeCanonSystem } from "@/lib/mindslice/use-narrative-canon-system";
 import { useArtCanonSystem } from "@/lib/mindslice/use-art-canon-system";
+import { useStructureCanonSystem } from "@/lib/mindslice/use-structure-canon-system";
+import { useShapeCanonSystem } from "@/lib/mindslice/use-shape-canon-system";
+import { useShapeGrammarMemorySystem } from "@/lib/mindslice/use-shape-grammar-memory-system";
+import { useShapeGrammarCanonSystem } from "@/lib/mindslice/use-shape-grammar-canon-system";
+import { useMetaSystemMemory } from "@/lib/mindslice/use-meta-system-memory";
+import { useMetaSystemCanon } from "@/lib/mindslice/use-meta-system-canon";
 import { useColorMemorySystem } from "@/lib/mindslice/use-color-memory-system";
 import { useColorCanonSystem } from "@/lib/mindslice/use-color-canon-system";
+import { useCanonInfluenceContext } from "@/lib/mindslice/use-canon-influence-context";
 import { useEngineDebuggerSystem } from "@/lib/mindslice/use-engine-debugger-system";
 import { useSystemModificationState } from "@/lib/mindslice/use-system-modification-state";
 import { useClockSystem } from "@/lib/mindslice/use-clock-system";
@@ -517,6 +528,7 @@ export default function Home() {
     currentIndex,
     influenceMode: effectiveInfluenceMode,
   });
+  const canonInfluence = useCanonInfluenceContext(isUserSignedIn);
   const thoughtCycleDuration = getThoughtCycleDuration(
     adjustedCurrent.thought,
     effectiveInfluenceMode,
@@ -560,8 +572,12 @@ export default function Home() {
         interference,
         influenceMode: effectiveInfluenceMode,
         liveAiResponseLines,
+        canonInfluence,
+        clockDisplay,
       }),
     [
+      canonInfluence,
+      clockDisplay,
       currentIndex,
       adjustedStateLibrary,
       effectiveInfluenceMode,
@@ -604,10 +620,40 @@ export default function Home() {
     isActive,
     conceptPool,
   });
+  const {
+    structurePool,
+    structurePoolCount,
+    latestStructurePoolEntry,
+    activeStructurePoolEntry,
+  } = useStructurePoolSystem({
+    isSignedIn: isUserSignedIn,
+    isActive,
+    conceptPool,
+  });
+  const {
+    shapePool,
+    shapePoolCount,
+    latestShapePoolEntry,
+    activeShapePoolEntry,
+  } = useShapePoolSystem({
+    isSignedIn: isUserSignedIn,
+    isActive,
+    conceptPool,
+  });
   const { artMemory, latestArtMemory, resolvedArtCount } = useArtMemorySystem({
     isSignedIn: isUserSignedIn,
     isActive,
     activeArtCompositionPoolEntry,
+  });
+  const { structureMemory, latestStructureMemory, resolvedStructureCount } = useStructureMemorySystem({
+    isSignedIn: isUserSignedIn,
+    isActive,
+    activeStructurePoolEntry,
+  });
+  const { shapeMemory, latestShapeMemory, resolvedShapeCount } = useShapeMemorySystem({
+    isSignedIn: isUserSignedIn,
+    isActive,
+    activeShapePoolEntry,
   });
   const { storyMemory, latestStoryMemory, resolvedScenarioCount } = useStoryMemorySystem({
     isSignedIn: isUserSignedIn,
@@ -621,6 +667,32 @@ export default function Home() {
   const { artCanon, artCanonCount, primaryArtCanon } = useArtCanonSystem({
     isSignedIn: isUserSignedIn,
     artMemory,
+  });
+  const { structureCanon, structureCanonCount, primaryStructureCanon } = useStructureCanonSystem({
+    isSignedIn: isUserSignedIn,
+    structureMemory,
+  });
+  const { shapeCanon, shapeCanonCount, primaryShapeCanon } = useShapeCanonSystem({
+    isSignedIn: isUserSignedIn,
+    shapeMemory,
+  });
+  const { shapeGrammarMemory, latestShapeGrammarMemory, resolvedShapeGrammarCount } = useShapeGrammarMemorySystem({
+    isSignedIn: isUserSignedIn,
+    isActive,
+    activePoolEntry,
+  });
+  const { shapeGrammarCanon, shapeGrammarCanonCount, primaryShapeGrammarCanon } = useShapeGrammarCanonSystem({
+    isSignedIn: isUserSignedIn,
+    shapeGrammarMemory,
+  });
+  const { metaSystemMemory, latestMetaSystemMemory, resolvedMetaSystemCount } = useMetaSystemMemory({
+    isSignedIn: isUserSignedIn,
+    isActive,
+    activePoolEntry,
+  });
+  const { metaSystemCanon, metaSystemCanonCount, primaryMetaSystemCanon } = useMetaSystemCanon({
+    isSignedIn: isUserSignedIn,
+    metaSystemMemory,
   });
   const { conceptMemory, latestConcept, resolvedConceptCount, latestPromotion } = useConceptMemorySystem({
     isSignedIn: isUserSignedIn,
@@ -1232,12 +1304,24 @@ export default function Home() {
             latestScenarioPoolTitle={latestScenarioPoolEntry?.conceptTitle ?? null}
             artCompositionPoolCount={artCompositionPoolCount}
             latestArtCompositionPoolTitle={latestArtCompositionPoolEntry?.conceptTitle ?? null}
+            structurePoolCount={structurePoolCount}
+            latestStructurePoolTitle={latestStructurePoolEntry?.conceptTitle ?? null}
+            shapePoolCount={shapePoolCount}
+            latestShapePoolTitle={latestShapePoolEntry?.conceptTitle ?? null}
             canonCount={canonCount}
             primaryCanonTitle={primaryCanon?.concept.core.title ?? null}
             colorCanonCount={colorCanonCount}
             primaryColorCanonTitle={primaryColorCanon?.conceptTitle ?? null}
             narrativeCanonCount={narrativeCanonCount}
             primaryNarrativeCanonTitle={primaryNarrativeCanon?.conceptTitle ?? null}
+            structureCanonCount={structureCanonCount}
+            primaryStructureCanonTitle={primaryStructureCanon?.conceptTitle ?? null}
+            shapeCanonCount={shapeCanonCount}
+            primaryShapeCanonTitle={primaryShapeCanon?.conceptTitle ?? null}
+            shapeGrammarCanonCount={shapeGrammarCanonCount}
+            primaryShapeGrammarCanonTitle={primaryShapeGrammarCanon?.conceptTitle ?? null}
+            metaSystemCanonCount={metaSystemCanonCount}
+            primaryMetaSystemCanonTitle={primaryMetaSystemCanon?.conceptTitle ?? null}
             conceptMemoryCount={conceptMemory.length}
             resolvedConceptCount={resolvedConceptCount}
             latestConceptTitle={latestConcept?.concept.core.title ?? null}
@@ -1250,6 +1334,18 @@ export default function Home() {
             artMemoryCount={artMemory.length}
             resolvedArtCount={resolvedArtCount}
             latestArtTitle={latestArtMemory?.conceptTitle ?? null}
+            structureMemoryCount={structureMemory.length}
+            resolvedStructureCount={resolvedStructureCount}
+            latestStructureTitle={latestStructureMemory?.conceptTitle ?? null}
+            shapeMemoryCount={shapeMemory.length}
+            resolvedShapeCount={resolvedShapeCount}
+            latestShapeTitle={latestShapeMemory?.conceptTitle ?? null}
+            shapeGrammarMemoryCount={shapeGrammarMemory.length}
+            resolvedShapeGrammarCount={resolvedShapeGrammarCount}
+            latestShapeGrammarTitle={latestShapeGrammarMemory?.conceptTitle ?? null}
+            metaSystemMemoryCount={metaSystemMemory.length}
+            resolvedMetaSystemCount={resolvedMetaSystemCount}
+            latestMetaSystemTitle={latestMetaSystemMemory?.conceptTitle ?? null}
             artCanonCount={artCanonCount}
             primaryArtCanonTitle={primaryArtCanon?.conceptTitle ?? null}
             promotionStatus={latestPromotion?.promotedConcept.stage ?? conceptCandidate.stage}
