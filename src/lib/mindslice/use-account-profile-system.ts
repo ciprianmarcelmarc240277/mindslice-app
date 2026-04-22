@@ -354,10 +354,12 @@ export function useAccountProfileSystem({
     setIsSavingNameDeclaration(true);
 
     try {
-      const response = await fetch("/api/user-state", {
-        method: "PATCH",
+      const response = await fetch("/api/author-engine", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nameDeclarationAccepted: nextAccepted }),
+        body: JSON.stringify({
+          action: nextAccepted ? "activate_author_identity" : "anonymize_user",
+        }),
       });
 
       const payload = (await response.json()) as { profile?: UserProfile; error?: string };
@@ -450,10 +452,11 @@ export function useAccountProfileSystem({
     setIsSavingAdminSubscription(true);
 
     try {
-      const response = await fetch("/api/admin/subscriptions", {
+      const response = await fetch("/api/author-engine", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          action: "activate_subscription",
           targetPseudonym,
           subscriptionStatus: adminSubscriptionStatusInput,
         }),

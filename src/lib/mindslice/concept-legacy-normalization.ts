@@ -73,12 +73,21 @@ function buildFallbackMetaSystem(shapeGrammar: any) {
     runtime: {
       framework: {
         intent: "legacy concept",
+        function: "legacy function unavailable",
+        target: "legacy target unavailable",
+        differentiator: "legacy differentiator unavailable",
         domain: ["shape", "composition", "color", "scenario"],
         constraints: [],
         goal: "legacy continuity",
         priority: shapeGrammar?.rulesApplied?.[0] ?? "repeat",
       },
       labyrinth: {
+        explorationMap: {
+          explorations: {},
+          connections: [],
+        },
+        explorations: {},
+        connections: [],
         axes: ["axis:legacy"],
         variations: [],
         relations: [],
@@ -90,6 +99,12 @@ function buildFallbackMetaSystem(shapeGrammar: any) {
         pipelinePressure: 0,
         relationPressure: 0,
         notes: ["legacy concept has no active conductor state"],
+      },
+      designOutput: {
+        direction: "artistic",
+        style: "hybrid_stage",
+        layout: "adaptive_layout",
+        motion: "ambient_motion",
       },
       activePipeline: ["shape_theory", "shape_grammar", "composition_structure", "art_composition", "color_theory", "scenario"],
       designState: {
@@ -117,6 +132,11 @@ function buildFallbackMetaSystem(shapeGrammar: any) {
         appliedDomains: ["shape", "composition", "color", "scenario"],
         influenceWeight: 0,
         influenceNotes: ["legacy concept has no meta memory influence"],
+        storedConcept: "legacy concept",
+        canonical: false,
+        canonicalReuse: 0,
+        canonicalImpact: 0,
+        canonicalStability: 0,
       },
       validationPassed: false,
       failed: true,
@@ -146,6 +166,15 @@ function buildFallbackMetaSystem(shapeGrammar: any) {
   };
 }
 
+function buildFallbackInfluence() {
+  return {
+    role: "free",
+    weightLabel: "LOW",
+    weightValue: 0.92,
+    notes: ["legacy concept normalized with default influence profile"],
+  };
+}
+
 function normalizeValidationScores(scores: Record<string, unknown> | undefined) {
   return {
     ...scores,
@@ -171,6 +200,7 @@ function normalizeConcept(concept: any) {
 
   return {
     ...concept,
+    influence: concept.influence ?? buildFallbackInfluence(),
     expression: {
       ...concept.expression,
       shapeGrammar,

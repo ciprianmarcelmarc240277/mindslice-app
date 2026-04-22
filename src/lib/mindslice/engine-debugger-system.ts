@@ -320,6 +320,8 @@ export function buildEngineDebuggerReport({
     activeTrace,
     colorTheory: {
       interpretation: activePalette.runtime?.interpretation ?? "Nicio interpretare cromatică disponibilă.",
+      colorPalette: activePalette.runtime?.colorPalette ?? null,
+      compositionPalette: activePalette.runtime?.compositionPalette ?? null,
       contaminationMode: activePalette.runtime?.contaminationMode ?? "none",
       acceptedContamination: activePalette.runtime?.acceptedContamination ?? false,
       iterationCount: activePalette.runtime?.iterationCount ?? 0,
@@ -349,6 +351,9 @@ export function buildEngineDebuggerReport({
     },
     artComposition: {
       interpretation: activeArtComposition.runtime?.interpretation ?? "Nicio interpretare compozițională disponibilă.",
+      visualOutput: activeArtComposition.runtime?.visualOutput ?? null,
+      visualScore: activeArtComposition.runtime?.visualScore ?? null,
+      visualRefined: activeArtComposition.runtime?.visualRefined ?? false,
       contaminationMode: activeArtComposition.runtime?.contaminationMode ?? "none",
       acceptedContamination: activeArtComposition.runtime?.acceptedContamination ?? false,
       iterationCount: activeArtComposition.runtime?.iterationCount ?? 0,
@@ -383,6 +388,9 @@ export function buildEngineDebuggerReport({
     },
     structure: {
       interpretation: activeStructure.runtime?.interpretation ?? "Nicio interpretare structurală disponibilă.",
+      selectedStrategy: activeStructure.runtime?.selectedStrategy ?? null,
+      compositionLayout: activeStructure.runtime?.compositionLayout ?? null,
+      generatedLayout: activeStructure.runtime?.generatedLayout ?? null,
       contaminationMode: activeStructure.runtime?.contaminationMode ?? "none",
       acceptedContamination: activeStructure.runtime?.acceptedContamination ?? false,
       iterationCount: activeStructure.runtime?.iterationCount ?? 0,
@@ -417,6 +425,8 @@ export function buildEngineDebuggerReport({
     shape: {
       interpretation: activeShape.runtime?.interpretation ?? "Nicio interpretare formală disponibilă.",
       shapeIdeaSet: activeShape.runtime?.shapeIdeaSet ?? [],
+      detectedPrimitiveShape: activeShape.runtime?.detectedPrimitiveShape ?? null,
+      primitiveShapeStructure: activeShape.runtime?.primitiveShapeStructure ?? null,
       contaminationMode: activeShape.runtime?.contaminationMode ?? "none",
       acceptedContamination: activeShape.runtime?.acceptedContamination ?? false,
       hardFailureMode: activeShape.runtime?.hardFailureMode ?? "soft",
@@ -452,6 +462,9 @@ export function buildEngineDebuggerReport({
     },
     shapeGrammar: {
       seedShape: activeShapeGrammar.runtime?.seedShape ?? "no-seed-shape",
+      primitiveBaseShape: activeShapeGrammar.runtime?.primitiveBaseShape ?? null,
+      primitiveEvolvedShape: activeShapeGrammar.runtime?.primitiveEvolvedShape ?? null,
+      generatedForm: activeShapeGrammar.runtime?.generatedForm ?? null,
       ruleset: activeShapeGrammar.runtime?.ruleset ?? [],
       rulesApplied: activeShapeGrammar.rulesApplied ?? [],
       constraints: activeShapeGrammar.runtime?.constraints ?? [],
@@ -503,12 +516,21 @@ export function buildEngineDebuggerReport({
     metaSystem: {
       framework: activeMetaSystem.runtime?.framework ?? {
         intent: "no-intent",
+        function: "no-function",
+        target: "no-target",
+        differentiator: "no-differentiator",
         domain: [],
         constraints: [],
         goal: "no-goal",
         priority: "no-priority",
       },
       labyrinth: activeMetaSystem.runtime?.labyrinth ?? {
+        explorationMap: {
+          explorations: {},
+          connections: [],
+        },
+        explorations: {},
+        connections: [],
         axes: [],
         variations: [],
         relations: [],
@@ -520,6 +542,12 @@ export function buildEngineDebuggerReport({
         pipelinePressure: 0,
         relationPressure: 0,
         notes: [],
+      },
+      designOutput: activeMetaSystem.runtime?.designOutput ?? {
+        direction: "artistic",
+        style: "hybrid_stage",
+        layout: "adaptive_layout",
+        motion: "ambient_motion",
       },
       activePipeline: activeMetaSystem.runtime?.activePipeline ?? [],
       designState: activeMetaSystem.runtime?.designState ?? {
@@ -542,6 +570,11 @@ export function buildEngineDebuggerReport({
         appliedDomains: [],
         influenceWeight: 0,
         influenceNotes: [],
+        storedConcept: "none",
+        canonical: false,
+        canonicalReuse: 0,
+        canonicalImpact: 0,
+        canonicalStability: 0,
       },
       validationPassed: activeMetaSystem.runtime?.validationPassed ?? false,
       failed: activeMetaSystem.runtime?.failed ?? false,
@@ -572,6 +605,8 @@ export function buildEngineDebuggerReport({
     },
     scenario: {
       interpretation: activeScenario.runtime?.interpretation ?? "Nicio interpretare narativă disponibilă.",
+      extractedTension: activeScenario.runtime?.extractedTension ?? null,
+      narrativeSequence: activeScenario.runtime?.narrativeSequence ?? [],
       contaminationMode: activeScenario.runtime?.contaminationMode ?? "none",
       acceptedContamination: activeScenario.runtime?.acceptedContamination ?? false,
       iterationCount: activeScenario.runtime?.iterationCount ?? 0,

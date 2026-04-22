@@ -4,6 +4,7 @@ import type {
   CompositionStructureState,
   ShapeGrammarRuntime,
   ShapeGrammarScores,
+  ShapeGrammarState,
   ShapeGrammarThresholds,
   ShapeTheoryState,
 } from "@/lib/mindslice/mindslice-types";
@@ -28,6 +29,54 @@ function defaultThresholds(): ShapeGrammarThresholds {
     transformation: 0.64,
     relation: 0.66,
     expressivePower: 0.7,
+  };
+}
+
+function normalizePrimitiveShape(shape: string): "POINT" | "LINE" | "PLANE" | "VOLUME" {
+  const normalized = shape.toUpperCase();
+
+  if (normalized === "POINT" || normalized === "LINE" || normalized === "PLANE" || normalized === "VOLUME") {
+    return normalized;
+  }
+
+  return "VOLUME" as const;
+}
+
+export function applyPrimitiveShapeRules(shapeStructure: {
+  type: string;
+}) {
+  const current = normalizePrimitiveShape(shapeStructure.type);
+
+  if (current === "POINT") {
+    return "LINE" as const;
+  }
+
+  if (current === "LINE") {
+    return "PLANE" as const;
+  }
+
+  if (current === "PLANE") {
+    return "VOLUME" as const;
+  }
+
+  return "VOLUME" as const;
+}
+
+export function generatePrimitiveForm(shapeStructure: {
+  type: string;
+  complexity?: number;
+  orientation?: string;
+}) {
+  const base = normalizePrimitiveShape(shapeStructure.type);
+  const evolved: "POINT" | "LINE" | "PLANE" | "VOLUME" = applyPrimitiveShapeRules({ type: base });
+
+  return {
+    base: {
+      type: base,
+      complexity: shapeStructure.complexity ?? 0,
+      orientation: shapeStructure.orientation ?? "undirected",
+    },
+    evolved,
   };
 }
 
@@ -541,6 +590,11 @@ export function generateShapeSequence(input: {
   const { shape, structure, maxIterations = 5, hardFailureMode = "controlled" } = input;
   const thresholds = defaultThresholds();
   const seedShape = `${shape.type}:${shape.mass}:${shape.behavior}`;
+  const primitiveForm = generatePrimitiveForm({
+    type: shape.runtime?.detectedPrimitiveShape ?? "VOLUME",
+    complexity: shape.runtime?.primitiveShapeStructure?.complexity,
+    orientation: shape.runtime?.primitiveShapeStructure?.orientation,
+  });
   const ruleset = buildRuleset(shape, structure);
   const constraints = buildConstraints(shape, structure);
   const sequence = [seedShape];
@@ -641,10 +695,13 @@ export function generateShapeSequence(input: {
     structureEvolution,
     outputVisual: sequence.join(" · "),
     outputText: isValid
-      ? `Gramatica formelor evoluează prin ${rulesApplied.join(", ") || "stabilizare minimă"} și produce o secvență lizibilă.`
-      : `Gramatica formelor rămâne instabilă; secvența nu trece încă pragurile de coerență și expresie.`,
+      ? `Gramatica formelor evoluează prin ${rulesApplied.join(", ") || "stabilizare minimă"} și produce o secvență lizibilă. Evoluția primară merge din ${primitiveForm.base.type} spre ${primitiveForm.evolved}.`
+      : `Gramatica formelor rămâne instabilă; secvența nu trece încă pragurile de coerență și expresie. Evoluția primară rămâne ${primitiveForm.base.type} -> ${primitiveForm.evolved}.`,
     runtime: {
       seedShape,
+      primitiveBaseShape: primitiveForm.base.type,
+      primitiveEvolvedShape: primitiveForm.evolved,
+      generatedForm: primitiveForm,
       ruleset,
       constraints,
       hardFailureMode,
@@ -662,6 +719,7 @@ export function generateShapeSequence(input: {
       systemStateUpdate,
       notes: [
         `seed ${seedShape}`,
+        `primitive ${primitiveForm.base.type} -> ${primitiveForm.evolved}`,
         `rules ${ruleset.join(" | ")}`,
         `constraints ${constraints.join(" | ")}`,
         `priority queue ${(finalPrioritizedRules.length
@@ -717,7 +775,7 @@ export function measureGrammarTimeStability(input: {
 }
 
 export function isGrammarCanonical(input: {
-  grammar: ReturnType<typeof generateShapeSequence>;
+  grammar: ShapeGrammarState;
   validation: ShapeGrammarScores;
   stage: string;
   sourceIdeaCanonCount: number;

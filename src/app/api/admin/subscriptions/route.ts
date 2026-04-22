@@ -1,5 +1,6 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { activateSubscription, deriveAuthorRole } from "@/lib/mindslice/concept-author-engine-system";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const SUBSCRIPTION_STATUS_OPTIONS = [
@@ -130,6 +131,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Pseudonimul țintă nu a fost găsit." }, { status: 404 });
   }
 
+  const { data: targetIdentity, error: targetIdentityError } = await supabase
+    .from("author_identities")
+    .select("type")
+    .eq("user_id", targetProfile.user_id)
+    .maybeSingle();
+
+  if (targetIdentityError) {
+    return NextResponse.json({ error: targetIdentityError.message }, { status: 500 });
+  }
+
   const nextExpiresAt =
     nextStatus === "active"
       ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -150,7 +161,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
+  const baseRole = deriveAuthorRole({
+    identityType: (targetIdentity?.type as "pseudonym" | "indexed" | undefined) ?? "pseudonym",
+    subscriptionStatus: "inactive",
+  });
+  const role = activateSubscription({
+    currentRole: baseRole,
+    subscriptionStatus: nextStatus,
+  });
+
+  await supabase.from("author_roles").upsert(
+    {
+      user_id: targetProfile.user_id,
+      role,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" },
+  );
+
   return NextResponse.json({
-    profile: updatedProfile,
+    profile: {
+      ...updatedProfile,
+      author_role: role,
+    },
   });
 }

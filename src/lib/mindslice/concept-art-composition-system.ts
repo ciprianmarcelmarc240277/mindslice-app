@@ -360,6 +360,103 @@ export function buildArtConcept(
   };
 }
 
+export function mergeVisualSystems(input: {
+  generatedForm: {
+    base: {
+      type: "POINT" | "LINE" | "PLANE" | "VOLUME";
+      complexity: number;
+      orientation: string;
+    };
+    evolved: "POINT" | "LINE" | "PLANE" | "VOLUME";
+  };
+  compositionLayout: {
+    layout: string;
+    balanceScore: number;
+  };
+  colorPalette: {
+    hue: "calm_hue" | "contrast_hue";
+    saturation: number;
+    brightness: number;
+  };
+}) {
+  return {
+    geometry: input.generatedForm,
+    composition: input.compositionLayout,
+    color: input.colorPalette,
+  };
+}
+
+export function computeVisualCoherence(visual: ReturnType<typeof mergeVisualSystems>) {
+  const geometryWeight =
+    (visual.geometry.base.complexity * 0.26) +
+    (visual.geometry.evolved === "VOLUME" ? 0.18 : visual.geometry.evolved === "PLANE" ? 0.12 : 0.08);
+  const compositionWeight = visual.composition.balanceScore * 0.34;
+  const colorWeight =
+    (visual.color.hue === "calm_hue" ? 0.16 : 0.12) +
+    visual.color.saturation * 0.12 +
+    visual.color.brightness * 0.1;
+
+  return clamp(geometryWeight + compositionWeight + colorWeight, 0, 1);
+}
+
+export function refineVisualOutput(
+  composition: ReturnType<typeof buildArtConcept>,
+  visual: ReturnType<typeof mergeVisualSystems>,
+) {
+  return {
+    ...composition,
+    balanceMap: unique([...composition.balanceMap, "visual:refined_balance"]),
+    unityMap: unique([...composition.unityMap, `visual:${visual.geometry.evolved.toLowerCase()}_integration`]),
+    contrastMap: unique([...composition.contrastMap, `color:${visual.color.hue}`]),
+    outputText: `${composition.outputText} Visual output-ul a fost rafinat pentru a ridica coerența internă.`,
+  };
+}
+
+export function applyMergedVisualOutputToArtComposition(
+  composition: ReturnType<typeof buildArtConcept>,
+  input: {
+    generatedForm: {
+      base: {
+        type: "POINT" | "LINE" | "PLANE" | "VOLUME";
+        complexity: number;
+        orientation: string;
+      };
+      evolved: "POINT" | "LINE" | "PLANE" | "VOLUME";
+    };
+    compositionLayout: {
+      layout: string;
+      balanceScore: number;
+    };
+    colorPalette: {
+      hue: "calm_hue" | "contrast_hue";
+      saturation: number;
+      brightness: number;
+    };
+  },
+) {
+  const visualOutput = mergeVisualSystems(input);
+  const visualScore = computeVisualCoherence(visualOutput);
+  const threshold = 0.7;
+  const refinedComposition = visualScore < threshold
+    ? refineVisualOutput(composition, visualOutput)
+    : composition;
+
+  return {
+    ...refinedComposition,
+    runtime: {
+      ...refinedComposition.runtime,
+      visualOutput,
+      visualScore,
+      visualRefined: visualScore < threshold,
+      notes: [
+        ...refinedComposition.runtime.notes,
+        `visual score ${visualScore.toFixed(2)}`,
+        visualScore < threshold ? "visual refinement applied" : "visual refinement not required",
+      ],
+    },
+  };
+}
+
 export function updateArtSystemState(input: {
   composition: ReturnType<typeof buildArtConcept>;
   validation: ArtCompositionScores;

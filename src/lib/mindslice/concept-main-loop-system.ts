@@ -1,6 +1,8 @@
 import { processIdea } from "@/lib/mindslice/concept-process-system";
 import { buildThoughtSceneEngine } from "@/lib/mindslice/thought-scene-engine";
 import type {
+  AuthorIdentityType,
+  AuthorRole,
   CanonInfluenceContext,
   ClockDisplayState,
   HistoryEntry,
@@ -22,6 +24,8 @@ type RunIdeaSetMainLoopInput = {
   liveAiResponseLines: string[];
   canonInfluence: CanonInfluenceContext;
   clockDisplay: ClockDisplayState | null;
+  authorRole?: AuthorRole | null;
+  identityType?: AuthorIdentityType | null;
 };
 
 function buildIdeaLoopEntry(
@@ -35,6 +39,8 @@ function buildIdeaLoopEntry(
   liveAiResponseLines: string[],
   canonInfluence: CanonInfluenceContext,
   clockDisplay: ClockDisplayState | null,
+  authorRole: AuthorRole | null | undefined,
+  identityType: AuthorIdentityType | null | undefined,
 ): IdeaLoopEntryResult {
   const thoughtScene = buildThoughtSceneEngine({
     current: idea,
@@ -59,6 +65,8 @@ function buildIdeaLoopEntry(
       influenceMode,
       canonInfluence,
       clockDisplay,
+      authorRole,
+      identityType,
     }),
   };
 }
@@ -73,6 +81,8 @@ export function runIdeaSetMainLoop({
   liveAiResponseLines,
   canonInfluence,
   clockDisplay,
+  authorRole,
+  identityType,
 }: RunIdeaSetMainLoopInput): IdeaSetMainLoopResult {
   const safeIdeaSet = ideaSet.length ? ideaSet : [];
   const safeActiveIdeaIndex =
@@ -92,6 +102,8 @@ export function runIdeaSetMainLoop({
       liveAiResponseLines,
       canonInfluence,
       clockDisplay,
+      authorRole,
+      identityType,
     ),
   );
 
@@ -134,6 +146,8 @@ export function runIdeaSetMainLoop({
       liveAiResponseLines,
       canonInfluence,
       clockDisplay,
+      authorRole,
+      identityType,
     );
 
     return {

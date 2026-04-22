@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type {
   ThoughtSceneEngineState,
 } from "@/lib/mindslice/thought-scene-engine";
@@ -216,6 +216,32 @@ export function LiveSceneView(props: LiveSceneViewProps) {
   );
   const [isCompositionRulesOpen, setIsCompositionRulesOpen] = useState(false);
   const [isAiResponseOpen, setIsAiResponseOpen] = useState(false);
+  const [isThoughtOverlayClosing, setIsThoughtOverlayClosing] = useState(false);
+  const [isThoughtOverlayDismissed, setIsThoughtOverlayDismissed] = useState(false);
+  const thoughtOverlayText = useMemo(
+    () => thoughtLines.join(" ").replace(/\s+/g, " ").trim(),
+    [thoughtLines],
+  );
+
+  useEffect(() => {
+    setIsThoughtOverlayClosing(false);
+    setIsThoughtOverlayDismissed(false);
+  }, [currentIndex, current.direction, current.thought]);
+
+  useEffect(() => {
+    if (!isThoughtOverlayVisible) {
+      setIsThoughtOverlayClosing(false);
+      setIsThoughtOverlayDismissed(false);
+    }
+  }, [isThoughtOverlayVisible]);
+
+  const handleThoughtOverlayDismiss = () => {
+    setIsThoughtOverlayClosing(true);
+
+    window.setTimeout(() => {
+      setIsThoughtOverlayDismissed(true);
+    }, 320);
+  };
   const filteredActiveTrace = useMemo(
     () =>
       engineDebuggerReport.activeTrace.filter((event) => {
@@ -1255,27 +1281,33 @@ export function LiveSceneView(props: LiveSceneViewProps) {
         <strong>O felie de gândire</strong>
         <span>Marc, Ciprian-Marcel</span>
       </div>
-      <div className={`${styles.thoughtOverlay} ${interference ? styles.thoughtOverlayInterference : ""}`}>
-        {isThoughtOverlayVisible ? (
+      {isThoughtOverlayVisible && (!isThoughtOverlayDismissed || isThoughtOverlayClosing) ? (
+        <div
+          className={`${styles.thoughtOverlay} ${interference ? styles.thoughtOverlayInterference : ""} ${
+            isThoughtOverlayClosing ? styles.thoughtOverlayClosing : ""
+          }`}
+        >
           <>
             <div className={styles.thoughtOverlayLabelPlate}>
               <span className={styles.overlayLabel}>Acum mă gândesc la</span>
             </div>
             <div key={thoughtAnimationKey} className={styles.thoughtOverlayTextStack}>
-              {thoughtLines.map((line, index) => (
-                <div key={`${thoughtAnimationKey}-${index}-${line}`} className={styles.thoughtOverlayTextPlate}>
-                  <p className={styles.typewriterText}>
-                    {line}
-                    {index === thoughtLines.length - 1 ? (
-                      <span className={styles.typewriterCaret} aria-hidden="true" />
-                    ) : null}
-                  </p>
-                </div>
-              ))}
+              <div className={styles.thoughtOverlayTextPlate}>
+                <p key={thoughtAnimationKey} className={styles.typewriterText}>
+                  {thoughtOverlayText}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.thoughtOverlayDismiss}
+                onClick={handleThoughtOverlayDismiss}
+              >
+                Vreau să văd felia de gând
+              </button>
             </div>
           </>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
       {liveAiResponseLines.length ? (
         <div
           className={`${styles.liveAiResponseOverlay} ${
@@ -1618,6 +1650,13 @@ export function LiveSceneView(props: LiveSceneViewProps) {
               <li>stare: {conceptProcess.status}</li>
               <li>acțiune următoare: {conceptProcess.nextAction}</li>
               <li>iterații: {conceptProcess.iterationCount}</li>
+              <li>thinking state: {conceptProcess.thinkingEngine.state}</li>
+              <li>thinking role: {conceptProcess.thinkingEngine.userRole}</li>
+              <li>thinking identity: {conceptProcess.thinkingEngine.identityType}</li>
+              <li>thinking structură: {conceptProcess.thinkingEngine.structure.toFixed(2)}</li>
+              <li>thinking sens: {conceptProcess.thinkingEngine.sense.toFixed(2)}</li>
+              <li>thinking atenție: {conceptProcess.thinkingEngine.attention.toFixed(2)}</li>
+              <li>thinking coerență: {conceptProcess.thinkingEngine.coherence.toFixed(2)}</li>
               <li>presiune de memorie: {conceptProcess.interpretation.memoryPressure.toFixed(2)}</li>
               <li>
                 presiune de contaminare: {conceptProcess.interpretation.contaminationPressure.toFixed(2)}
@@ -1629,6 +1668,12 @@ export function LiveSceneView(props: LiveSceneViewProps) {
               <li>acceptată: {conceptProcess.contamination.accepted ? "da" : "nu"}</li>
               <li>focalizare a iterației: {conceptProcess.iteration.iterationFocus}</li>
               <li>greutate a iterației: {conceptProcess.iteration.nextIterationWeight.toFixed(2)}</li>
+              <li>
+                praguri thinking: S {conceptProcess.thinkingEngine.thresholds.structure.toFixed(2)} / M{" "}
+                {conceptProcess.thinkingEngine.thresholds.sense.toFixed(2)} / A{" "}
+                {conceptProcess.thinkingEngine.thresholds.attention.toFixed(2)} / C{" "}
+                {conceptProcess.thinkingEngine.thresholds.coherence.toFixed(2)}
+              </li>
               <li>terminare: {conceptProcess.terminationReason}</li>
             </ul>
           </article>
@@ -1690,6 +1735,13 @@ export function LiveSceneView(props: LiveSceneViewProps) {
           <article className={styles.alphaDebugCard}>
             <span>MindSlice ColorTheory Runtime</span>
             <ul>
+              <li>layout hue: {engineDebuggerReport.colorTheory.compositionPalette?.hue ?? "none"}</li>
+              <li>
+                layout saturation: {engineDebuggerReport.colorTheory.compositionPalette?.saturation.toFixed(2) ?? "0.00"}
+              </li>
+              <li>
+                layout brightness: {engineDebuggerReport.colorTheory.compositionPalette?.brightness.toFixed(2) ?? "0.00"}
+              </li>
               <li>contaminare: {engineDebuggerReport.colorTheory.contaminationMode}</li>
               <li>acceptată: {engineDebuggerReport.colorTheory.acceptedContamination ? "da" : "nu"}</li>
               <li>iterații: {engineDebuggerReport.colorTheory.iterationCount}</li>
@@ -1712,6 +1764,8 @@ export function LiveSceneView(props: LiveSceneViewProps) {
           <article className={styles.alphaDebugCard}>
             <span>MindSlice Scenario Runtime</span>
             <ul>
+              <li>tension extracted: {engineDebuggerReport.scenario.extractedTension ?? "none"}</li>
+              <li>narrative sequence: {engineDebuggerReport.scenario.narrativeSequence.join(" -> ") || "none"}</li>
               <li>contaminare: {engineDebuggerReport.scenario.contaminationMode}</li>
               <li>acceptată: {engineDebuggerReport.scenario.acceptedContamination ? "da" : "nu"}</li>
               <li>iterații: {engineDebuggerReport.scenario.iterationCount}</li>
@@ -1734,6 +1788,13 @@ export function LiveSceneView(props: LiveSceneViewProps) {
           <article className={styles.alphaDebugCard}>
             <span>MindSlice ArtComposition Runtime</span>
             <ul>
+              <li>
+                visual output: {engineDebuggerReport.artComposition.visualOutput
+                  ? `${engineDebuggerReport.artComposition.visualOutput.geometry.base.type} -> ${engineDebuggerReport.artComposition.visualOutput.geometry.evolved} / ${engineDebuggerReport.artComposition.visualOutput.composition.layout} / ${engineDebuggerReport.artComposition.visualOutput.color.hue}`
+                  : "none"}
+              </li>
+              <li>visual score: {engineDebuggerReport.artComposition.visualScore?.toFixed(2) ?? "0.00"}</li>
+              <li>visual refined: {engineDebuggerReport.artComposition.visualRefined ? "da" : "nu"}</li>
               <li>contaminare: {engineDebuggerReport.artComposition.contaminationMode}</li>
               <li>acceptată: {engineDebuggerReport.artComposition.acceptedContamination ? "da" : "nu"}</li>
               <li>iterații: {engineDebuggerReport.artComposition.iterationCount}</li>
@@ -1768,6 +1829,15 @@ export function LiveSceneView(props: LiveSceneViewProps) {
               <li>motiv: {engineDebuggerReport.structure.terminationReason}</li>
               <li>structură validă: {engineDebuggerReport.structure.isValidStructure ? "da" : "nu"}</li>
               <li>trece legea: {engineDebuggerReport.structure.lawPassed ? "da" : "nu"}</li>
+              <li>strategy: {engineDebuggerReport.structure.selectedStrategy ?? "none"}</li>
+              <li>composition layout: {engineDebuggerReport.structure.compositionLayout?.layout ?? "none"}</li>
+              <li>
+                composition balance: {engineDebuggerReport.structure.compositionLayout?.balanceScore.toFixed(2) ?? "0.00"}
+              </li>
+              <li>generated layout: {engineDebuggerReport.structure.generatedLayout?.layout ?? "none"}</li>
+              <li>
+                balance: {engineDebuggerReport.structure.generatedLayout?.balanceScore.toFixed(2) ?? "0.00"}
+              </li>
               <li>grid: {engineDebuggerReport.structure.grid}</li>
               <li>subject: {engineDebuggerReport.structure.subjectPosition}</li>
               <li>τt: {engineDebuggerReport.structure.thresholds.thirds.toFixed(2)}</li>
@@ -1797,6 +1867,13 @@ export function LiveSceneView(props: LiveSceneViewProps) {
               <li>fail reason: {engineDebuggerReport.shape.failureReason ?? "none"}</li>
               <li>formă validă: {engineDebuggerReport.shape.isValidShape ? "da" : "nu"}</li>
               <li>trece legea: {engineDebuggerReport.shape.lawPassed ? "da" : "nu"}</li>
+              <li>primitive: {engineDebuggerReport.shape.detectedPrimitiveShape ?? "none"}</li>
+              <li>
+                primitive orientation: {engineDebuggerReport.shape.primitiveShapeStructure?.orientation ?? "none"}
+              </li>
+              <li>
+                primitive complexity: {engineDebuggerReport.shape.primitiveShapeStructure?.complexity.toFixed(2) ?? "0.00"}
+              </li>
               <li>type: {engineDebuggerReport.shape.type}</li>
               <li>mass: {engineDebuggerReport.shape.mass}</li>
               <li>behavior: {engineDebuggerReport.shape.behavior}</li>
@@ -1815,6 +1892,19 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             <span>MindSlice ShapeGrammar Runtime</span>
             <ul>
               <li>seed: {engineDebuggerReport.shapeGrammar.seedShape}</li>
+              <li>primitive base: {engineDebuggerReport.shapeGrammar.primitiveBaseShape ?? "none"}</li>
+              <li>primitive evolved: {engineDebuggerReport.shapeGrammar.primitiveEvolvedShape ?? "none"}</li>
+              <li>
+                generated form: {engineDebuggerReport.shapeGrammar.generatedForm
+                  ? `${engineDebuggerReport.shapeGrammar.generatedForm.base.type} -> ${engineDebuggerReport.shapeGrammar.generatedForm.evolved}`
+                  : "none"}
+              </li>
+              <li>
+                form orientation: {engineDebuggerReport.shapeGrammar.generatedForm?.base.orientation ?? "none"}
+              </li>
+              <li>
+                form complexity: {engineDebuggerReport.shapeGrammar.generatedForm?.base.complexity.toFixed(2) ?? "0.00"}
+              </li>
               <li>rules: {engineDebuggerReport.shapeGrammar.ruleset.length}</li>
               <li>constraints: {engineDebuggerReport.shapeGrammar.constraints.length}</li>
               <li>hard fail mode: {engineDebuggerReport.shapeGrammar.hardFailureMode}</li>
@@ -1841,13 +1931,23 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             <span>MindSlice MetaSystem</span>
             <ul>
               <li>intent: {engineDebuggerReport.metaSystem.framework.intent}</li>
+              <li>function: {engineDebuggerReport.metaSystem.framework.function}</li>
+              <li>target: {engineDebuggerReport.metaSystem.framework.target}</li>
+              <li>differentiator: {engineDebuggerReport.metaSystem.framework.differentiator}</li>
               <li>domains: {engineDebuggerReport.metaSystem.framework.domain.join(" / ") || "none"}</li>
+              <li>exploration map: {Object.keys(engineDebuggerReport.metaSystem.labyrinth.explorationMap.explorations).join(" / ") || "none"}</li>
+              <li>labyrinth explorations: {Object.keys(engineDebuggerReport.metaSystem.labyrinth.explorations).join(" / ") || "none"}</li>
+              <li>labyrinth connections: {engineDebuggerReport.metaSystem.labyrinth.connections.join(" / ") || "none"}</li>
               <li>mode: {engineDebuggerReport.metaSystem.conductor.mode}</li>
               <li>targets: {engineDebuggerReport.metaSystem.conductor.targetModules.join(" > ") || "none"}</li>
               <li>labyrinth pressure: {engineDebuggerReport.metaSystem.conductor.labyrinthPressure.toFixed(2)}</li>
               <li>pipeline pressure: {engineDebuggerReport.metaSystem.conductor.pipelinePressure.toFixed(2)}</li>
               <li>relation pressure: {engineDebuggerReport.metaSystem.conductor.relationPressure.toFixed(2)}</li>
               <li>conductor notes: {engineDebuggerReport.metaSystem.conductor.notes.join(" / ") || "none"}</li>
+              <li>design direction: {engineDebuggerReport.metaSystem.designOutput.direction}</li>
+              <li>design style: {engineDebuggerReport.metaSystem.designOutput.style}</li>
+              <li>design layout: {engineDebuggerReport.metaSystem.designOutput.layout}</li>
+              <li>design motion: {engineDebuggerReport.metaSystem.designOutput.motion}</li>
               <li>pipeline: {engineDebuggerReport.metaSystem.activePipeline.join(" > ") || "none"}</li>
               <li>executed: {engineDebuggerReport.metaSystem.designState.executedModules.join(" > ") || "none"}</li>
               <li>reordered: {engineDebuggerReport.metaSystem.designState.reorderedPipeline.join(" > ") || "none"}</li>
@@ -1870,6 +1970,11 @@ export function LiveSceneView(props: LiveSceneViewProps) {
               <li>integration: {engineDebuggerReport.metaSystem.scores.integration.toFixed(2)}</li>
               <li>memory: {engineDebuggerReport.metaSystem.memory.globalWeight.toFixed(2)}</li>
               <li>memory influence: {engineDebuggerReport.metaSystem.memory.influenceWeight.toFixed(2)}</li>
+              <li>stored concept: {engineDebuggerReport.metaSystem.memory.storedConcept}</li>
+              <li>memory canonical: {engineDebuggerReport.metaSystem.memory.canonical ? "da" : "nu"}</li>
+              <li>memory reuse: {engineDebuggerReport.metaSystem.memory.canonicalReuse.toFixed(2)}</li>
+              <li>memory impact: {engineDebuggerReport.metaSystem.memory.canonicalImpact.toFixed(2)}</li>
+              <li>memory stability: {engineDebuggerReport.metaSystem.memory.canonicalStability.toFixed(2)}</li>
               <li>memory notes: {engineDebuggerReport.metaSystem.memory.influenceNotes.join(" / ") || "none"}</li>
               <li>global canon: {engineDebuggerReport.metaSystem.canon.globalCandidate ? "candidate" : "nu"}</li>
               <li>domain canon: {engineDebuggerReport.metaSystem.canon.domainCandidates.join(" / ") || "none"}</li>

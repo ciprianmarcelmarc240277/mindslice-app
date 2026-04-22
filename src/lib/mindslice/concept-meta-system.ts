@@ -108,6 +108,13 @@ function overlapScore(left: Set<string>, right: Set<string>) {
   return overlap / Math.max(Math.min(left.size, right.size), 1);
 }
 
+const LABYRINTH_DIMENSIONS = [
+  "artistic",
+  "emotional",
+  "technical",
+  "social",
+] as const;
+
 function defaultThresholds(): MetaSystemThresholds {
   return {
     structure: 0.66,
@@ -129,6 +136,77 @@ function detectDomains(input: {
   ]);
 }
 
+export function extractFrameworkIntent(input: {
+  current: ThoughtState;
+}) {
+  return input.current.direction || input.current.thought || "intent latent";
+}
+
+export function extractFrameworkFunction(input: {
+  shape: ShapeTheoryState;
+  shapeGrammar: ShapeGrammarState;
+  structure: CompositionStructureState;
+}) {
+  return [
+    `shape:${input.shape.type}`,
+    `grammar:${input.shapeGrammar.runtime.systemStateUpdate.rulePriorities.dominantRule}`,
+    `structure:${input.structure.grid}`,
+  ].join(" / ");
+}
+
+export function extractFrameworkTarget(input: {
+  scenario: NarrativeScenarioState;
+  current: ThoughtState;
+}) {
+  return input.current.mood || input.scenario.stakes || "context deschis";
+}
+
+export function extractFrameworkDifferentiator(input: {
+  shapeGrammar: ShapeGrammarState;
+  palette: ColorPaletteState;
+  artComposition: ArtCompositionState;
+}) {
+  return unique([
+    input.shapeGrammar.runtime.generatedForm
+      ? `form:${input.shapeGrammar.runtime.generatedForm.base.type}->${input.shapeGrammar.runtime.generatedForm.evolved}`
+      : null,
+    input.palette.runtime?.colorPalette ? `color:${input.palette.runtime.colorPalette.hue}` : null,
+    input.artComposition.runtime?.visualRefined ? "visual:refined" : "visual:stable",
+  ]).join(" / ") || "diferențiator latent";
+}
+
+export function buildMindSliceFramework(input: {
+  sliceContent: {
+    current: ThoughtState;
+    shape: ShapeTheoryState;
+    shapeGrammar: ShapeGrammarState;
+    structure: CompositionStructureState;
+    artComposition: ArtCompositionState;
+    scenario: NarrativeScenarioState;
+    palette: ColorPaletteState;
+  };
+}) {
+  return {
+    intent: extractFrameworkIntent({
+      current: input.sliceContent.current,
+    }),
+    function: extractFrameworkFunction({
+      shape: input.sliceContent.shape,
+      shapeGrammar: input.sliceContent.shapeGrammar,
+      structure: input.sliceContent.structure,
+    }),
+    target: extractFrameworkTarget({
+      scenario: input.sliceContent.scenario,
+      current: input.sliceContent.current,
+    }),
+    differentiator: extractFrameworkDifferentiator({
+      shapeGrammar: input.sliceContent.shapeGrammar,
+      palette: input.sliceContent.palette,
+      artComposition: input.sliceContent.artComposition,
+    }),
+  };
+}
+
 function buildFramework(input: {
   current: ThoughtState;
   shape: ShapeTheoryState;
@@ -142,9 +220,20 @@ function buildFramework(input: {
   const domain = detectDomains({
     clockDisplay: input.clockDisplay,
   });
+  const frameworkModel = buildMindSliceFramework({
+    sliceContent: {
+      current: input.current,
+      shape: input.shape,
+      shapeGrammar: input.shapeGrammar,
+      structure: input.structure,
+      artComposition: input.artComposition,
+      scenario: input.scenario,
+      palette: input.palette,
+    },
+  });
 
   return {
-    intent: `${input.current.direction} / ${input.current.visual.mode} / ${input.current.motion}`,
+    ...frameworkModel,
     domain,
     constraints: unique([
       ...input.shapeGrammar.runtime.constraints,
@@ -164,6 +253,109 @@ function buildFramework(input: {
   };
 }
 
+export function exploreFrameworkDimension(input: {
+  model: ReturnType<typeof buildFramework>;
+  dimension: (typeof LABYRINTH_DIMENSIONS)[number];
+  shape: ShapeTheoryState;
+  shapeGrammar: ShapeGrammarState;
+  structure: CompositionStructureState;
+  artComposition: ArtCompositionState;
+  scenario: NarrativeScenarioState;
+  palette: ColorPaletteState;
+  clockDisplay: ClockDisplayState | null;
+}) {
+  if (input.dimension === "artistic") {
+    return unique([
+      input.model.differentiator,
+      `focus:${input.artComposition.focusNode}`,
+      `shape:${input.shape.type}`,
+      `grammar:${input.shapeGrammar.rulesApplied[0] ?? input.shapeGrammar.runtime.systemStateUpdate.rulePriorities.dominantRule}`,
+    ]).slice(0, 4);
+  }
+
+  if (input.dimension === "emotional") {
+    return unique([
+      input.model.intent,
+      input.model.target,
+      `stakes:${input.scenario.stakes}`,
+      `resolution:${input.scenario.resolution}`,
+    ]).slice(0, 4);
+  }
+
+  if (input.dimension === "technical") {
+    return unique([
+      input.model.function,
+      `grid:${input.structure.grid}`,
+      `color:${input.palette.runtime?.colorPalette?.hue ?? input.palette.dominant}`,
+      input.clockDisplay ? `time:${input.clockDisplay.transition}` : null,
+    ]).slice(0, 4);
+  }
+
+  return unique([
+    input.model.target,
+    `scenario:${input.scenario.coreConflict}`,
+    `attention:${input.structure.subjectPosition}`,
+    input.clockDisplay ? `clock:${input.clockDisplay.attentionAnchor}` : null,
+  ]).slice(0, 4);
+}
+
+export function generateLabyrinthVariations(input: {
+  model: ReturnType<typeof buildFramework>;
+  dimension: (typeof LABYRINTH_DIMENSIONS)[number];
+  shape: ShapeTheoryState;
+  shapeGrammar: ShapeGrammarState;
+  structure: CompositionStructureState;
+  artComposition: ArtCompositionState;
+  scenario: NarrativeScenarioState;
+  palette: ColorPaletteState;
+  clockDisplay: ClockDisplayState | null;
+}) {
+  return exploreFrameworkDimension(input);
+}
+
+export function findLabyrinthOverlap(input: {
+  dimensionA: string;
+  valuesA: string[];
+  dimensionB: string;
+  valuesB: string[];
+}) {
+  const tokensA = tokenize(input.valuesA);
+  const tokensB = tokenize(input.valuesB);
+  const overlap = [...tokensA].filter((token) => tokensB.has(token));
+
+  if (!overlap.length) {
+    return null;
+  }
+
+  return `${input.dimensionA}<->${input.dimensionB}:${overlap.slice(0, 3).join("|")}`;
+}
+
+export function detectLabyrinthConnections(explorations: Record<string, string[]>) {
+  const connections: string[] = [];
+  const entries = Object.entries(explorations);
+
+  for (const [dimensionA, valuesA] of entries) {
+    for (const [dimensionB, valuesB] of entries) {
+      if (dimensionA >= dimensionB) {
+        continue;
+      }
+
+      const link = findLabyrinthOverlap({
+        dimensionA,
+        valuesA,
+        dimensionB,
+        valuesB,
+      });
+
+      if (link) {
+        connections.push(link);
+      }
+    }
+  }
+
+  return connections;
+}
+
 function runLabyrinth(input: {
   framework: ReturnType<typeof buildFramework>;
   shape: ShapeTheoryState;
@@ -174,8 +366,26 @@ function runLabyrinth(input: {
   palette: ColorPaletteState;
   clockDisplay: ClockDisplayState | null;
 }) {
+  const explorations = Object.fromEntries(
+    LABYRINTH_DIMENSIONS.map((dimension) => [
+      dimension,
+      generateLabyrinthVariations({
+        model: input.framework,
+        dimension,
+        shape: input.shape,
+        shapeGrammar: input.shapeGrammar,
+        structure: input.structure,
+        artComposition: input.artComposition,
+        scenario: input.scenario,
+        palette: input.palette,
+        clockDisplay: input.clockDisplay,
+      }),
+    ]),
+  ) as Record<string, string[]>;
+  const connections = detectLabyrinthConnections(explorations);
   const axes = unique([
     ...input.framework.domain.map((domain) => `axis:${domain}`),
+    ...LABYRINTH_DIMENSIONS.map((dimension) => `dimension:${dimension}`),
     `shape:${input.shape.positionTendency}`,
     `grammar:${input.shapeGrammar.rulesApplied[0] ?? input.shapeGrammar.runtime.systemStateUpdate.rulePriorities.dominantRule}`,
     `structure:${input.structure.centerState}`,
@@ -200,14 +410,114 @@ function runLabyrinth(input: {
     `scenario -> structure via ${input.structure.centerState}`,
     `art -> color via ${input.palette.accent}`,
     `shape -> art via ${input.artComposition.focusNode}`,
+    ...connections,
     input.clockDisplay ? `time -> scenario via ${input.clockDisplay.attentionAnchor}` : null,
     input.clockDisplay ? `time -> composition via ${input.clockDisplay.transition}` : null,
   ]);
 
   return {
+    explorationMap: {
+      explorations,
+      connections,
+    },
+    explorations,
+    connections,
     axes,
     variations,
     relations,
+  };
+}
+
+export function selectVisualDirection(input: {
+  explorationMap: {
+    explorations: Record<string, string[]>;
+    connections: string[];
+  };
+}) {
+  const rankedDimensions = Object.entries(input.explorationMap.explorations)
+    .map(([dimension, values]) => {
+      const connectionWeight = input.explorationMap.connections.filter((connection) =>
+        connection.includes(dimension),
+      ).length;
+      return {
+        dimension,
+        score: values.length + connectionWeight * 0.75,
+      };
+    })
+    .sort((left, right) => right.score - left.score);
+
+  return rankedDimensions[0]?.dimension ?? "artistic";
+}
+
+export function generateVisualStyle(direction: string) {
+  if (direction === "artistic") {
+    return "expressive_field";
+  }
+  if (direction === "emotional") {
+    return "atmospheric_tension";
+  }
+  if (direction === "technical") {
+    return "precision_grid";
+  }
+  if (direction === "social") {
+    return "dialogic_stage";
+  }
+
+  return "hybrid_stage";
+}
+
+export function generateDesignLayout(style: string) {
+  if (style === "expressive_field") {
+    return "floating_composition";
+  }
+  if (style === "atmospheric_tension") {
+    return "centered_pressure";
+  }
+  if (style === "precision_grid") {
+    return "modular_alignment";
+  }
+  if (style === "dialogic_stage") {
+    return "offset_dual_frame";
+  }
+
+  return "adaptive_layout";
+}
+
+export function generateDesignMotion(style: string) {
+  if (style === "expressive_field") {
+    return "slow_drift";
+  }
+  if (style === "atmospheric_tension") {
+    return "breathing_pulse";
+  }
+  if (style === "precision_grid") {
+    return "measured_step";
+  }
+  if (style === "dialogic_stage") {
+    return "counter_motion";
+  }
+
+  return "ambient_motion";
+}
+
+export function generateDesignOutput(input: {
+  explorationMap: {
+    explorations: Record<string, string[]>;
+    connections: string[];
+  };
+}) {
+  const direction = selectVisualDirection({
+    explorationMap: input.explorationMap,
+  });
+  const style = generateVisualStyle(direction);
+  const layout = generateDesignLayout(style);
+  const motion = generateDesignMotion(style);
+
+  return {
+    direction,
+    style,
+    layout,
+    motion,
   };
 }
 
@@ -333,6 +643,38 @@ function composeConductedLabyrinth(input: {
   context: MetaModuleContext;
 }) {
   return {
+    explorationMap: {
+      explorations: Object.fromEntries(
+        Object.entries(input.labyrinth.explorationMap.explorations).map(([dimension, values]) => [
+          dimension,
+          unique([
+            ...values,
+            input.conductor.targetModules[0] ? `conductor:${input.conductor.targetModules[0]}` : null,
+            input.conductor.labyrinthPressure >= 0.66 ? `pressure:${input.conductor.labyrinthPressure.toFixed(2)}` : null,
+          ]).slice(0, 6),
+        ]),
+      ) as Record<string, string[]>,
+      connections: unique([
+        ...input.labyrinth.explorationMap.connections,
+        `conductor<->goal:${input.framework.goal}`,
+        ...input.conductor.targetModules.slice(0, 3).map((module) => `conductor<->${module}`),
+      ]).slice(0, 12),
+    },
+    explorations: Object.fromEntries(
+      Object.entries(input.labyrinth.explorations).map(([dimension, values]) => [
+        dimension,
+        unique([
+          ...values,
+          input.conductor.targetModules[0] ? `conductor:${input.conductor.targetModules[0]}` : null,
+          input.conductor.labyrinthPressure >= 0.66 ? `pressure:${input.conductor.labyrinthPressure.toFixed(2)}` : null,
+        ]).slice(0, 6),
+      ]),
+    ) as Record<string, string[]>,
+    connections: unique([
+      ...input.labyrinth.connections,
+      `conductor<->goal:${input.framework.goal}`,
+      ...input.conductor.targetModules.slice(0, 3).map((module) => `conductor<->${module}`),
+    ]).slice(0, 12),
     axes: unique([
       ...input.labyrinth.axes,
       `conductor:priority:${input.framework.priority}`,
@@ -1001,6 +1343,21 @@ function metasystemLaw(input: {
   };
 }
 
+export function storeConceptInMetaMemory(input: {
+  concept: {
+    framework: ReturnType<typeof buildFramework>;
+  };
+  systemMemory: ReturnType<typeof runMemory>;
+}) {
+  return {
+    ...input.systemMemory,
+    influenceNotes: unique([
+      ...input.systemMemory.influenceNotes,
+      `stored ${input.concept.framework.intent}`,
+    ]),
+  };
+}
+
 function runMemory(input: {
   framework: ReturnType<typeof buildFramework>;
   history: HistoryEntry[];
@@ -1034,9 +1391,75 @@ function runMemory(input: {
   };
 }
 
+export function evaluateCanonicalForMemory(input: {
+  concept: {
+    validation: MetaSystemScores;
+    stage: string;
+    sourceIdeaCanonCount: number;
+  };
+}) {
+  const reuse = measureReuse({
+    sourceIdeaCanonCount: input.concept.sourceIdeaCanonCount,
+    validation: input.concept.validation,
+  });
+  const impact = measureImpact({
+    validation: input.concept.validation,
+  });
+  const stability = measureStability({
+    stage: input.concept.stage,
+    validation: input.concept.validation,
+  });
+
+  return {
+    canonical: reuse >= 0.62 && impact >= 0.66 && stability >= 0.64,
+    reuse,
+    impact,
+    stability,
+  };
+}
+
+export function updateMetaMemory(input: {
+  concept: {
+    framework: ReturnType<typeof buildFramework>;
+    validation: MetaSystemScores;
+    stage: string;
+    sourceIdeaCanonCount: number;
+  };
+  systemMemory: ReturnType<typeof runMemory>;
+}) {
+  const storedMemory = storeConceptInMetaMemory({
+    concept: {
+      framework: input.concept.framework,
+    },
+    systemMemory: input.systemMemory,
+  });
+  const canonicalEvaluation = evaluateCanonicalForMemory({
+    concept: {
+      validation: input.concept.validation,
+      stage: input.concept.stage,
+      sourceIdeaCanonCount: input.concept.sourceIdeaCanonCount,
+    },
+  });
+
+  return {
+    ...storedMemory,
+    storedConcept: input.concept.framework.intent,
+    canonical: canonicalEvaluation.canonical,
+    canonicalReuse: canonicalEvaluation.reuse,
+    canonicalImpact: canonicalEvaluation.impact,
+    canonicalStability: canonicalEvaluation.stability,
+    influenceNotes: unique([
+      ...storedMemory.influenceNotes,
+      canonicalEvaluation.canonical
+        ? `marked canonical ${input.concept.framework.intent}`
+        : `not canonical ${input.concept.framework.intent}`,
+    ]),
+  };
+}
+
 function applyMemoryInfluence(input: {
   designState: MetaDesignState;
-  memory: ReturnType<typeof runMemory>;
+  memory: ReturnType<typeof updateMetaMemory>;
   framework: ReturnType<typeof buildFramework>;
 }) {
   return {
@@ -1257,6 +1680,9 @@ export function runMetaSystem(input: {
       clockDisplay: input.clockDisplay,
     },
   });
+  const designOutput = generateDesignOutput({
+    explorationMap: conductedLabyrinth.explorationMap,
+  });
   const activePipeline = selectModulePipeline(framework.domain);
   const designState = runDesign({
     pipeline: activePipeline,
@@ -1273,15 +1699,54 @@ export function runMetaSystem(input: {
     conductor,
   });
   const thresholds = defaultThresholds();
-  const memory = runMemory({
+  const baseMemory = runMemory({
     framework,
     history: input.history,
     thoughtMemory: input.thoughtMemory,
     canonInfluence: input.canonInfluence,
   });
+  const preliminaryScores = {
+    structure: clamp(
+      input.compositionStructure.runtime.scores.center * 0.34 +
+        input.shape.runtime.scores.relation * 0.2 +
+        input.artComposition.runtime.scores.balance * 0.18,
+      0,
+      1,
+    ),
+    coherence: clamp(
+      input.shapeGrammar.runtime.scores.coherence * 0.38 +
+        input.scenario.runtime.scores.meaning * 0.22 +
+        input.palette.runtime.scores.colorRelations * 0.14,
+      0,
+      1,
+    ),
+    attention: clamp(
+      input.artComposition.runtime.scores.focus * 0.34 +
+        input.palette.runtime.scores.attentionImpact * 0.22 +
+        input.scenario.runtime.scores.attention * 0.16,
+      0,
+      1,
+    ),
+    integration: clamp(
+      input.shapeGrammar.runtime.scores.relation * 0.3 +
+        input.scenario.runtime.scores.progression * 0.2 +
+        input.compositionStructure.runtime.scores.attention * 0.16,
+      0,
+      1,
+    ),
+  } satisfies MetaSystemScores;
+  const updatedMemory = updateMetaMemory({
+    concept: {
+      framework,
+      validation: preliminaryScores,
+      stage: "resolved",
+      sourceIdeaCanonCount: input.canonInfluence.totalInfluence >= 0.66 ? 2 : input.canonInfluence.totalInfluence >= 0.32 ? 1 : 0,
+    },
+    systemMemory: baseMemory,
+  });
   const memoryInfluencedDesignState = applyMemoryInfluence({
     designState,
-    memory,
+    memory: updatedMemory,
     framework,
   });
   const scores = evaluateGlobalOutput({
@@ -1301,7 +1766,7 @@ export function runMetaSystem(input: {
   const canon = runCanon({
     framework,
     scores,
-    memory,
+    memory: updatedMemory,
   });
   const canonInfluencedDesignState = applyCanonInfluence({
     designState: memoryInfluencedDesignState,
@@ -1325,10 +1790,11 @@ export function runMetaSystem(input: {
 
   return {
     outputText: `MetaSystem orchestrează ${activePipeline.join(", ") || "niciun modul"} în jurul intenției ${framework.intent}.`,
-    outputVisual: `${framework.domain.join(" / ") || "none"} :: ${activePipeline.join(" > ") || "no-pipeline"} :: memory ${memory.influenceWeight.toFixed(2)} :: canon ${canon.influenceWeight.toFixed(2)}`,
+    outputVisual: `${framework.domain.join(" / ") || "none"} :: ${activePipeline.join(" > ") || "no-pipeline"} :: memory ${updatedMemory.influenceWeight.toFixed(2)} :: canon ${canon.influenceWeight.toFixed(2)}`,
     runtime: {
       framework,
       labyrinth: conductedLabyrinth,
+      designOutput,
       conductor,
       activePipeline,
       designState: {
@@ -1345,7 +1811,7 @@ export function runMetaSystem(input: {
         failureReason: canonInfluencedDesignState.failureReason,
         moduleNotes: canonInfluencedDesignState.moduleNotes,
       },
-      memory,
+      memory: updatedMemory,
       validationPassed,
       canon,
       thresholds,
@@ -1358,12 +1824,13 @@ export function runMetaSystem(input: {
         `framework ${framework.intent}`,
         `domains ${framework.domain.join(" | ") || "none"}`,
         `conductor ${conductor.targetModules.join(" > ") || "none"}`,
+        `design ${designOutput.direction} / ${designOutput.style} / ${designOutput.layout} / ${designOutput.motion}`,
         `pipeline ${activePipeline.join(" > ") || "none"}`,
         `executed ${designState.executedModules.join(" > ") || "none"}`,
         `reordered ${designState.reorderedPipeline.join(" > ") || "none"}`,
         `design fail ${designState.failed ? `${designState.failureModule ?? "unknown"} / ${designState.failureReason ?? "unknown"}` : "none"}`,
         `meta fail ${failureReason ?? "none"}`,
-        `memory ${memory.globalWeight.toFixed(2)}`,
+        `memory ${updatedMemory.globalWeight.toFixed(2)}`,
         `canon global ${canon.globalCandidate ? "candidate" : "not-yet"}`,
       ],
     } satisfies MetaSystemRuntime,

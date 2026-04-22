@@ -1,13 +1,26 @@
-import { processCompositionIdea } from "@/lib/mindslice/concept-art-composition-system";
+import {
+  applyMergedVisualOutputToArtComposition,
+  processCompositionIdea,
+} from "@/lib/mindslice/concept-art-composition-system";
 import { runMetaSystem } from "@/lib/mindslice/concept-meta-system";
 import { buildConceptOutput } from "@/lib/mindslice/concept-output-system";
-import { buildConceptPalette } from "@/lib/mindslice/concept-color-theory-system";
-import { processStructureIdea } from "@/lib/mindslice/concept-composition-structure-system";
+import {
+  applyCompositionLayoutToPalette,
+  buildConceptPalette,
+} from "@/lib/mindslice/concept-color-theory-system";
+import {
+  applyGeneratedFormToCompositionStructure,
+  processStructureIdea,
+} from "@/lib/mindslice/concept-composition-structure-system";
 import { generateShapeSequence } from "@/lib/mindslice/concept-shape-grammar-system";
 import { processShapeIdea } from "@/lib/mindslice/concept-shape-theory-system";
-import { processNarrativeIdea } from "@/lib/mindslice/concept-scenario-system";
+import {
+  applyVisualOutputToScenario,
+  processNarrativeIdea,
+} from "@/lib/mindslice/concept-scenario-system";
 import type { ThoughtSceneEngineState } from "@/lib/mindslice/thought-scene-engine";
 import type {
+  AuthorRole,
   CanonInfluenceContext,
   ClockDisplayState,
   ConceptCandidate,
@@ -32,6 +45,7 @@ type BuildConceptCandidateInput = {
   interference: LiveInterference | null;
   canonInfluence: CanonInfluenceContext;
   clockDisplay: ClockDisplayState | null;
+  authorRole?: AuthorRole | null;
 };
 
 function clamp(value: number, min: number, max: number) {
@@ -426,6 +440,64 @@ function deriveResolutionStatus(
   return "unresolved";
 }
 
+export function computeInfluenceWeight(authorRole: AuthorRole | null | undefined) {
+  if (authorRole === "active_author") {
+    return {
+      role: "active_author" as const,
+      weightLabel: "HIGH" as const,
+      weightValue: 1.08,
+      notes: ["active author influence: output amplified"],
+    };
+  }
+
+  if (authorRole === "author") {
+    return {
+      role: "author" as const,
+      weightLabel: "MEDIUM" as const,
+      weightValue: 1,
+      notes: ["author influence: output balanced"],
+    };
+  }
+
+  return {
+    role: "free" as const,
+    weightLabel: "LOW" as const,
+    weightValue: 0.92,
+    notes: ["free influence: output reduced"],
+  };
+}
+
+function applyInfluenceWeight(input: {
+  confidence: ConceptConfidence;
+  evaluationAxes: ConceptEvaluationAxes;
+  influence: ReturnType<typeof computeInfluenceWeight>;
+}) {
+  const scaledConfidence = {
+    ...input.confidence,
+    semantic: clamp(input.confidence.semantic * input.influence.weightValue, 0, 1),
+    visual: clamp(input.confidence.visual * input.influence.weightValue, 0, 1),
+    contaminationResistance: clamp(
+      input.confidence.contaminationResistance * (0.96 + input.influence.weightValue * 0.04),
+      0,
+      1,
+    ),
+    authorAlignment: clamp(input.confidence.authorAlignment * input.influence.weightValue, 0, 1),
+    overall: clamp(input.confidence.overall * input.influence.weightValue, 0, 1),
+  } satisfies ConceptConfidence;
+
+  const scaledAxes = {
+    structure: clamp(input.evaluationAxes.structure * (0.98 + input.influence.weightValue * 0.02), 0, 1),
+    sense: clamp(input.evaluationAxes.sense * (0.98 + input.influence.weightValue * 0.02), 0, 1),
+    attention: clamp(input.evaluationAxes.attention * input.influence.weightValue, 0, 1),
+    coherence: clamp(input.evaluationAxes.coherence * (0.99 + input.influence.weightValue * 0.01), 0, 1),
+  } satisfies ConceptEvaluationAxes;
+
+  return {
+    confidence: scaledConfidence,
+    evaluationAxes: scaledAxes,
+  };
+}
+
 export function buildConceptCandidate(
   input: BuildConceptCandidateInput,
 ): ConceptCandidate {
@@ -438,6 +510,7 @@ export function buildConceptCandidate(
     interference,
     canonInfluence,
     clockDisplay,
+    authorRole,
   } = input;
   const dominantFragments = pickDominantFragments(current, history);
   const dominantKeywords = pickDominantKeywords(current, thoughtMemory);
@@ -448,7 +521,7 @@ export function buildConceptCandidate(
     history,
     contamination.resistanceScore,
   );
-  const evaluationAxes = buildEvaluationAxes(
+  const baseEvaluationAxes = buildEvaluationAxes(
     current,
     confidence,
     contamination,
@@ -456,8 +529,16 @@ export function buildConceptCandidate(
     dominantKeywords,
     history,
   );
-  const stage = deriveStage(confidence);
-  const resolutionStatus = deriveResolutionStatus(confidence, stage);
+  const influence = computeInfluenceWeight(authorRole);
+  const influencedSignals = applyInfluenceWeight({
+    confidence,
+    evaluationAxes: baseEvaluationAxes,
+    influence,
+  });
+  const influencedConfidence = influencedSignals.confidence;
+  const evaluationAxes = influencedSignals.evaluationAxes;
+  const stage = deriveStage(influencedConfidence);
+  const resolutionStatus = deriveResolutionStatus(influencedConfidence, stage);
   const sourceIdeaId = `idea:${slugify(current.direction)}`;
   const currentThoughtId = `thought:${slugify(current.direction)}:${currentIndex + 1}`;
   const contaminationSummary = interference
@@ -508,6 +589,12 @@ export function buildConceptCandidate(
     structure: compositionStructure,
     hardFailureMode: "controlled",
   });
+  const structureWithGeneratedForm = shapeGrammar.runtime.generatedForm
+    ? applyGeneratedFormToCompositionStructure(
+        compositionStructure,
+        shapeGrammar.runtime.generatedForm,
+      )
+    : compositionStructure;
   const influencedScenario = {
     ...scenario,
     coreConflict: blendPrimaryValue(
@@ -591,9 +678,9 @@ export function buildConceptCandidate(
       : artComposition.outputText,
   };
   const influencedStructure = {
-    ...compositionStructure,
+    ...structureWithGeneratedForm,
     grid: blendPrimaryValue(
-      compositionStructure.grid,
+      structureWithGeneratedForm.grid,
       canonInfluence.structure?.structure.grid,
       resolveCanonBias(
         canonInfluence.activeWeights.structure,
@@ -601,7 +688,7 @@ export function buildConceptCandidate(
       ),
     ),
     subjectPosition: blendPrimaryValue(
-      compositionStructure.subjectPosition,
+      structureWithGeneratedForm.subjectPosition,
       canonInfluence.structure?.structure.subjectPosition,
       resolveCanonBias(
         canonInfluence.activeWeights.structure,
@@ -609,7 +696,7 @@ export function buildConceptCandidate(
       ),
     ),
     symmetryState: blendPrimaryValue(
-      compositionStructure.symmetryState,
+      structureWithGeneratedForm.symmetryState,
       canonInfluence.structure?.structure.symmetryState,
       resolveCanonBias(
         canonInfluence.activeWeights.structure,
@@ -617,7 +704,7 @@ export function buildConceptCandidate(
       ),
     ),
     centerState: blendPrimaryValue(
-      compositionStructure.centerState,
+      structureWithGeneratedForm.centerState,
       canonInfluence.structure?.structure.centerState,
       resolveCanonBias(
         canonInfluence.activeWeights.structure,
@@ -625,7 +712,7 @@ export function buildConceptCandidate(
       ),
     ),
     tensionZones: mergeLeadingValues(
-      compositionStructure.tensionZones,
+      structureWithGeneratedForm.tensionZones,
       canonInfluence.structure?.structure.tensionZones,
       5,
       resolveCanonBias(
@@ -634,7 +721,7 @@ export function buildConceptCandidate(
       ),
     ),
     attentionMap: mergeLeadingValues(
-      compositionStructure.attentionMap,
+      structureWithGeneratedForm.attentionMap,
       canonInfluence.structure?.structure.attentionMap,
       5,
       resolveCanonBias(
@@ -643,8 +730,8 @@ export function buildConceptCandidate(
       ),
     ),
     outputText: canonInfluence.structure
-      ? `${compositionStructure.outputText} Canon structural activ: ${canonInfluence.structure.conceptTitle}.`
-      : compositionStructure.outputText,
+      ? `${structureWithGeneratedForm.outputText} Canon structural activ: ${canonInfluence.structure.conceptTitle}.`
+      : structureWithGeneratedForm.outputText,
   };
   const influencedPalette = {
     ...palette,
@@ -695,18 +782,43 @@ export function buildConceptCandidate(
       ? `${palette.outputText} Canon cromatic activ: ${canonInfluence.color.conceptTitle}.`
       : palette.outputText,
   };
+  const paletteWithCompositionLayout = applyCompositionLayoutToPalette(
+    influencedPalette,
+    influencedStructure,
+  );
+  const artCompositionWithVisualOutput =
+    shapeGrammar.runtime.generatedForm &&
+      influencedStructure.runtime?.compositionLayout &&
+      paletteWithCompositionLayout.runtime?.colorPalette
+      ? applyMergedVisualOutputToArtComposition(influencedArtComposition, {
+          generatedForm: shapeGrammar.runtime.generatedForm,
+          compositionLayout: influencedStructure.runtime.compositionLayout,
+          colorPalette: paletteWithCompositionLayout.runtime.colorPalette,
+        })
+      : influencedArtComposition;
+  const scenarioWithVisualOutput = artCompositionWithVisualOutput.runtime?.visualOutput
+    ? applyVisualOutputToScenario(influencedScenario, {
+        concept: {
+          title: coreTitle,
+          tension,
+          thesis,
+          oneLineDefinition,
+        },
+        visualOutput: artCompositionWithVisualOutput.runtime.visualOutput,
+      })
+    : influencedScenario;
   const metaSystem = runMetaSystem({
     current,
     history,
     thoughtMemory,
     canonInfluence,
     clockDisplay,
-    scenario: influencedScenario,
-    artComposition: influencedArtComposition,
+    scenario: scenarioWithVisualOutput,
+    artComposition: artCompositionWithVisualOutput,
     compositionStructure: influencedStructure,
     shape,
     shapeGrammar,
-    palette: influencedPalette,
+    palette: paletteWithCompositionLayout,
   });
   const expression = {
     textSignature: dominantFragments.join(" / "),
@@ -717,13 +829,13 @@ export function buildConceptCandidate(
     typographyMode: current.visual.mode,
     motionMode: current.motion,
     clock: clockDisplay,
-    scenario: influencedScenario,
-    artComposition: influencedArtComposition,
+    scenario: scenarioWithVisualOutput,
+    artComposition: artCompositionWithVisualOutput,
     compositionStructure: influencedStructure,
     shape,
     shapeGrammar,
     metaSystem,
-    palette: influencedPalette,
+    palette: paletteWithCompositionLayout,
     dominantFragments,
     dominantKeywords,
   } as const;
@@ -761,9 +873,9 @@ export function buildConceptCandidate(
     output,
     contamination,
     validation: {
-      semanticCoherence: confidence.semantic,
-      graphicCoherence: confidence.visual,
-      crossModalAlignment: clamp((confidence.semantic + confidence.visual) / 2, 0, 1),
+      semanticCoherence: influencedConfidence.semantic,
+      graphicCoherence: influencedConfidence.visual,
+      crossModalAlignment: clamp((influencedConfidence.semantic + influencedConfidence.visual) / 2, 0, 1),
       persistenceAcrossCycles: clamp(Math.min(history.length, 5) * 0.18, 0, 1),
       survivesContamination: contamination.resistanceScore >= 0.6,
       validationNotes: [
@@ -785,13 +897,15 @@ export function buildConceptCandidate(
         clockDisplay
           ? `Ceasul intră în generare prin ${clockDisplay.visualStyle}, ancora ${clockDisplay.attentionAnchor} și tranziția ${clockDisplay.transition}.`
           : "Ceasul nu modifică încă acest candidat de concept.",
+        `Influence: rol ${influence.role} / greutate ${influence.weightLabel} (${influence.weightValue.toFixed(2)}).`,
         ...canonInfluence.notes.map((note) => `Canon influence: ${note}.`),
         interference
           ? `Interferența ${interference.influenceMode} este integrată în candidatul de concept.`
           : "Candidatul de concept este încă necontaminat extern.",
       ],
     },
-    confidence,
+    confidence: influencedConfidence,
+    influence,
     memory: {
       parentConceptIds: [],
       siblingConceptIds: [],
@@ -814,12 +928,41 @@ export function buildConceptCandidate(
     dominantKeywords,
     contaminationSummary,
     coherenceSignals: {
-      semantic: confidence.semantic,
-      visual: confidence.visual,
+      semantic: influencedConfidence.semantic,
+      visual: influencedConfidence.visual,
       crossModal: conceptStateDraft.validation.crossModalAlignment,
     },
     canonInfluence,
     evaluationAxes,
     conceptStateDraft,
+  };
+}
+
+export function runMindSliceVisualPipeline(
+  input: BuildConceptCandidateInput,
+) {
+  const candidate = buildConceptCandidate(input);
+
+  return {
+    visual: candidate.conceptStateDraft.expression.artComposition,
+    scenario: candidate.conceptStateDraft.expression.scenario,
+    time: candidate.conceptStateDraft.expression.clock,
+  };
+}
+
+export function runMindSliceCore(
+  input: BuildConceptCandidateInput,
+) {
+  const candidate = buildConceptCandidate(input);
+  const metaSystem = candidate.conceptStateDraft.expression.metaSystem;
+  const visualPipeline = runMindSliceVisualPipeline(input);
+
+  return {
+    framework: metaSystem.runtime.framework,
+    exploration: metaSystem.runtime.labyrinth.explorationMap,
+    design: metaSystem.runtime.designOutput,
+    visual: visualPipeline,
+    concept: candidate.conceptStateDraft,
+    memory: metaSystem.runtime.memory,
   };
 }

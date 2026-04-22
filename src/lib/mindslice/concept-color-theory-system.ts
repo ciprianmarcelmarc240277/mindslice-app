@@ -1,5 +1,6 @@
 import type {
   ColorPaletteState,
+  CompositionStructureState,
   ColorTheoryRuntime,
   ColorTheoryScores,
   ColorTheoryThresholds,
@@ -67,6 +68,64 @@ function defaultThresholds(): ColorTheoryThresholds {
     saturationControl: 0.7,
     colorRelations: 0.72,
     attentionImpact: 0.72,
+  };
+}
+
+function mixHexColors(colorA: string, colorB: string, ratio: number) {
+  const rgbA = hexToRgb(colorA);
+  const rgbB = hexToRgb(colorB);
+
+  if (!rgbA || !rgbB) {
+    return colorA;
+  }
+
+  const clampedRatio = clamp(ratio, 0, 1);
+  const channel = (left: number, right: number) =>
+    Math.round(left + (right - left) * clampedRatio)
+      .toString(16)
+      .padStart(2, "0");
+
+  return `#${channel(rgbA.r, rgbB.r)}${channel(rgbA.g, rgbB.g)}${channel(rgbA.b, rgbB.b)}`;
+}
+
+export function computeHueFromCompositionLayout(layout: {
+  balanceScore: number;
+}) {
+  return layout.balanceScore > 0.7 ? "calm_hue" as const : "contrast_hue" as const;
+}
+
+export function computeSaturationFromCompositionLayout(layout: {
+  balanceScore: number;
+}) {
+  return clamp(0.32 + (1 - layout.balanceScore) * 0.56, 0, 1);
+}
+
+export function computeBrightnessFromCompositionLayout(layout: {
+  layout: string;
+}) {
+  if (layout.layout.includes("phi_ratio") || layout.layout.includes("mirror")) {
+    return 0.72;
+  }
+
+  if (layout.layout.includes("thirds")) {
+    return 0.62;
+  }
+
+  return 0.52;
+}
+
+export function generatePaletteFromCompositionLayout(layout: {
+  layout: string;
+  balanceScore: number;
+}) {
+  const hue = computeHueFromCompositionLayout(layout);
+  const saturation = computeSaturationFromCompositionLayout(layout);
+  const brightness = computeBrightnessFromCompositionLayout(layout);
+
+  return {
+    hue,
+    saturation,
+    brightness,
   };
 }
 
@@ -253,6 +312,45 @@ export function buildColorConcept(
     outputText,
     outputVisual,
     runtime,
+  };
+}
+
+export function applyCompositionLayoutToPalette(
+  palette: ColorPaletteState,
+  structure: CompositionStructureState,
+) {
+  const compositionLayout = structure.runtime?.compositionLayout ?? structure.runtime?.generatedLayout;
+
+  if (!compositionLayout) {
+    return palette;
+  }
+
+  const generatedPalette = generatePaletteFromCompositionLayout(compositionLayout);
+  const hueColor = generatedPalette.hue === "calm_hue" ? "#8fa7c4" : "#d96b43";
+  const brightnessColor = generatedPalette.brightness >= 0.68 ? "#e7edf6" : generatedPalette.brightness >= 0.58 ? "#c2cfdf" : "#7b8798";
+  const accentColor = mixHexColors(hueColor, brightnessColor, 1 - generatedPalette.saturation * 0.72);
+
+  return {
+    ...palette,
+    dominant: mixHexColors(palette.dominant, hueColor, 0.34),
+    secondary: mixHexColors(palette.secondary, brightnessColor, 0.28),
+    accent: mixHexColors(palette.accent, accentColor, 0.42),
+    supportTones: unique([
+      ...palette.supportTones,
+      `layout_hue:${generatedPalette.hue}`,
+      `layout_saturation:${generatedPalette.saturation.toFixed(2)}`,
+      `layout_brightness:${generatedPalette.brightness.toFixed(2)}`,
+    ]).slice(0, 6),
+    outputText: `${palette.outputText} Composition layout-ul recalibrează cromatica prin ${generatedPalette.hue}, cu saturație ${generatedPalette.saturation.toFixed(2)} și luminozitate ${generatedPalette.brightness.toFixed(2)}.`,
+    runtime: {
+      ...palette.runtime,
+      colorPalette: generatedPalette,
+      compositionPalette: generatedPalette,
+      notes: [
+        ...palette.runtime.notes,
+        `composition palette ${generatedPalette.hue}`,
+      ],
+    },
   };
 }
 

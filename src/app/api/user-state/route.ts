@@ -1,5 +1,11 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import {
+  activateAuthorIdentity,
+  buildAuthorProfileSnapshot,
+  createUser,
+  deriveAuthorRole,
+} from "@/lib/mindslice/concept-author-engine-system";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const ADDRESS_FORM_OPTIONS = ["domnule", "doamnă", "domnișoară"] as const;
@@ -94,6 +100,18 @@ export async function GET() {
     .eq("user_id", userId)
     .maybeSingle();
 
+  const { data: existingIdentity } = await supabase
+    .from("author_identities")
+    .select("type, pseudonym, first_name, last_name, indexed_name, consent_flag")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  const { data: existingRole } = await supabase
+    .from("author_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .maybeSingle();
+
   const profilePayload = {
     user_id: userId,
     display_name: existingProfile?.display_name ?? null,
@@ -115,6 +133,16 @@ export async function GET() {
     debut_status: existingProfile?.debut_status ?? "aspirant",
     updated_at: new Date().toISOString(),
   };
+
+  await supabase.from("users").upsert(
+    {
+      user_id: userId,
+      provider: createUser().provider,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" },
+  );
+
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .upsert(profilePayload, { onConflict: "user_id" })
@@ -126,6 +154,39 @@ export async function GET() {
   if (profileError) {
     return NextResponse.json({ error: profileError.message }, { status: 500 });
   }
+
+  const authorSnapshot = buildAuthorProfileSnapshot({
+    profile,
+  });
+  const identityPayload = activateAuthorIdentity({
+    displayName: profile.display_name ?? null,
+    pseudonym: profile.pseudonym ?? null,
+    consentFlag: profile.name_declaration_accepted ?? false,
+  });
+  const rolePayload = authorSnapshot.role;
+
+  await supabase.from("author_identities").upsert(
+    {
+      user_id: userId,
+      type: identityPayload.identityType,
+      pseudonym: identityPayload.pseudonym,
+      first_name: identityPayload.firstName,
+      last_name: identityPayload.lastName,
+      indexed_name: identityPayload.indexedName,
+      consent_flag: identityPayload.consentFlag,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" },
+  );
+
+  await supabase.from("author_roles").upsert(
+    {
+      user_id: userId,
+      role: rolePayload,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" },
+  );
 
   const { data: savedMoments, error: momentsError } = await supabase
     .from("saved_moments")
@@ -139,7 +200,15 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    profile,
+    profile: {
+      ...profile,
+      identity_type: identityPayload.identityType,
+      first_name: identityPayload.firstName,
+      last_name: identityPayload.lastName,
+      indexed_name: identityPayload.indexedName,
+      consent_flag: identityPayload.consentFlag,
+      author_role: rolePayload,
+    },
     savedMoments: savedMoments ?? [],
     isAdmin: isAdminEmail(clerkUser?.primaryEmailAddress?.emailAddress),
   });
@@ -229,7 +298,7 @@ export async function PATCH(request: Request) {
 
   const { data: existingProfile } = await supabase
     .from("profiles")
-    .select("subscription_status")
+    .select("display_name, pseudonym, name_declaration_accepted, subscription_status")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -295,7 +364,86 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ profile });
+  await supabase.from("users").upsert(
+    {
+      user_id: userId,
+      provider: createUser().provider,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" },
+  );
+
+  const resolvedDisplayName =
+    nextDisplayName !== undefined
+      ? nextDisplayName
+      : (profile.display_name ?? existingProfile?.display_name ?? null);
+  const resolvedPseudonym =
+    nextPseudonym !== undefined
+      ? nextPseudonym
+      : (profile.pseudonym ?? existingProfile?.pseudonym ?? null);
+  const resolvedConsentFlag =
+    nextNameDeclarationAccepted !== undefined
+      ? nextNameDeclarationAccepted
+      : Boolean(profile.name_declaration_accepted ?? existingProfile?.name_declaration_accepted ?? false);
+
+  const identityPayload = activateAuthorIdentity({
+    displayName: resolvedDisplayName,
+    pseudonym: resolvedPseudonym,
+    consentFlag: resolvedConsentFlag,
+  });
+  const rolePayload = deriveAuthorRole({
+    identityType: identityPayload.identityType,
+    subscriptionStatus:
+      profile.subscription_status &&
+      SUBSCRIPTION_STATUS_OPTIONS.includes(
+        profile.subscription_status as (typeof SUBSCRIPTION_STATUS_OPTIONS)[number],
+      )
+        ? (profile.subscription_status as (typeof SUBSCRIPTION_STATUS_OPTIONS)[number])
+        : "inactive",
+  });
+
+  const { error: identityError } = await supabase.from("author_identities").upsert(
+    {
+      user_id: userId,
+      type: identityPayload.identityType,
+      pseudonym: identityPayload.pseudonym,
+      first_name: identityPayload.firstName,
+      last_name: identityPayload.lastName,
+      indexed_name: identityPayload.indexedName,
+      consent_flag: identityPayload.consentFlag,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" },
+  );
+
+  if (identityError) {
+    return NextResponse.json({ error: identityError.message }, { status: 500 });
+  }
+
+  const { error: roleError } = await supabase.from("author_roles").upsert(
+    {
+      user_id: userId,
+      role: rolePayload,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" },
+  );
+
+  if (roleError) {
+    return NextResponse.json({ error: roleError.message }, { status: 500 });
+  }
+
+  return NextResponse.json({
+    profile: {
+      ...profile,
+      identity_type: identityPayload.identityType,
+      first_name: identityPayload.firstName,
+      last_name: identityPayload.lastName,
+      indexed_name: identityPayload.indexedName,
+      consent_flag: identityPayload.consentFlag,
+      author_role: rolePayload,
+    },
+  });
 }
 
 export async function POST(request: Request) {

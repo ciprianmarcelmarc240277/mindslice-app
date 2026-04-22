@@ -351,6 +351,22 @@ export function AccountPanel(props: AccountPanelProps) {
           </div>
 
           <div className={styles.accountProfileItem}>
+            <span>Identity engine</span>
+            <div className={styles.accountInlineEditor}>
+              <strong className={styles.inlineStatusValue}>
+                identity_type: {profile.identity_type ?? "pseudonym"}
+              </strong>
+              <strong className={styles.inlineStatusValue}>
+                author_role: {profile.author_role ?? "free"}
+              </strong>
+              <p className={styles.accountHint}>
+                `indexed` apare doar când numele este valid, consimțământul este activ, iar
+                `active_author` apare când abonamentul este activ.
+              </p>
+            </div>
+          </div>
+
+          <div className={styles.accountProfileItem}>
             <span>Program de debut artistic</span>
             <div className={styles.accountInlineEditor}>
               <strong className={styles.inlineStatusValue}>

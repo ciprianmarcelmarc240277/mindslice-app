@@ -67,6 +67,99 @@ export function interpretShapeIdea(current: ThoughtState) {
   ].join(" ");
 }
 
+export function detectShape(conceptData: {
+  current: ThoughtState;
+  structure: CompositionStructureState;
+}) {
+  const haystack = [
+    conceptData.current.direction,
+    conceptData.current.thought,
+    ...conceptData.current.fragments,
+    ...conceptData.current.keywords,
+    conceptData.structure.grid,
+    conceptData.structure.subjectPosition,
+    conceptData.structure.centerState,
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  const hasPointLikeSignal = /(point|punct|nucleu|seed|core|dot|singular)/.test(haystack);
+  const hasDirectionSignal = Boolean(conceptData.current.direction?.trim()) ||
+    /(direction|linie|line|axis|vector|drift|flow|motion|trajectory)/.test(haystack);
+  const hasAreaSignal = /(area|surface|plane|field|grid|suprafa|câmp|camp|zonă|zona)/.test(haystack);
+
+  if (hasPointLikeSignal) {
+    return "POINT" as const;
+  }
+
+  if (hasDirectionSignal) {
+    return "LINE" as const;
+  }
+
+  if (hasAreaSignal) {
+    return "PLANE" as const;
+  }
+
+  return "VOLUME" as const;
+}
+
+function computePrimitiveShapeComplexity(
+  shape: "POINT" | "LINE" | "PLANE" | "VOLUME",
+  current: ThoughtState,
+) {
+  const base =
+    shape === "POINT" ? 0.22 :
+    shape === "LINE" ? 0.4 :
+    shape === "PLANE" ? 0.62 :
+    0.8;
+
+  return clamp(
+    base + current.visual.density * 0.08 + current.visual.fracture * 0.04,
+    0,
+    1,
+  );
+}
+
+function computePrimitiveShapeOrientation(
+  shape: "POINT" | "LINE" | "PLANE" | "VOLUME",
+  structure: CompositionStructureState,
+  current: ThoughtState,
+) {
+  if (shape === "POINT") {
+    return structure.centerState === "centered_intentional" ? "centered" : "displaced";
+  }
+
+  if (shape === "LINE") {
+    if (current.motion.includes("spiral") || current.motion.includes("arc")) {
+      return "curvilinear";
+    }
+
+    if (structure.subjectPosition.includes("third")) {
+      return "diagonal";
+    }
+
+    return "axial";
+  }
+
+  if (shape === "PLANE") {
+    return structure.symmetryState === "symmetry_precise" ? "planar-symmetric" : "planar-open";
+  }
+
+  return current.visual.convergence >= 0.72 ? "volumetric-centered" : "volumetric-diffuse";
+}
+
+export function buildPrimitiveShapeStructure(input: {
+  shape: "POINT" | "LINE" | "PLANE" | "VOLUME";
+  current: ThoughtState;
+  structure: CompositionStructureState;
+}) {
+  return {
+    type: input.shape,
+    complexity: computePrimitiveShapeComplexity(input.shape, input.current),
+    orientation: computePrimitiveShapeOrientation(input.shape, input.structure, input.current),
+  };
+}
+
 function detectShapeType(current: ThoughtState, structure: CompositionStructureState) {
   if (current.visual.fracture >= 0.7) {
     return "fragment";
@@ -344,9 +437,12 @@ export function buildShapeConcept(
     ].join(" / "),
     outputText: [
       `Forma se fixează ca ${shape.type}, cu masă ${shape.mass} și comportament ${shape.behavior}.`,
+      runtime.primitiveShapeStructure
+        ? `În lectura primară, forma funcționează ca ${runtime.primitiveShapeStructure.type.toLowerCase()}, cu orientare ${runtime.primitiveShapeStructure.orientation} și complexitate ${runtime.primitiveShapeStructure.complexity.toFixed(2)}.`
+        : null,
       `Conturul lucrează prin ${shape.edges[0] ?? "edge:unset"} și se raportează la gol prin ${shape.voidRelation[0] ?? "void:unset"}.`,
       runtime.lawNote,
-    ].join(" "),
+    ].filter(Boolean).join(" "),
     runtime,
   };
 }
@@ -459,18 +555,36 @@ export function processShapeIdea(input: {
   const thresholds = defaultThresholds();
   const shapeIdeaSet = buildShapeIdeaSet(current, structure, artComposition, thoughtMemory);
   const interpretation = interpretShapeIdea(current);
+  const detectedPrimitiveShape = detectShape({ current, structure });
+  const primitiveShapeStructure = buildPrimitiveShapeStructure({
+    shape: detectedPrimitiveShape,
+    current,
+    structure,
+  });
   const contaminationMode = selectShapeContamination(interference, thoughtMemory);
   const contaminationRejected = rejectShapeContamination(contaminationMode);
   let working = buildBaseShape(current, palette, structure, artComposition, thoughtMemory);
   const notes = [
     interpretation,
     `shape idea set: ${shapeIdeaSet.join(" | ")}`,
+    `primitive shape: ${detectedPrimitiveShape} / orientation ${primitiveShapeStructure.orientation} / complexity ${primitiveShapeStructure.complexity.toFixed(2)}`,
   ];
+
+  working = {
+    ...working,
+    structure: unique([
+      `primitive:${detectedPrimitiveShape.toLowerCase()}`,
+      `orientation:${primitiveShapeStructure.orientation}`,
+      ...working.structure,
+    ]),
+  };
 
   if (contaminationRejected) {
     const runtime: ShapeTheoryRuntime = {
       interpretation,
       shapeIdeaSet,
+      detectedPrimitiveShape,
+      primitiveShapeStructure,
       contaminationMode,
       acceptedContamination: false,
       hardFailureMode,
@@ -533,6 +647,8 @@ export function processShapeIdea(input: {
   const runtime: ShapeTheoryRuntime = {
     interpretation,
     shapeIdeaSet,
+    detectedPrimitiveShape,
+    primitiveShapeStructure,
     contaminationMode,
     acceptedContamination: true,
     hardFailureMode,

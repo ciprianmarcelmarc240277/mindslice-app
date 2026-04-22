@@ -10,6 +10,8 @@ export type ContaminationType =
 export type AddressForm = "domnule" | "doamnă" | "domnișoară";
 export type SubscriptionStatus = "inactive" | "active" | "past_due" | "canceled";
 export type DebutStatus = "aspirant" | "in_program" | "selected" | "published" | "alumni";
+export type AuthorRole = "free" | "author" | "active_author";
+export type AuthorIdentityType = "pseudonym" | "indexed";
 export type ViewMode = "live" | "journal" | "archive";
 
 export type Triad = {
@@ -104,6 +106,12 @@ export type UserProfile = {
   user_id: string;
   display_name?: string | null;
   pseudonym?: string | null;
+  identity_type?: AuthorIdentityType | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  indexed_name?: string | null;
+  consent_flag?: boolean | null;
+  author_role?: AuthorRole | null;
   email?: string | null;
   avatar_url?: string | null;
   name_declaration_accepted?: boolean | null;
@@ -337,6 +345,13 @@ export type ConceptMemoryLinks = {
   canonClusterId: string | null;
 };
 
+export type ConceptInfluenceProfile = {
+  role: AuthorRole;
+  weightLabel: "LOW" | "MEDIUM" | "HIGH";
+  weightValue: number;
+  notes: string[];
+};
+
 export type ConceptState = {
   id: string;
   stage: ConceptStage;
@@ -348,6 +363,7 @@ export type ConceptState = {
   contamination: ConceptContaminationProfile;
   validation: ConceptValidation;
   confidence: ConceptConfidence;
+  influence: ConceptInfluenceProfile;
   memory: ConceptMemoryLinks;
   systemEffect: SystemModificationState | null;
   promotedAt: string | null;
@@ -463,6 +479,8 @@ export type NarrativeScenarioScores = {
 
 export type NarrativeScenarioRuntime = {
   interpretation: string;
+  extractedTension?: string;
+  narrativeSequence?: string[];
   contaminationMode: ContaminationType;
   acceptedContamination: boolean;
   iterationCount: number;
@@ -568,6 +586,16 @@ export type ColorTheoryScores = {
 
 export type ColorTheoryRuntime = {
   interpretation: string;
+  colorPalette?: {
+    hue: "calm_hue" | "contrast_hue";
+    saturation: number;
+    brightness: number;
+  };
+  compositionPalette?: {
+    hue: "calm_hue" | "contrast_hue";
+    saturation: number;
+    brightness: number;
+  };
   contaminationMode: ContaminationType;
   acceptedContamination: boolean;
   iterationCount: number;
@@ -603,6 +631,27 @@ export type ArtCompositionScores = {
 
 export type ArtCompositionRuntime = {
   interpretation: string;
+  visualOutput?: {
+    geometry: {
+      base: {
+        type: "POINT" | "LINE" | "PLANE" | "VOLUME";
+        complexity: number;
+        orientation: string;
+      };
+      evolved: "POINT" | "LINE" | "PLANE" | "VOLUME";
+    };
+    composition: {
+      layout: string;
+      balanceScore: number;
+    };
+    color: {
+      hue: "calm_hue" | "contrast_hue";
+      saturation: number;
+      brightness: number;
+    };
+  };
+  visualScore?: number;
+  visualRefined?: boolean;
   contaminationMode: ContaminationType;
   acceptedContamination: boolean;
   iterationCount: number;
@@ -634,6 +683,15 @@ export type CompositionStructureScores = {
 
 export type CompositionStructureRuntime = {
   interpretation: string;
+  selectedStrategy?: "golden_ratio" | "thirds" | "symmetry" | "offset";
+  compositionLayout?: {
+    layout: string;
+    balanceScore: number;
+  };
+  generatedLayout?: {
+    layout: string;
+    balanceScore: number;
+  };
   contaminationMode: ContaminationType;
   acceptedContamination: boolean;
   iterationCount: number;
@@ -664,6 +722,12 @@ export type ShapeTheoryScores = {
 export type ShapeTheoryRuntime = {
   interpretation: string;
   shapeIdeaSet: string[];
+  detectedPrimitiveShape?: "POINT" | "LINE" | "PLANE" | "VOLUME";
+  primitiveShapeStructure?: {
+    type: "POINT" | "LINE" | "PLANE" | "VOLUME";
+    complexity: number;
+    orientation: string;
+  };
   contaminationMode: ContaminationType;
   acceptedContamination: boolean;
   hardFailureMode: "soft" | "controlled";
@@ -697,6 +761,16 @@ export type ShapeGrammarScores = {
 
 export type ShapeGrammarRuntime = {
   seedShape: string;
+  primitiveBaseShape: "POINT" | "LINE" | "PLANE" | "VOLUME";
+  primitiveEvolvedShape: "POINT" | "LINE" | "PLANE" | "VOLUME";
+  generatedForm: {
+    base: {
+      type: "POINT" | "LINE" | "PLANE" | "VOLUME";
+      complexity: number;
+      orientation: string;
+    };
+    evolved: "POINT" | "LINE" | "PLANE" | "VOLUME";
+  };
   ruleset: string[];
   constraints: string[];
   hardFailureMode: "soft" | "controlled";
@@ -750,12 +824,21 @@ export type MetaSystemScores = {
 export type MetaSystemRuntime = {
   framework: {
     intent: string;
+    function: string;
+    target: string;
+    differentiator: string;
     domain: string[];
     constraints: string[];
     goal: string;
     priority: string;
   };
   labyrinth: {
+    explorationMap: {
+      explorations: Record<string, string[]>;
+      connections: string[];
+    };
+    explorations: Record<string, string[]>;
+    connections: string[];
     axes: string[];
     variations: string[];
     relations: string[];
@@ -767,6 +850,12 @@ export type MetaSystemRuntime = {
     pipelinePressure: number;
     relationPressure: number;
     notes: string[];
+  };
+  designOutput: {
+    direction: string;
+    style: string;
+    layout: string;
+    motion: string;
   };
   activePipeline: string[];
   designState: {
@@ -789,6 +878,11 @@ export type MetaSystemRuntime = {
     appliedDomains: string[];
     influenceWeight: number;
     influenceNotes: string[];
+    storedConcept: string;
+    canonical: boolean;
+    canonicalReuse: number;
+    canonicalImpact: number;
+    canonicalStability: number;
   };
   validationPassed: boolean;
   failed: boolean;
@@ -1209,12 +1303,32 @@ export type ThoughtIterationResult = {
   notes: string[];
 };
 
+export type ThinkingEngineState = "IDEA" | "CONCEPT";
+
+export type ThinkingEngineResult = {
+  structure: number;
+  sense: number;
+  attention: number;
+  coherence: number;
+  thresholds: {
+    structure: number;
+    sense: number;
+    attention: number;
+    coherence: number;
+  };
+  userRole: AuthorRole;
+  identityType: AuthorIdentityType;
+  state: ThinkingEngineState;
+  notes: string[];
+};
+
 export type ProcessIdeaResult = {
   status: ConceptProcessStatus;
   nextAction: "iterate" | "build_concept" | "fail";
   iterationCount: number;
   interpretation: IdeaInterpretationResult;
   contamination: ConceptContaminationDecision;
+  thinkingEngine: ThinkingEngineResult;
   iteration: ThoughtIterationResult;
   candidate: ConceptCandidate;
   validation: ConceptValidationResult;
@@ -1299,10 +1413,20 @@ export type EngineFailureAnalysis = {
 export type EngineDebuggerReport = {
   trace: EngineDebugEvent[];
   activeTrace: EngineDebugEvent[];
-  colorTheory: {
-    interpretation: string;
-    contaminationMode: ContaminationType;
-    acceptedContamination: boolean;
+    colorTheory: {
+      interpretation: string;
+      colorPalette: {
+        hue: "calm_hue" | "contrast_hue";
+        saturation: number;
+        brightness: number;
+      } | null;
+      compositionPalette: {
+        hue: "calm_hue" | "contrast_hue";
+        saturation: number;
+        brightness: number;
+      } | null;
+      contaminationMode: ContaminationType;
+      acceptedContamination: boolean;
     iterationCount: number;
     terminated: boolean;
     terminationReason: string;
@@ -1335,6 +1459,27 @@ export type EngineDebuggerReport = {
   };
   artComposition: {
     interpretation: string;
+    visualOutput: {
+      geometry: {
+        base: {
+          type: "POINT" | "LINE" | "PLANE" | "VOLUME";
+          complexity: number;
+          orientation: string;
+        };
+        evolved: "POINT" | "LINE" | "PLANE" | "VOLUME";
+      };
+      composition: {
+        layout: string;
+        balanceScore: number;
+      };
+      color: {
+        hue: "calm_hue" | "contrast_hue";
+        saturation: number;
+        brightness: number;
+      };
+    } | null;
+    visualScore: number | null;
+    visualRefined: boolean;
     contaminationMode: ContaminationType;
     acceptedContamination: boolean;
     iterationCount: number;
@@ -1368,6 +1513,15 @@ export type EngineDebuggerReport = {
   };
   structure: {
     interpretation: string;
+    selectedStrategy: "golden_ratio" | "thirds" | "symmetry" | "offset" | null;
+    compositionLayout: {
+      layout: string;
+      balanceScore: number;
+    } | null;
+    generatedLayout: {
+      layout: string;
+      balanceScore: number;
+    } | null;
     contaminationMode: ContaminationType;
     acceptedContamination: boolean;
     iterationCount: number;
@@ -1404,6 +1558,12 @@ export type EngineDebuggerReport = {
   shape: {
     interpretation: string;
     shapeIdeaSet: string[];
+    detectedPrimitiveShape: "POINT" | "LINE" | "PLANE" | "VOLUME" | null;
+    primitiveShapeStructure: {
+      type: "POINT" | "LINE" | "PLANE" | "VOLUME";
+      complexity: number;
+      orientation: string;
+    } | null;
     contaminationMode: ContaminationType;
     acceptedContamination: boolean;
     hardFailureMode: "soft" | "controlled";
@@ -1445,6 +1605,16 @@ export type EngineDebuggerReport = {
   };
   shapeGrammar: {
     seedShape: string;
+    primitiveBaseShape: "POINT" | "LINE" | "PLANE" | "VOLUME" | null;
+    primitiveEvolvedShape: "POINT" | "LINE" | "PLANE" | "VOLUME" | null;
+    generatedForm: {
+      base: {
+        type: "POINT" | "LINE" | "PLANE" | "VOLUME";
+        complexity: number;
+        orientation: string;
+      };
+      evolved: "POINT" | "LINE" | "PLANE" | "VOLUME";
+    } | null;
     ruleset: string[];
     rulesApplied: string[];
     constraints: string[];
@@ -1486,12 +1656,21 @@ export type EngineDebuggerReport = {
   metaSystem: {
     framework: {
       intent: string;
+      function: string;
+      target: string;
+      differentiator: string;
       domain: string[];
       constraints: string[];
       goal: string;
       priority: string;
     };
     labyrinth: {
+      explorationMap: {
+        explorations: Record<string, string[]>;
+        connections: string[];
+      };
+      explorations: Record<string, string[]>;
+      connections: string[];
       axes: string[];
       variations: string[];
       relations: string[];
@@ -1503,6 +1682,12 @@ export type EngineDebuggerReport = {
       pipelinePressure: number;
       relationPressure: number;
       notes: string[];
+    };
+    designOutput: {
+      direction: string;
+      style: string;
+      layout: string;
+      motion: string;
     };
     activePipeline: string[];
     designState: {
@@ -1525,6 +1710,11 @@ export type EngineDebuggerReport = {
       appliedDomains: string[];
       influenceWeight: number;
       influenceNotes: string[];
+      storedConcept: string;
+      canonical: boolean;
+      canonicalReuse: number;
+      canonicalImpact: number;
+      canonicalStability: number;
     };
     validationPassed: boolean;
     failed: boolean;
@@ -1545,6 +1735,8 @@ export type EngineDebuggerReport = {
   };
   scenario: {
     interpretation: string;
+    extractedTension: string | null;
+    narrativeSequence: string[];
     contaminationMode: ContaminationType;
     acceptedContamination: boolean;
     iterationCount: number;

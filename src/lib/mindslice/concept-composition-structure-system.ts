@@ -291,6 +291,166 @@ export function validCompositionStructure(
     scores.attention >= thresholds.attention;
 }
 
+function applyRuleOfThirdsLayout(form: {
+  evolved: string;
+  base: {
+    orientation: string;
+  };
+}) {
+  return `grid_position:${form.evolved.toLowerCase()}:thirds:${form.base.orientation}`;
+}
+
+function applyGoldenRatioLayout(form: {
+  evolved: string;
+  base: {
+    orientation: string;
+  };
+}) {
+  return `position:${form.evolved.toLowerCase()}:phi_ratio:${form.base.orientation}`;
+}
+
+function applySymmetryLayout(form: {
+  evolved: string;
+}) {
+  return `mirror:${form.evolved.toLowerCase()}`;
+}
+
+function applyOffsetLayout(form: {
+  evolved: string;
+  base: {
+    orientation: string;
+  };
+}) {
+  return `shift_off_center:${form.evolved.toLowerCase()}:${form.base.orientation}`;
+}
+
+function selectCompositionStrategy(form: {
+  base: {
+    orientation: string;
+  };
+  evolved: string;
+}) {
+  if (form.evolved === "VOLUME") {
+    return "golden_ratio" as const;
+  }
+
+  if (form.evolved === "PLANE") {
+    return "thirds" as const;
+  }
+
+  if (form.base.orientation.includes("center") || form.base.orientation.includes("symmetric")) {
+    return "symmetry" as const;
+  }
+
+  return "offset" as const;
+}
+
+function evaluateGeneratedLayoutBalance(input: {
+  strategy: "golden_ratio" | "thirds" | "symmetry" | "offset";
+  form: {
+    evolved: string;
+    base: {
+      complexity: number;
+      orientation: string;
+    };
+  };
+}) {
+  const base =
+    input.strategy === "golden_ratio" ? 0.82 :
+    input.strategy === "thirds" ? 0.72 :
+    input.strategy === "symmetry" ? 0.76 :
+    0.58;
+
+  const orientationBoost = input.form.base.orientation.includes("center") ? 0.06 : 0.02;
+  const complexityWeight = Math.min(input.form.base.complexity * 0.12, 0.12);
+
+  return clamp(base + orientationBoost + complexityWeight, 0, 1);
+}
+
+export function generateCompositionLayoutFromForm(form: {
+  base: {
+    type: string;
+    complexity: number;
+    orientation: string;
+  };
+  evolved: string;
+}) {
+  const strategy = selectCompositionStrategy(form);
+  const layout =
+    strategy === "golden_ratio"
+      ? applyGoldenRatioLayout(form)
+      : strategy === "thirds"
+        ? applyRuleOfThirdsLayout(form)
+        : strategy === "symmetry"
+          ? applySymmetryLayout(form)
+        : applyOffsetLayout(form);
+
+  return {
+    strategy,
+    layout,
+    balanceScore: evaluateGeneratedLayoutBalance({ strategy, form }),
+    symmetryLayout: applySymmetryLayout(form),
+  };
+}
+
+export function applyGeneratedFormToCompositionStructure(
+  structure: ReturnType<typeof buildStructureConcept>,
+  generatedForm: {
+    base: {
+      type: string;
+      complexity: number;
+      orientation: string;
+    };
+    evolved: string;
+  },
+) {
+  const generatedLayout = generateCompositionLayoutFromForm(generatedForm);
+  const grid = generatedLayout.strategy === "golden_ratio"
+    ? "golden"
+    : generatedLayout.strategy === "thirds"
+      ? "thirds"
+      : structure.grid;
+  const subjectPosition = generatedLayout.strategy === "golden_ratio"
+    ? "phi-anchor"
+    : generatedLayout.strategy === "thirds"
+      ? "thirds-anchor"
+      : "offset-center";
+
+  return {
+    ...structure,
+    grid,
+    subjectPosition,
+    tensionZones: unique([
+      ...structure.tensionZones,
+      `layout:${generatedLayout.layout}`,
+      generatedLayout.symmetryLayout,
+    ]).slice(0, 6),
+    attentionMap: unique([
+      ...structure.attentionMap,
+      `strategy:${generatedLayout.strategy}`,
+      `generated_form:${generatedForm.base.type}->${generatedForm.evolved}`,
+    ]).slice(0, 6),
+    outputText: `${structure.outputText} Generated form-ul împinge compoziția spre ${generatedLayout.strategy}, prin layout-ul ${generatedLayout.layout}.`,
+    runtime: {
+      ...structure.runtime,
+      selectedStrategy: generatedLayout.strategy,
+      compositionLayout: {
+        layout: generatedLayout.layout,
+        balanceScore: generatedLayout.balanceScore,
+      },
+      generatedLayout: {
+        layout: generatedLayout.layout,
+        balanceScore: generatedLayout.balanceScore,
+      },
+      notes: [
+        ...structure.runtime.notes,
+        `generated form ${generatedForm.base.type} -> ${generatedForm.evolved}`,
+        `composition strategy ${generatedLayout.strategy}`,
+      ],
+    },
+  };
+}
+
 export function buildStructureConcept(
   structure: ReturnType<typeof buildBaseStructure>,
   runtime: CompositionStructureRuntime,
@@ -305,9 +465,12 @@ export function buildStructureConcept(
     ].join(" / "),
     outputText: [
       `Suprafața ecranului organizează atenția prin grila ${structure.grid} și poziția ${structure.subjectPosition}.`,
+      runtime.generatedLayout
+        ? `Strategia primară folosește ${runtime.selectedStrategy} și produce layout-ul ${runtime.generatedLayout.layout}, cu echilibru ${runtime.generatedLayout.balanceScore.toFixed(2)}.`
+        : null,
       `Starea ${structure.symmetryState} lucrează împreună cu ${structure.centerState}.`,
       runtime.lawNote,
-    ].join(" "),
+    ].filter(Boolean).join(" "),
     runtime,
   };
 }
@@ -404,6 +567,9 @@ export function processStructureIdea(input: {
   if (contaminationRejected) {
     const runtime: CompositionStructureRuntime = {
       interpretation,
+      selectedStrategy: undefined,
+      compositionLayout: undefined,
+      generatedLayout: undefined,
       contaminationMode,
       acceptedContamination: false,
       iterationCount: 1,
@@ -454,6 +620,9 @@ export function processStructureIdea(input: {
   const law = organizeAttentionThroughPosition(lastScores, working);
   const runtime: CompositionStructureRuntime = {
     interpretation,
+    selectedStrategy: undefined,
+    compositionLayout: undefined,
+    generatedLayout: undefined,
     contaminationMode,
     acceptedContamination: true,
     iterationCount,

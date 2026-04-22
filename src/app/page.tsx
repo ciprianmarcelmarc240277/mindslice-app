@@ -574,6 +574,8 @@ export default function Home() {
         liveAiResponseLines,
         canonInfluence,
         clockDisplay,
+        authorRole: profile?.author_role ?? "free",
+        identityType: profile?.identity_type ?? "pseudonym",
       }),
     [
       canonInfluence,
@@ -584,6 +586,8 @@ export default function Home() {
       history,
       interference,
       liveAiResponseLines,
+      profile?.author_role,
+      profile?.identity_type,
       thoughtMemory,
     ],
   );

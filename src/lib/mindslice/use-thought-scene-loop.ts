@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect, useEffectEvent, useState } from "react";
-import {
-  getTypewriterDelay,
-  THOUGHT_OVERLAY_HOLD_MS,
-  type InfluenceMode,
-} from "@/lib/mindslice/thought-scene-engine";
+import type { InfluenceMode } from "@/lib/mindslice/thought-scene-engine";
 
 type UseThoughtSceneLoopOptions = {
   currentThought: string;
@@ -38,64 +34,10 @@ export function useThoughtSceneLoop({
   const advanceImage = useEffectEvent(onAdvanceImage);
 
   useEffect(() => {
-    let cancelled = false;
-    const timeoutIds: number[] = [];
-
-    const writeCharacter = (index: number) => {
-      if (cancelled) {
-        return;
-      }
-
-      setAnimatedThought(currentThought.slice(0, index + 1));
-
-      if (index >= currentThought.length - 1) {
-        const holdTimeoutId = window.setTimeout(
-          () => eraseCharacter(currentThought.length - 1),
-          THOUGHT_OVERLAY_HOLD_MS,
-        );
-        timeoutIds.push(holdTimeoutId);
-        return;
-      }
-
-      const nextTimeoutId = window.setTimeout(
-        () => writeCharacter(index + 1),
-        getTypewriterDelay(currentThought[index], influenceMode),
-      );
-      timeoutIds.push(nextTimeoutId);
-    };
-
-    const eraseCharacter = (index: number) => {
-      if (cancelled) {
-        return;
-      }
-
-      setAnimatedThought(currentThought.slice(0, index));
-
-      if (index <= 0) {
-        setIsThoughtOverlayVisible(false);
-        return;
-      }
-
-      const nextTimeoutId = window.setTimeout(
-        () => eraseCharacter(index - 1),
-        getTypewriterDelay(currentThought[index - 1], influenceMode),
-      );
-      timeoutIds.push(nextTimeoutId);
-    };
-
-    const initialTimeoutId = window.setTimeout(() => {
-      setThoughtAnimationKey((previous) => previous + 1);
-      setAnimatedThought("");
-      setIsThoughtOverlayVisible(true);
-      writeCharacter(0);
-    }, 0);
-    timeoutIds.push(initialTimeoutId);
-
-    return () => {
-      cancelled = true;
-      timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
-    };
-  }, [currentDirection, currentIndex, currentThought, influenceMode]);
+    setThoughtAnimationKey((previous) => previous + 1);
+    setAnimatedThought(currentThought);
+    setIsThoughtOverlayVisible(true);
+  }, [currentDirection, currentIndex, currentThought]);
 
   useEffect(() => {
     if (!isActive) {

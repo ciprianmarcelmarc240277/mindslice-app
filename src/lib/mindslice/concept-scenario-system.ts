@@ -267,6 +267,143 @@ export function evaluateNarrativeTerminationCondition(input: {
     (!input.isValidScenario && input.iterationCount >= input.maxIterations);
 }
 
+export function extractScenarioTension(input: {
+  concept: {
+    title?: string;
+    tension?: string;
+    thesis?: string;
+    oneLineDefinition?: string;
+  };
+}) {
+  return input.concept.tension ??
+    input.concept.thesis ??
+    input.concept.oneLineDefinition ??
+    input.concept.title ??
+    "conflict latent";
+}
+
+export function buildIntroduction(input: {
+  visualOutput: {
+    geometry: {
+      evolved: "POINT" | "LINE" | "PLANE" | "VOLUME";
+    };
+    composition: {
+      layout: string;
+    };
+  };
+}) {
+  return `introduction:${input.visualOutput.geometry.evolved}:${input.visualOutput.composition.layout}`;
+}
+
+export function buildUp(input: {
+  tension: string;
+}) {
+  return `build_up:${input.tension}`;
+}
+
+export function buildClimax(input: {
+  tension: string;
+}) {
+  return `climax:${input.tension}`;
+}
+
+export function buildResolution(input: {
+  visualOutput: {
+    color: {
+      hue: "calm_hue" | "contrast_hue";
+    };
+  };
+}) {
+  return `resolution:${input.visualOutput.color.hue}`;
+}
+
+export function buildNarrativeSequenceFromVisual(input: {
+  tension: string;
+  visualOutput: {
+    geometry: {
+      evolved: "POINT" | "LINE" | "PLANE" | "VOLUME";
+    };
+    composition: {
+      layout: string;
+    };
+    color: {
+      hue: "calm_hue" | "contrast_hue";
+    };
+  };
+}) {
+  return [
+    buildIntroduction({
+      visualOutput: {
+        geometry: input.visualOutput.geometry,
+        composition: input.visualOutput.composition,
+      },
+    }),
+    buildUp({
+      tension: input.tension,
+    }),
+    buildClimax({
+      tension: input.tension,
+    }),
+    buildResolution({
+      visualOutput: {
+        color: input.visualOutput.color,
+      },
+    }),
+  ];
+}
+
+export function applyVisualOutputToScenario(
+  scenario: ReturnType<typeof buildScenarioConcept>,
+  input: {
+    concept: {
+      title?: string;
+      tension?: string;
+      thesis?: string;
+      oneLineDefinition?: string;
+    };
+    visualOutput: {
+      geometry: {
+        evolved: "POINT" | "LINE" | "PLANE" | "VOLUME";
+      };
+      composition: {
+        layout: string;
+      };
+      color: {
+        hue: "calm_hue" | "contrast_hue";
+      };
+    };
+  },
+) {
+  const extractedTension = extractScenarioTension({
+    concept: input.concept,
+  });
+  const narrativeSequence = buildNarrativeSequenceFromVisual({
+    tension: extractedTension,
+    visualOutput: input.visualOutput,
+  });
+
+  return {
+    ...scenario,
+    progression: unique([...scenario.progression, ...narrativeSequence]).slice(0, 6),
+    attentionFlow: unique([
+      ...scenario.attentionFlow,
+      `visual:${input.visualOutput.geometry.evolved.toLowerCase()}`,
+      `color:${input.visualOutput.color.hue}`,
+    ]).slice(0, 6),
+    outputText: `${scenario.outputText} Secvența narativă simplă se ordonează prin ${narrativeSequence.join(" -> ")}.`,
+    runtime: {
+      ...scenario.runtime,
+      extractedTension,
+      narrativeSequence,
+      notes: [
+        ...scenario.runtime.notes,
+        `scenario tension ${extractedTension}`,
+        `narrative sequence ${narrativeSequence.join(" | ")}`,
+      ],
+    },
+  };
+}
+
 export function modifyNarrativeSystem(
   scores: NarrativeScenarioScores,
   scenario: ReturnType<typeof buildBaseScenario>,
