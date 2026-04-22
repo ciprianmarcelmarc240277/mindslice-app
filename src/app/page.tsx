@@ -46,6 +46,7 @@ import { useEngineDebuggerSystem } from "@/lib/mindslice/use-engine-debugger-sys
 import { useSystemModificationState } from "@/lib/mindslice/use-system-modification-state";
 import { useClockSystem } from "@/lib/mindslice/use-clock-system";
 import { useJournalEditorSystem } from "@/lib/mindslice/use-journal-editor-system";
+import type { ExecutionEngineResult } from "@/lib/mindslice/concept-execution-engine-system";
 import type {
   BlogPostDraft,
   EngineProfile,
@@ -332,6 +333,60 @@ function buildPrompt(snapshotMode: boolean, current: ThoughtState) {
   ].join("\n");
 }
 
+function buildExecutionSliceText(current: ThoughtState, profile: UserProfile | null) {
+  const identityType = profile?.identity_type ?? "pseudonym";
+  const identityBlock =
+    identityType === "indexed" && profile?.indexed_name?.trim()
+      ? `TYPE: indexed\nINDEX_NAME: ${profile.indexed_name}`
+      : `TYPE: pseudonym\nPSEUDONYM: ${profile?.pseudonym?.trim() || "MindSlice Visitor"}`;
+  const tags = [...new Set([...current.keywords, ...current.palette, ...current.materials])]
+    .filter(Boolean)
+    .slice(0, 6)
+    .join(", ");
+
+  return `<<<MINDSLICE_SLICE_START>>>
+
+[IDENTITY]
+${identityBlock}
+PRIORITY: primary
+[/IDENTITY]
+
+[CONTENT]
+TYPE: idea_seed
+TEXT:
+${current.thought}
+[/CONTENT]
+
+[PROCESS]
+PIPELINE:
+- Framework
+- Labyrinth
+- Design
+- ShapeTheory
+- ShapeGrammar
+- CompositionStructure
+- ColorTheory
+- ArtComposition
+- Scenario
+- Memory
+- Business
+[/PROCESS]
+
+[METADATA]
+LANGUAGE: ro
+INTENSITY: ${current.visual.density.toFixed(2)}
+TAGS: ${tags}
+[/METADATA]
+
+[CONTROL]
+ALLOW_CONTAMINATION: true
+ALLOW_TRANSFORMATION: true
+VISIBILITY: system
+[/CONTROL]
+
+<<<MINDSLICE_SLICE_END>>>`;
+}
+
 export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>("live");
@@ -356,6 +411,8 @@ export default function Home() {
   const [promptOutput, setPromptOutput] = useState(() =>
     buildPrompt(false, fallbackStateLibrary[0]),
   );
+  const [executionEngineResult, setExecutionEngineResult] = useState<ExecutionEngineResult | null>(null);
+  const [executionEngineStatus, setExecutionEngineStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const { isSignedIn } = useAuth();
   const isUserSignedIn = Boolean(isSignedIn);
   const {
@@ -732,6 +789,10 @@ export default function Home() {
     isActive,
     report: engineDebuggerReport,
   });
+  const executionRawSliceText = useMemo(
+    () => buildExecutionSliceText(adjustedCurrent, profile),
+    [adjustedCurrent, profile],
+  );
   const handleBioSaveWithAccess = () => handleBioSave(hasProfileAccess);
   const handleDebutProgramSaveWithAccess = () => handleDebutProgramSave(hasProfileAccess);
 
@@ -742,6 +803,74 @@ export default function Home() {
   useEffect(() => {
     setPromptOutput(buildPrompt(false, adjustedCurrent));
   }, [adjustedCurrent, currentIndex]);
+
+  useEffect(() => {
+    if (!canViewArtistThinking || viewMode !== "live") {
+      setExecutionEngineStatus("idle");
+      setExecutionEngineResult(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    let cancelled = false;
+
+    async function loadExecutionEngine() {
+      setExecutionEngineStatus("loading");
+
+      try {
+        const response = await fetch("/api/execution-engine", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            rawSliceText: executionRawSliceText,
+          }),
+          signal: controller.signal,
+        });
+
+        const payload = (await response.json()) as ExecutionEngineResult | { error?: string };
+
+        if (cancelled) {
+          return;
+        }
+
+        if (!response.ok || ("status" in payload && payload.status === "fail")) {
+          setExecutionEngineStatus("error");
+          setExecutionEngineResult(
+            "status" in payload && payload.status === "fail"
+              ? payload
+              : {
+                  status: "fail",
+                  message:
+                    "error" in payload ? payload.error ?? "EXECUTION_ENGINE_FAILED" : "EXECUTION_ENGINE_FAILED",
+                },
+          );
+          return;
+        }
+
+        setExecutionEngineResult(payload as ExecutionEngineResult);
+        setExecutionEngineStatus("ready");
+      } catch (error) {
+        if (cancelled || (error instanceof Error && error.name === "AbortError")) {
+          return;
+        }
+
+        setExecutionEngineStatus("error");
+        setExecutionEngineResult({
+          status: "fail",
+          message: error instanceof Error ? error.message : "EXECUTION_ENGINE_FAILED",
+        });
+      }
+    }
+
+    void loadExecutionEngine();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [canViewArtistThinking, executionRawSliceText, viewMode]);
 
   useEffect(() => {
     if (!isSignedIn) {
@@ -1294,6 +1423,8 @@ export default function Home() {
             liveAiResponseLines={liveAiResponseLines}
             systemState={systemState}
             engineDebuggerReport={engineDebuggerReport}
+            executionEngineStatus={executionEngineStatus}
+            executionEngineResult={executionEngineResult}
             debugRunCount={debugRuns.length}
             comparativeDelta={comparativeDelta}
             ideaSetMainLoop={ideaSetMainLoop}

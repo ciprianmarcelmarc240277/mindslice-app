@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { ExecutionEngineResult } from "@/lib/mindslice/concept-execution-engine-system";
 import type {
   ThoughtSceneEngineState,
 } from "@/lib/mindslice/thought-scene-engine";
@@ -49,6 +50,8 @@ type LiveSceneViewProps = {
   liveAiResponseLines: string[];
   systemState: SystemModificationState;
   engineDebuggerReport: EngineDebuggerReport;
+  executionEngineStatus: "idle" | "loading" | "ready" | "error";
+  executionEngineResult: ExecutionEngineResult | null;
   debugRunCount: number;
   comparativeDelta: {
     resolvedDelta: number;
@@ -146,6 +149,8 @@ export function LiveSceneView(props: LiveSceneViewProps) {
     liveAiResponseLines,
     systemState,
     engineDebuggerReport,
+    executionEngineStatus,
+    executionEngineResult,
     debugRunCount,
     comparativeDelta,
     ideaSetMainLoop,
@@ -208,6 +213,10 @@ export function LiveSceneView(props: LiveSceneViewProps) {
     canPromoteToCanonical,
     promotionNotes,
   } = props;
+  const executionEngineSuccess =
+    executionEngineResult && !("status" in executionEngineResult) ? executionEngineResult : null;
+  const executionEngineFailure =
+    executionEngineResult && "status" in executionEngineResult ? executionEngineResult.message : null;
   const [activeTracePhase, setActiveTracePhase] = useState<
     "all" | "interpret" | "contamination" | "validation" | "promotion" | "pool" | "memory" | "canon" | "system"
   >("all");
@@ -1980,6 +1989,58 @@ export function LiveSceneView(props: LiveSceneViewProps) {
               <li>domain canon: {engineDebuggerReport.metaSystem.canon.domainCandidates.join(" / ") || "none"}</li>
               <li>canon influence: {engineDebuggerReport.metaSystem.canon.influenceWeight.toFixed(2)}</li>
               <li>canon notes: {engineDebuggerReport.metaSystem.canon.influenceNotes.join(" / ") || "none"}</li>
+            </ul>
+          </article>
+          <article className={styles.alphaDebugCard}>
+            <span>MindSlice ExecutionEngine v3</span>
+            <ul>
+              <li>status: {executionEngineStatus}</li>
+              <li>
+                parser:{" "}
+                {executionEngineSuccess
+                  ? executionEngineSuccess.parsed_slice.content.type ?? "parsed"
+                  : executionEngineFailure ?? "none"}
+              </li>
+              <li>
+                importance: {executionEngineSuccess?.analytic_profile.importance ?? "none"}
+              </li>
+              <li>nature: {executionEngineSuccess?.analytic_profile.nature ?? "none"}</li>
+              <li>
+                presentation: {executionEngineSuccess?.analytic_profile.presentation ?? "none"}
+              </li>
+              <li>
+                difficulty: {executionEngineSuccess?.analytic_profile.difficulty ?? 0}
+              </li>
+              <li>
+                total score: {executionEngineSuccess?.score.total.toFixed(2) ?? "0.00"}
+              </li>
+              <li>
+                clarity: {executionEngineSuccess?.score.clarity.toFixed(2) ?? "0.00"}
+              </li>
+              <li>
+                impact: {executionEngineSuccess?.score.impact.toFixed(2) ?? "0.00"}
+              </li>
+              <li>
+                reusability: {executionEngineSuccess?.score.reusability.toFixed(2) ?? "0.00"}
+              </li>
+              <li>
+                expansion: {executionEngineSuccess?.score.expansion.toFixed(2) ?? "0.00"}
+              </li>
+              <li>
+                executed steps: {executionEngineSuccess?.execution_log.map((entry) => entry.step).join(" > ") || "none"}
+              </li>
+              <li>
+                successful: {executionEngineSuccess?.learning_state.successful_steps.join(" / ") || "none"}
+              </li>
+              <li>
+                weak steps: {executionEngineSuccess?.learning_state.weak_steps.join(" / ") || "none"}
+              </li>
+              <li>
+                adjustments: {executionEngineSuccess?.learning_state.pipeline_adjustments.join(" / ") || "none"}
+              </li>
+              <li>
+                thresholds: {executionEngineSuccess ? Object.entries(executionEngineSuccess.learning_state.new_thresholds).map(([key, value]) => `${key}:${value}`).join(" / ") || "none" : "none"}
+              </li>
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
