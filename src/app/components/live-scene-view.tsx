@@ -1348,6 +1348,30 @@ export function LiveSceneView(props: LiveSceneViewProps) {
       { inset: shapeGrammar.scores.coherence >= 0.72 ? "14%" : "16%" },
       { inset: shapeGrammar.scores.expressivePower >= 0.72 ? "22%" : "24%" },
     ] as React.CSSProperties[];
+    const overlayCoverage =
+      scenarioAttention >= 0.82
+        ? { inset: "0%", maxWidth: "min(62rem, 100%)" }
+        : structure.centerState === "centered_intentional"
+          ? { inset: "4%", maxWidth: "min(54rem, 100%)" }
+          : shape.positionTendency === "edge"
+            ? { inset: "6% 10% 8% 14%", maxWidth: "min(48rem, 100%)" }
+            : { inset: "7% 12% 10% 12%", maxWidth: "min(50rem, 100%)" };
+    const thoughtOverlayStyle = {
+      "--thought-overlay-inset": overlayCoverage.inset,
+      "--thought-overlay-z": scenarioAttention >= 0.74 ? "7" : "6",
+      "--thought-overlay-opacity": interference ? "0.98" : "0.94",
+      "--thought-overlay-padding": scenarioAttention >= 0.82 ? "clamp(28px, 4.8vw, 64px)" : "clamp(24px, 4vw, 52px)",
+      "--thought-overlay-text-width": overlayCoverage.maxWidth,
+      "--thought-overlay-align": structure.centerState === "centered_intentional" ? "center" : "start",
+      "--thought-overlay-justify": scenarioAttention >= 0.82 ? "center" : "start",
+      "--thought-overlay-text-align": structure.centerState === "centered_intentional" ? "center" : "left",
+      "--thought-overlay-background": interference
+        ? "color-mix(in srgb, var(--slice-ink, #181411) 92%, #15100c)"
+        : "color-mix(in srgb, var(--slice-ink, #181411) 88%, #15100c)",
+      "--thought-overlay-border": interference
+        ? "rgba(255, 194, 168, 0.12)"
+        : "color-mix(in srgb, var(--slice-accent, #b5452f) 10%, transparent)",
+    } as React.CSSProperties;
     const layerOrderStyle = {
       "--z-text-backdrop": "0",
       "--z-relation-field": scenarioAttention >= 0.74 ? "2" : "1",
@@ -1452,6 +1476,7 @@ export function LiveSceneView(props: LiveSceneViewProps) {
       centerTranslateMarkerLayouts,
       centerFragmentShardLayouts,
       centerRepeatEchoLayouts,
+      thoughtOverlayStyle,
       layerOrderStyle,
       grammarMemoryClass,
       grammarMemoryStyle,
@@ -1493,7 +1518,9 @@ export function LiveSceneView(props: LiveSceneViewProps) {
     >
       <span className={styles.panelMarker}>PANEL · Slice Canvas</span>
       <div className={styles.visualStage}>
-        <div className={`${styles.textStage} ${liveInfluenceMode ? styles[`textStage${liveInfluenceMode}`] : ""}`}>
+        <div
+          className={`${styles.textStage} ${styles.textStageStaticMotion} ${liveInfluenceMode ? styles[`textStage${liveInfluenceMode}`] : ""}`}
+        >
           <div
             className={`${styles.compositionGuide} ${
               liveInfluenceMode ? styles[`compositionGuide${liveInfluenceMode}`] : ""
@@ -1861,6 +1888,7 @@ export function LiveSceneView(props: LiveSceneViewProps) {
           className={`${styles.thoughtOverlay} ${interference ? styles.thoughtOverlayInterference : ""} ${
             isThoughtOverlayClosing ? styles.thoughtOverlayClosing : ""
           }`}
+          style={structureSceneConfig.thoughtOverlayStyle}
         >
           <>
             <div className={styles.thoughtOverlayLabelPlate}>
@@ -2611,6 +2639,69 @@ export function LiveSceneView(props: LiveSceneViewProps) {
               </li>
               <li>
                 thresholds: {executionEngineSuccess ? Object.entries(executionEngineSuccess.learning_state.new_thresholds).map(([key, value]) => `${key}:${value}`).join(" / ") || "none" : "none"}
+              </li>
+              <li>
+                threshold classification: {executionEngineSuccess?.threshold_model.threshold_state.classification ?? "none"}
+              </li>
+              <li>
+                threshold next action: {executionEngineSuccess?.threshold_model.threshold_state.next_action ?? "none"}
+              </li>
+              <li>
+                threshold flags: {executionEngineSuccess ? Object.keys(executionEngineSuccess.threshold_model.flags).join(" / ") || "none" : "none"}
+              </li>
+              <li>
+                τs: {executionEngineSuccess?.threshold_model.threshold_state.thresholds["τs"].toFixed(2) ?? "0.00"} · τm:{" "}
+                {executionEngineSuccess?.threshold_model.threshold_state.thresholds["τm"].toFixed(2) ?? "0.00"} · τa:{" "}
+                {executionEngineSuccess?.threshold_model.threshold_state.thresholds["τa"].toFixed(2) ?? "0.00"} · τc:{" "}
+                {executionEngineSuccess?.threshold_model.threshold_state.thresholds["τc"].toFixed(2) ?? "0.00"}
+              </li>
+              <li>
+                current state: structure {executionEngineSuccess?.threshold_model.threshold_state.state.structure.toFixed(2) ?? "0.00"} · sense{" "}
+                {executionEngineSuccess?.threshold_model.threshold_state.state.sense.toFixed(2) ?? "0.00"} · attention{" "}
+                {executionEngineSuccess?.threshold_model.threshold_state.state.attention.toFixed(2) ?? "0.00"} · coherence{" "}
+                {executionEngineSuccess?.threshold_model.threshold_state.state.coherence.toFixed(2) ?? "0.00"}
+              </li>
+              <li>
+                updated thresholds: τs {executionEngineSuccess?.threshold_model.updated_thresholds["τs"].toFixed(2) ?? "0.00"} · τm{" "}
+                {executionEngineSuccess?.threshold_model.updated_thresholds["τm"].toFixed(2) ?? "0.00"} · τa{" "}
+                {executionEngineSuccess?.threshold_model.updated_thresholds["τa"].toFixed(2) ?? "0.00"} · τc{" "}
+                {executionEngineSuccess?.threshold_model.updated_thresholds["τc"].toFixed(2) ?? "0.00"}
+              </li>
+              <li>
+                learning loop: {executionEngineSuccess
+                  ? "status" in executionEngineSuccess.learning_loop
+                    ? executionEngineSuccess.learning_loop.message
+                    : executionEngineSuccess.learning_loop.learning_cycle_output.threshold.threshold_state.classification
+                  : "none"}
+              </li>
+              <li>
+                learning canon: {executionEngineSuccess && !("status" in executionEngineSuccess.learning_loop)
+                  ? executionEngineSuccess.learning_loop.canonical_state
+                    ? "true"
+                    : "false"
+                  : "none"}
+              </li>
+              <li>
+                canon status: {executionEngineSuccess && !("status" in executionEngineSuccess.learning_loop)
+                  ? "status" in executionEngineSuccess.learning_loop.learning_cycle_output.canon_result
+                    ? executionEngineSuccess.learning_loop.learning_cycle_output.canon_result.message
+                    : `${executionEngineSuccess.learning_loop.learning_cycle_output.canon_result.canon_status} · ${executionEngineSuccess.learning_loop.learning_cycle_output.canon_result.action}`
+                  : "none"}
+              </li>
+              <li>
+                learning score: {executionEngineSuccess && !("status" in executionEngineSuccess.learning_loop)
+                  ? executionEngineSuccess.learning_loop.learning_cycle_output.score.total.toFixed(2)
+                  : "0.00"}
+              </li>
+              <li>
+                learning bias: {executionEngineSuccess && !("status" in executionEngineSuccess.learning_loop)
+                  ? executionEngineSuccess.learning_loop.updated_state.behavioral_bias.join(" / ") || "none"
+                  : "none"}
+              </li>
+              <li>
+                learning next context: {executionEngineSuccess && !("status" in executionEngineSuccess.learning_loop)
+                  ? executionEngineSuccess.learning_loop.updated_state.next_context.focus
+                  : "none"}
               </li>
             </ul>
           </article>

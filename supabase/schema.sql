@@ -308,6 +308,31 @@ create table if not exists public.mindslice_canon_states (
   constraint mindslice_canon_states_user_domain_entry_unique unique (user_id, domain, entry_id)
 );
 
+create table if not exists public.mindslice_learning_cycles (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null references public.profiles(user_id) on delete cascade,
+  cycle_status text not null
+    check (cycle_status in ('success', 'failure', 'refined', 'canonical_candidate')),
+  classification text not null
+    check (classification in ('NOISE', 'FRAGMENT', 'PRE_CONCEPT', 'CONCEPT', 'CANONICAL_CANDIDATE')),
+  decision text not null
+    check (decision in ('RESTART', 'LOOP_BACK', 'REFINE', 'STORE', 'CANON_CHECK')),
+  score_total numeric not null default 0,
+  canonical_state boolean not null default false,
+  failure_reason text,
+  payload_mode text not null default 'compact'
+    check (payload_mode in ('compact', 'full')),
+  payload_size integer not null default 0,
+  retention_tier text not null default 'standard'
+    check (retention_tier in ('short', 'standard', 'long', 'canonical')),
+  threshold_state jsonb not null default '{}'::jsonb,
+  decision_flags jsonb not null default '{}'::jsonb,
+  updated_state jsonb not null default '{}'::jsonb,
+  learning_summary jsonb not null default '{}'::jsonb,
+  full_payload jsonb,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists saved_moments_user_id_created_at_idx
   on public.saved_moments (user_id, created_at desc);
 
@@ -347,6 +372,12 @@ create index if not exists mindslice_memory_states_user_domain_updated_at_idx
 create index if not exists mindslice_canon_states_user_domain_updated_at_idx
   on public.mindslice_canon_states (user_id, domain, updated_at desc);
 
+create index if not exists mindslice_learning_cycles_user_created_at_idx
+  on public.mindslice_learning_cycles (user_id, created_at desc);
+
+create index if not exists mindslice_learning_cycles_user_classification_idx
+  on public.mindslice_learning_cycles (user_id, classification, created_at desc);
+
 alter table public.profiles enable row level security;
 alter table public.users enable row level security;
 alter table public.author_identities enable row level security;
@@ -364,6 +395,7 @@ alter table public.concept_artifacts enable row level security;
 alter table public.engine_debug_runs enable row level security;
 alter table public.mindslice_memory_states enable row level security;
 alter table public.mindslice_canon_states enable row level security;
+alter table public.mindslice_learning_cycles enable row level security;
 
 drop policy if exists "users_owner_read" on public.users;
 create policy "users_owner_read"
@@ -826,5 +858,23 @@ create policy "mindslice_canon_states_owner_update"
 drop policy if exists "mindslice_canon_states_owner_delete" on public.mindslice_canon_states;
 create policy "mindslice_canon_states_owner_delete"
   on public.mindslice_canon_states
+  for delete
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_learning_cycles_owner_read" on public.mindslice_learning_cycles;
+create policy "mindslice_learning_cycles_owner_read"
+  on public.mindslice_learning_cycles
+  for select
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_learning_cycles_owner_insert" on public.mindslice_learning_cycles;
+create policy "mindslice_learning_cycles_owner_insert"
+  on public.mindslice_learning_cycles
+  for insert
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_learning_cycles_owner_delete" on public.mindslice_learning_cycles;
+create policy "mindslice_learning_cycles_owner_delete"
+  on public.mindslice_learning_cycles
   for delete
   using (user_id = coalesce(auth.jwt() ->> 'sub', ''));

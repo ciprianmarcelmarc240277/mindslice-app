@@ -1,6 +1,15 @@
 import { runAnalyticEngine, type AnalyticProfile } from "@/lib/mindslice/concept-analytic-engine-system";
 import { runMasterEngine, type RunMasterEngineResult } from "@/lib/mindslice/concept-master-engine-system";
+import {
+  runLearningLoopEngineV2,
+  type LearningLoopResult,
+} from "@/lib/mindslice/concept-learning-loop-engine-system";
 import { runParserEngine, type ParsedSliceObject } from "@/lib/mindslice/concept-parser-engine-system";
+import {
+  runThresholdModelV2,
+  type HistoricalMemorySignal,
+  type ThresholdModelResult,
+} from "@/lib/mindslice/concept-threshold-model-system";
 import type {
   CanonInfluenceContext,
   ClockDisplayState,
@@ -80,6 +89,8 @@ export type ExecutionEngineResult =
       score: ExecutionScore;
       execution_log: ExecutionLogEntry[];
       learning_state: ExecutionLearningState;
+      threshold_model: ThresholdModelResult;
+      learning_loop: LearningLoopResult;
     }
   | ExecutionEngineFailure;
 
@@ -729,6 +740,16 @@ export function learnFromExecution(
   return learning;
 }
 
+function buildHistoricalMemorySignals(input: RunExecutionEngineInput): HistoricalMemorySignal[] {
+  return (input.thoughtMemory ?? []).map((entry) => ({
+    success: entry.memory_weight >= 0.62,
+    failure: entry.memory_weight < 0.28,
+    reuse: Math.min(1, Math.max(0, entry.keywords.length / 8)),
+    stability: Math.min(1, Math.max(0, entry.memory_weight)),
+    impact: Math.min(1, Math.max(0, (entry.sense_score + entry.structure_score + entry.attention_score) / 3)),
+  }));
+}
+
 export function runExecutionEngineV3(
   input: RunExecutionEngineInput | string,
 ): ExecutionEngineResult {
@@ -785,6 +806,31 @@ export function runExecutionEngineV3(
 
   const score = computeScore(context);
   const learningState = learnFromExecution(context, executionLog, score);
+  const thresholdModel = runThresholdModelV2(
+    analyticProfile,
+    {
+      outputs: context.outputs,
+      score,
+      system_state: context.system_state,
+      master_result: context.master_result,
+    },
+    buildHistoricalMemorySignals(normalizedInput),
+  );
+  const learningLoop = runLearningLoopEngineV2({
+    execution_input: {
+      parsed_slice: parsedSlice,
+      analytic_profile: analyticProfile,
+      outputs: Object.fromEntries(
+        Object.entries(context.outputs).map(([step, result]) => [step, result.payload]),
+      ) as Partial<Record<ExecutionEngineStep, unknown>>,
+      score,
+      execution_log: executionLog,
+      learning_state: learningState,
+      threshold_model: thresholdModel,
+    },
+    historical_memory: buildHistoricalMemorySignals(normalizedInput),
+    analytic_profile: analyticProfile,
+  });
 
   return {
     parsed_slice: parsedSlice,
@@ -795,5 +841,7 @@ export function runExecutionEngineV3(
     score,
     execution_log: executionLog,
     learning_state: learningState,
+    threshold_model: thresholdModel,
+    learning_loop: learningLoop,
   };
 }

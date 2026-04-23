@@ -881,7 +881,7 @@
 .visualStage {
   width: 100%;
   height: 68vh;
-  background: color-mix(in srgb, var(--slice-background, #ffffff) 92%, white);
+  background: #ffffff;
   display: grid;
   place-items: center;
 }
@@ -891,13 +891,7 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 78% 22%, color-mix(in srgb, var(--slice-accent, #b5452f) 10%, transparent), transparent 28%),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--slice-background, #ffffff) 94%, white) 0%,
-      color-mix(in srgb, var(--slice-background, #ffffff) 88%, var(--slice-ink, #181411) 2%) 100%
-    );
+  background: #ffffff;
   --structure-v1: 33.333%;
   --structure-v2: 66.666%;
   --structure-h1: 33.333%;
@@ -913,33 +907,30 @@
   pointer-events: none;
 }
 
+.textStageStaticMotion,
+.textStageStaticMotion * {
+  animation: none !important;
+}
+
 .textStagewhisper {
-  background:
-    radial-gradient(circle at 22% 18%, color-mix(in srgb, var(--slice-ink, #181411) 4%, transparent), transparent 28%),
-    linear-gradient(180deg, color-mix(in srgb, var(--slice-background, #ffffff) 97%, white), color-mix(in srgb, var(--slice-background, #ffffff) 93%, var(--slice-ink, #181411) 2%));
+  background: #ffffff;
   filter: saturate(0.9) brightness(1.02);
 }
 
 .textStageecho {
-  background:
-    radial-gradient(circle at 82% 22%, color-mix(in srgb, var(--slice-accent, #b5452f) 20%, transparent), transparent 30%),
-    radial-gradient(circle at 18% 74%, color-mix(in srgb, var(--slice-accent, #b5452f) 10%, transparent), transparent 34%),
-    linear-gradient(180deg, color-mix(in srgb, var(--slice-background, #ffffff) 94%, white), color-mix(in srgb, var(--slice-background, #ffffff) 84%, var(--slice-accent, #b5452f) 8%));
+  background: #ffffff;
 }
 
 .textStagerupture {
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--slice-background, #ffffff) 92%, white), color-mix(in srgb, var(--slice-background, #ffffff) 78%, var(--slice-accent, #b5452f) 12%));
+  background: #ffffff;
 }
 
 .textStagecounterpoint {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--slice-background, #ffffff) 94%, white), color-mix(in srgb, var(--slice-background, #ffffff) 82%, var(--slice-ink, #181411) 9%));
+  background: #ffffff;
 }
 
 .textStagestain {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--slice-background, #ffffff) 84%, var(--slice-accent, #b5452f) 10%), color-mix(in srgb, var(--slice-background, #ffffff) 74%, var(--slice-accent, #b5452f) 16%));
+  background: #ffffff;
 }
 
 .textFieldBackdrop {
@@ -4199,24 +4190,30 @@
 
 .thoughtOverlay {
   position: absolute;
-  inset: 0;
+  inset: var(--thought-overlay-inset, 0);
   display: grid;
-  align-content: center;
-  justify-items: center;
+  align-content: var(--thought-overlay-justify, center);
+  justify-items: var(--thought-overlay-align, center);
   gap: 12px;
-  padding: clamp(28px, 4vw, 52px);
-  background: #15100c;
+  padding: var(--thought-overlay-padding, clamp(28px, 4vw, 52px));
+  background: var(--thought-overlay-background, #15100c);
   color: #f9f1e8;
-  z-index: 8;
+  z-index: var(--thought-overlay-z, 8);
   overflow: hidden;
-  text-align: center;
-  opacity: 1;
+  text-align: var(--thought-overlay-text-align, center);
+  opacity: var(--thought-overlay-opacity, 1);
   transition: opacity 300ms ease, background-color 300ms ease;
+  border-radius: 26px;
+  box-shadow:
+    inset 0 0 0 1px var(--thought-overlay-border, transparent),
+    0 16px 40px rgba(24, 20, 17, 0.16);
 }
 
 .thoughtOverlayInterference {
-  background: #1a110d;
-  box-shadow: inset 0 0 0 1px rgba(255, 194, 168, 0.12);
+  background: var(--thought-overlay-background, #1a110d);
+  box-shadow:
+    inset 0 0 0 1px var(--thought-overlay-border, rgba(255, 194, 168, 0.12)),
+    0 16px 40px rgba(24, 20, 17, 0.18);
 }
 
 .thoughtOverlayClosing {
@@ -4242,9 +4239,9 @@
 .thoughtOverlayTextStack {
   display: grid;
   align-content: center;
-  justify-items: center;
+  justify-items: var(--thought-overlay-align, center);
   gap: 14px;
-  width: min(58.8rem, 100%);
+  width: var(--thought-overlay-text-width, min(58.8rem, 100%));
   max-width: 100%;
   max-height: 100%;
   overflow-y: auto;
