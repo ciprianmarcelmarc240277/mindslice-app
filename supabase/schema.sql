@@ -333,6 +333,44 @@ create table if not exists public.mindslice_learning_cycles (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.mindslice_author_value_states (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null references public.profiles(user_id) on delete cascade,
+  author_id text not null,
+  concept_id text,
+  classification text,
+  current_rank text,
+  next_rank text,
+  promoted boolean not null default false,
+  canonical_state boolean not null default false,
+  contribution_score numeric not null default 0,
+  consistency_score numeric not null default 0,
+  canon_score numeric not null default 0,
+  influence_score numeric not null default 0,
+  growth_score numeric not null default 0,
+  journal_score numeric not null default 0,
+  structure_score numeric not null default 0,
+  slice_score numeric not null default 0,
+  coordination_score numeric not null default 0,
+  decision_score numeric not null default 0,
+  total_value numeric not null default 0,
+  profile_payload jsonb not null default '{}'::jsonb,
+  reputation_payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.author_reputation_events (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null references public.profiles(user_id) on delete cascade,
+  author_id text not null,
+  concept_id text,
+  from_rank text not null,
+  to_rank text not null,
+  event_type text not null default 'RANK_PROMOTION',
+  event_payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists saved_moments_user_id_created_at_idx
   on public.saved_moments (user_id, created_at desc);
 
@@ -378,6 +416,18 @@ create index if not exists mindslice_learning_cycles_user_created_at_idx
 create index if not exists mindslice_learning_cycles_user_classification_idx
   on public.mindslice_learning_cycles (user_id, classification, created_at desc);
 
+create index if not exists mindslice_author_value_states_user_created_at_idx
+  on public.mindslice_author_value_states (user_id, created_at desc);
+
+create index if not exists mindslice_author_value_states_author_created_at_idx
+  on public.mindslice_author_value_states (author_id, created_at desc);
+
+create index if not exists author_reputation_events_user_created_at_idx
+  on public.author_reputation_events (user_id, created_at desc);
+
+create index if not exists author_reputation_events_author_created_at_idx
+  on public.author_reputation_events (author_id, created_at desc);
+
 alter table public.profiles enable row level security;
 alter table public.users enable row level security;
 alter table public.author_identities enable row level security;
@@ -396,6 +446,8 @@ alter table public.engine_debug_runs enable row level security;
 alter table public.mindslice_memory_states enable row level security;
 alter table public.mindslice_canon_states enable row level security;
 alter table public.mindslice_learning_cycles enable row level security;
+alter table public.mindslice_author_value_states enable row level security;
+alter table public.author_reputation_events enable row level security;
 
 drop policy if exists "users_owner_read" on public.users;
 create policy "users_owner_read"
@@ -876,5 +928,41 @@ create policy "mindslice_learning_cycles_owner_insert"
 drop policy if exists "mindslice_learning_cycles_owner_delete" on public.mindslice_learning_cycles;
 create policy "mindslice_learning_cycles_owner_delete"
   on public.mindslice_learning_cycles
+  for delete
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_author_value_states_owner_read" on public.mindslice_author_value_states;
+create policy "mindslice_author_value_states_owner_read"
+  on public.mindslice_author_value_states
+  for select
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_author_value_states_owner_insert" on public.mindslice_author_value_states;
+create policy "mindslice_author_value_states_owner_insert"
+  on public.mindslice_author_value_states
+  for insert
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_author_value_states_owner_delete" on public.mindslice_author_value_states;
+create policy "mindslice_author_value_states_owner_delete"
+  on public.mindslice_author_value_states
+  for delete
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "author_reputation_events_owner_read" on public.author_reputation_events;
+create policy "author_reputation_events_owner_read"
+  on public.author_reputation_events
+  for select
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "author_reputation_events_owner_insert" on public.author_reputation_events;
+create policy "author_reputation_events_owner_insert"
+  on public.author_reputation_events
+  for insert
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "author_reputation_events_owner_delete" on public.author_reputation_events;
+create policy "author_reputation_events_owner_delete"
+  on public.author_reputation_events
   for delete
   using (user_id = coalesce(auth.jwt() ->> 'sub', ''));

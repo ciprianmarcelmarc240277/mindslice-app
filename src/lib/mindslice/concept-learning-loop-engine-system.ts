@@ -1,5 +1,10 @@
 import type { AnalyticProfile } from "@/lib/mindslice/concept-analytic-engine-system";
 import {
+  runAuthorValueSystemV1,
+  type AuthorHistoricalDataPoint,
+  type AuthorValueProfile,
+} from "@/lib/mindslice/concept-author-value-system";
+import {
   runCanonEngineV1,
   type CanonEngineResult,
 } from "@/lib/mindslice/concept-canon-engine-system";
@@ -73,6 +78,7 @@ export type LearningCycleOutput = {
   legacy: LearningLoopLegacy;
   score: LearningLoopScore;
   canon_result: CanonEngineResult;
+  author_value_profile: AuthorValueProfile;
 };
 
 export type LearningLoopResult =
@@ -85,6 +91,8 @@ export type LearningLoopResult =
 
 export type LearningLoopInput = {
   execution_input: unknown;
+  author_id?: string;
+  historical_author_data?: AuthorHistoricalDataPoint[];
   system_memory?: LearningLoopLegacy[];
   historical_memory?: HistoricalMemorySignal[];
   analytic_profile?: AnalyticProfile;
@@ -389,6 +397,18 @@ function prepareNextContext(legacy: LearningLoopLegacy) {
   };
 }
 
+function buildAuthorValueConcept(legacy: LearningLoopLegacy, score: LearningLoopScore) {
+  return {
+    concept_id: legacy.insights[0] ?? legacy.patterns[0] ?? "learning_loop_concept",
+    score: {
+      total: score.total,
+    },
+    confidence: {
+      overall: clamp(score.total / 25, 0, 1),
+    },
+  };
+}
+
 export function reinject(
   legacy: LearningLoopLegacy,
   score: LearningLoopScore,
@@ -441,6 +461,13 @@ export function runLearningLoopEngineV2(input: LearningLoopInput, depth = 0): Le
   const legacy = processLegacy(recap, systemMemory);
   const score = processScoring(legacy);
   const canonResult = processCanon(score, legacy, threshold, historicalMemory);
+  const authorValueProfile = runAuthorValueSystemV1(
+    input.author_id ?? "anonymous_author",
+    buildAuthorValueConcept(legacy, score),
+    score,
+    canonResult,
+    input.historical_author_data ?? [],
+  );
   const canonicalState = !("status" in canonResult) && canonResult.canon_status === "CANONICAL";
   const updatedState = reinject(legacy, score, canonResult);
 
@@ -454,6 +481,7 @@ export function runLearningLoopEngineV2(input: LearningLoopInput, depth = 0): Le
       legacy,
       score,
       canon_result: canonResult,
+      author_value_profile: authorValueProfile,
     },
     canonical_state: canonicalState,
   };

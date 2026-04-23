@@ -2703,6 +2703,43 @@ export function LiveSceneView(props: LiveSceneViewProps) {
                   ? executionEngineSuccess.learning_loop.updated_state.next_context.focus
                   : "none"}
               </li>
+              <li>
+                author value: {executionEngineSuccess
+                  ? `${executionEngineSuccess.author_value_profile.total_value.toFixed(2)} · contribution ${executionEngineSuccess.author_value_profile.contribution.toFixed(2)} · consistency ${executionEngineSuccess.author_value_profile.consistency.toFixed(2)}`
+                  : "none"}
+              </li>
+              <li>
+                author influence: {executionEngineSuccess
+                  ? `${executionEngineSuccess.author_value_profile.influence.toFixed(2)} · growth ${executionEngineSuccess.author_value_profile.growth.toFixed(2)} · canon ${executionEngineSuccess.author_value_profile.canon.toFixed(2)}`
+                  : "none"}
+              </li>
+              <li>
+                author rank: {executionEngineSuccess
+                  ? `${executionEngineSuccess.author_reputation_result.current_rank} -> ${executionEngineSuccess.author_reputation_result.next_rank}`
+                  : "none"}
+              </li>
+              <li>
+                author promotion: {executionEngineSuccess
+                  ? executionEngineSuccess.author_reputation_result.promoted
+                    ? executionEngineSuccess.author_reputation_result.promotion_event
+                      ? `${executionEngineSuccess.author_reputation_result.promotion_event.from_rank} -> ${executionEngineSuccess.author_reputation_result.promotion_event.to_rank}`
+                      : "true"
+                    : "false"
+                  : "none"}
+              </li>
+              <li>
+                unlocked identity: {executionEngineSuccess
+                  ? `${executionEngineSuccess.author_reputation_result.unlocked_identity.display_name ?? "none"} · ${executionEngineSuccess.author_reputation_result.unlocked_identity.layout}`
+                  : "none"}
+              </li>
+              <li>
+                unlocked permissions: {executionEngineSuccess
+                  ? Object.entries(executionEngineSuccess.author_reputation_result.unlocked_permissions)
+                      .filter(([, value]) => value === true)
+                      .map(([key]) => key)
+                      .join(" / ") || "none"
+                  : "none"}
+              </li>
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>

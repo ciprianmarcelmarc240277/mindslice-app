@@ -6,6 +6,7 @@ import {
   createUser,
   deriveAuthorRole,
 } from "@/lib/mindslice/concept-author-engine-system";
+import { resolvePermissions } from "@/lib/mindslice/concept-author-reputation-system";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const ADDRESS_FORM_OPTIONS = ["domnule", "doamnă", "domnișoară"] as const;
@@ -71,6 +72,35 @@ function isAdminEmail(email: string | null | undefined) {
   }
 
   return allowlist.includes(email.trim().toLowerCase());
+}
+
+async function loadAuthorPermissions(
+  userId: string,
+  supabase: ReturnType<typeof createServerSupabaseClient>,
+) {
+  const { data } = await supabase
+    .from("mindslice_author_value_states")
+    .select("current_rank, next_rank")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const resolvedRank =
+    typeof data?.next_rank === "string" && data.next_rank.trim()
+      ? data.next_rank
+      : typeof data?.current_rank === "string" && data.current_rank.trim()
+        ? data.current_rank
+        : "PSEUDONYM";
+
+  return resolvePermissions(
+    resolvedRank === "TECHNOLOGIST" ||
+      resolvedRank === "AUTHOR_ARTIST" ||
+      resolvedRank === "ORCHESTRATOR" ||
+      resolvedRank === "EXECUTIVE"
+      ? resolvedRank
+      : "PSEUDONYM",
+  );
 }
 
 export async function GET() {
@@ -474,6 +504,15 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Supabase configuration error" },
       { status: 500 },
+    );
+  }
+
+  const permissions = await loadAuthorPermissions(userId, supabase);
+
+  if (!permissions.can_create_slice) {
+    return NextResponse.json(
+      { error: "Rank-ul curent nu permite încă salvarea și crearea de slice-uri." },
+      { status: 403 },
     );
   }
 

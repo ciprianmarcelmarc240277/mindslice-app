@@ -1,4 +1,17 @@
 import { runAnalyticEngine, type AnalyticProfile } from "@/lib/mindslice/concept-analytic-engine-system";
+import {
+  detectCurrentRank,
+  resolvePermissions,
+  type AuthorPermissions,
+  runAuthorReputationSystemV1,
+  type AuthorReputationHistoryEntry,
+  type AuthorReputationResult,
+} from "@/lib/mindslice/concept-author-reputation-system";
+import {
+  runAuthorValueSystemV1,
+  type AuthorHistoricalDataPoint,
+  type AuthorValueProfile,
+} from "@/lib/mindslice/concept-author-value-system";
 import { runMasterEngine, type RunMasterEngineResult } from "@/lib/mindslice/concept-master-engine-system";
 import {
   runLearningLoopEngineV2,
@@ -91,6 +104,8 @@ export type ExecutionEngineResult =
       learning_state: ExecutionLearningState;
       threshold_model: ThresholdModelResult;
       learning_loop: LearningLoopResult;
+      author_value_profile: AuthorValueProfile;
+      author_reputation_result: AuthorReputationResult;
     }
   | ExecutionEngineFailure;
 
@@ -99,6 +114,7 @@ type RunExecutionEngineInput = {
   user?: UserProfile | null;
   history?: HistoryEntry[];
   thoughtMemory?: ThoughtMemoryEntry[];
+  authorValueHistory?: AuthorHistoricalDataPoint[];
   interference?: LiveInterference | null;
   canonInfluence?: CanonInfluenceContext | null;
   clockDisplay?: ClockDisplayState | null;
@@ -119,6 +135,14 @@ const DEFAULT_PIPELINE: ExecutionEngineStep[] = [
   "Memory",
   "Business",
 ];
+
+function resolveExecutionPermissions(input: Omit<RunExecutionEngineInput, "rawSliceText">): AuthorPermissions {
+  const authorHistory = buildAuthorHistoricalData(input);
+  const reputationHistory = buildAuthorReputationHistory(input, authorHistory);
+  const currentRank = detectCurrentRank(reputationHistory);
+
+  return resolvePermissions(currentRank);
+}
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -259,12 +283,20 @@ function fail(message = "FAIL"): ExecutionEngineFailure {
 export function buildPipeline(
   parsedSlice: ParsedSliceObject,
   analyticProfile: AnalyticProfile,
+  input?: Omit<RunExecutionEngineInput, "rawSliceText">,
 ): ExecutionEngineStep[] {
   const declaredPipeline = parsedSlice.process.pipeline
     .map(normalizeStepName)
     .filter((step): step is ExecutionEngineStep => step !== null);
 
   const pipeline = declaredPipeline.length ? [...declaredPipeline] : [...DEFAULT_PIPELINE];
+  const permissions = input ? resolveExecutionPermissions(input) : null;
+
+  if (permissions && !permissions.can_decide) {
+    const filteredPipeline = pipeline.filter((step) => step !== "Business");
+    pipeline.length = 0;
+    pipeline.push(...filteredPipeline);
+  }
 
   if (analyticProfile.importance === "critical" && !pipeline.includes("Scenario")) {
     pipeline.push("Scenario");
@@ -343,13 +375,17 @@ function getMasterResult(
   }
 
   const identity = buildExecutionIdentity(user, context.slice);
+  const permissions = resolveExecutionPermissions(input);
   context.master_result = runMasterEngine({
     user: identity.user,
     idea: context.thought,
     history: input.history ?? [],
     thoughtMemory: input.thoughtMemory ?? [],
-    interference: context.slice.control.allow_contamination ? input.interference ?? null : null,
-    canonInfluence: input.canonInfluence ?? null,
+    interference:
+      permissions.can_coordinate && context.slice.control.allow_contamination
+        ? input.interference ?? null
+        : null,
+    canonInfluence: permissions.can_coordinate ? input.canonInfluence ?? null : null,
     clockDisplay: input.clockDisplay ?? null,
   });
   context.system_state.master_status = context.master_result.status;
@@ -740,7 +776,7 @@ export function learnFromExecution(
   return learning;
 }
 
-function buildHistoricalMemorySignals(input: RunExecutionEngineInput): HistoricalMemorySignal[] {
+function buildHistoricalMemorySignals(input: Omit<RunExecutionEngineInput, "rawSliceText">): HistoricalMemorySignal[] {
   return (input.thoughtMemory ?? []).map((entry) => ({
     success: entry.memory_weight >= 0.62,
     failure: entry.memory_weight < 0.28,
@@ -748,6 +784,69 @@ function buildHistoricalMemorySignals(input: RunExecutionEngineInput): Historica
     stability: Math.min(1, Math.max(0, entry.memory_weight)),
     impact: Math.min(1, Math.max(0, (entry.sense_score + entry.structure_score + entry.attention_score) / 3)),
   }));
+}
+
+function buildAuthorHistoricalData(input: Omit<RunExecutionEngineInput, "rawSliceText">): AuthorHistoricalDataPoint[] {
+  const fromDedicatedHistory = input.authorValueHistory ?? [];
+  const fromThoughtMemory = (input.thoughtMemory ?? []).map((entry) => ({
+    total:
+      Math.min(
+        100,
+        Math.max(0, ((entry.sense_score + entry.structure_score + entry.attention_score) / 3) * 100),
+      ),
+    canonical: entry.memory_weight >= 0.8,
+    reuse_by_others: Math.max(0, entry.keywords.length - 2),
+    score_over_time: [
+      Math.max(0, entry.structure_score * 100),
+      Math.max(0, entry.attention_score * 100),
+      Math.max(0, entry.sense_score * 100),
+    ],
+    created_at: entry.created_at,
+  }));
+
+  const fromHistory = (input.history ?? []).map((entry) => ({
+    total: Math.min(100, Math.max(0, entry.text.length / 2.2)),
+    canonical: /canon|stabil|axiom|core/iu.test(entry.text),
+    reuse_by_others: Math.max(0, Math.round(entry.text.split(/\s+/u).length / 8) - 1),
+    timestamp: entry.time,
+  }));
+
+  return [...fromDedicatedHistory, ...fromThoughtMemory, ...fromHistory];
+}
+
+function buildAuthorReputationHistory(
+  input: Omit<RunExecutionEngineInput, "rawSliceText">,
+  authorHistory: AuthorHistoricalDataPoint[],
+): AuthorReputationHistoryEntry[] {
+  const fromAuthorHistory = authorHistory.map((entry) => ({
+    total_value: typeof entry.total === "number" ? entry.total : typeof entry.score === "number" ? entry.score : 0,
+    rank: typeof entry.rank === "string" ? entry.rank : undefined,
+    journal_score: typeof entry.journal_score === "number" ? entry.journal_score : undefined,
+    structure_score: typeof entry.structure_score === "number" ? entry.structure_score : undefined,
+    slice_score: typeof entry.slice_score === "number" ? entry.slice_score : undefined,
+    coordination_score: typeof entry.coordination_score === "number" ? entry.coordination_score : undefined,
+    decision_score: typeof entry.decision_score === "number" ? entry.decision_score : undefined,
+  }));
+
+  const fromThoughtMemory = (input.thoughtMemory ?? []).map((entry) => ({
+    journal_score: Math.min(100, Math.max(0, entry.fragments.length * 3 + entry.keywords.length)),
+    structure_score: Math.min(100, Math.max(0, entry.structure_score * 100)),
+    slice_score: Math.min(100, Math.max(0, entry.fragments.length * 2)),
+    coordination_score: Math.min(100, Math.max(0, entry.attention_score * 60)),
+    decision_score: Math.min(100, Math.max(0, entry.sense_score * 55)),
+    total_value: Math.min(
+      100,
+      Math.max(0, ((entry.sense_score + entry.structure_score + entry.attention_score) / 3) * 100),
+    ),
+  }));
+
+  const fromHistory = (input.history ?? []).map((entry) => ({
+    journal_score: Math.min(100, Math.max(0, entry.text.length / 8)),
+    slice_score: 1,
+    total_value: Math.min(100, Math.max(0, entry.text.length / 4)),
+  }));
+
+  return [...fromAuthorHistory, ...fromThoughtMemory, ...fromHistory];
 }
 
 export function runExecutionEngineV3(
@@ -772,7 +871,7 @@ export function runExecutionEngineV3(
     return fail("INVALID_ANALYTIC_PROFILE");
   }
 
-  let pipeline = buildPipeline(parsedSlice, analyticProfile);
+  let pipeline = buildPipeline(parsedSlice, analyticProfile, normalizedInput);
   let context = initContext(parsedSlice, analyticProfile);
   const executionLog: ExecutionLogEntry[] = [];
 
@@ -828,9 +927,44 @@ export function runExecutionEngineV3(
       learning_state: learningState,
       threshold_model: thresholdModel,
     },
+    author_id: normalizedInput.user?.user_id ?? "anonymous_author",
+    historical_author_data: buildAuthorHistoricalData(normalizedInput),
     historical_memory: buildHistoricalMemorySignals(normalizedInput),
     analytic_profile: analyticProfile,
   });
+  const authorValueProfile =
+    "status" in learningLoop
+      ? runAuthorValueSystemV1(
+          normalizedInput.user?.user_id ?? "anonymous_author",
+          {
+            concept_id: parsedSlice.content.text.slice(0, 64),
+            score: {
+              total: score.total,
+            },
+            confidence: {
+              overall: Math.min(1, Math.max(0, score.total / 25)),
+            },
+          },
+          score,
+          null,
+          buildAuthorHistoricalData(normalizedInput),
+        )
+      : learningLoop.learning_cycle_output.author_value_profile;
+  const authorHistory = buildAuthorHistoricalData(normalizedInput);
+  const authorReputationResult = runAuthorReputationSystemV1(
+    normalizedInput.user?.user_id ?? "anonymous_author",
+    buildAuthorReputationHistory(normalizedInput, authorHistory),
+    authorValueProfile,
+    authorHistory,
+    normalizedInput.user ?? {
+      user_id: "anonymous_author",
+      pseudonym: "Anonymous",
+      first_name: null,
+      last_name: null,
+      indexed_name: null,
+      identity_type: "pseudonym",
+    },
+  );
 
   return {
     parsed_slice: parsedSlice,
@@ -843,5 +977,7 @@ export function runExecutionEngineV3(
     learning_state: learningState,
     threshold_model: thresholdModel,
     learning_loop: learningLoop,
+    author_value_profile: authorValueProfile,
+    author_reputation_result: authorReputationResult,
   };
 }

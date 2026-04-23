@@ -10,6 +10,7 @@ import {
   type CanonHistoricalMemory,
   type CanonScoreProfile,
 } from "@/lib/mindslice/concept-canon-engine-system";
+import type { AuthorHistoricalDataPoint } from "@/lib/mindslice/concept-author-value-system";
 import { runExecutionEngineV3, type ExecutionEngineResult } from "@/lib/mindslice/concept-execution-engine-system";
 import type { UserProfile } from "@/lib/mindslice/mindslice-types";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -66,6 +67,63 @@ async function loadProfile(userId: string | null): Promise<UserProfile | null> {
     consent_flag: identity?.consent_flag ?? false,
     author_role: role?.role ?? "free",
   };
+}
+
+async function loadAuthorValueHistory(userId: string | null): Promise<AuthorHistoricalDataPoint[]> {
+  if (!userId) {
+    return [];
+  }
+
+  let supabase;
+  try {
+    supabase = createServerSupabaseClient();
+  } catch {
+    return [];
+  }
+
+  const { data } = await supabase
+    .from("mindslice_author_value_states")
+    .select(
+      "total_value, contribution_score, consistency_score, canon_score, influence_score, growth_score, journal_score, structure_score, slice_score, coordination_score, decision_score, canonical_state, classification, current_rank, next_rank, promoted, created_at",
+    )
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(48);
+
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return data.map((entry) => ({
+    rank:
+      typeof entry.next_rank === "string"
+        ? entry.next_rank
+        : typeof entry.current_rank === "string"
+          ? entry.current_rank
+          : undefined,
+    total: typeof entry.total_value === "number" ? entry.total_value : 0,
+    average_score:
+      typeof entry.contribution_score === "number" &&
+      typeof entry.consistency_score === "number" &&
+      typeof entry.influence_score === "number"
+        ? (entry.contribution_score + entry.consistency_score + entry.influence_score) / 3
+        : 0,
+    canonical: entry.canonical_state ?? false,
+    canon_status:
+      entry.canonical_state ? "CANONICAL" : typeof entry.classification === "string" ? entry.classification : undefined,
+    journal_score: typeof entry.journal_score === "number" ? entry.journal_score : 0,
+    structure_score: typeof entry.structure_score === "number" ? entry.structure_score : 0,
+    slice_score: typeof entry.slice_score === "number" ? entry.slice_score : 0,
+    coordination_score: typeof entry.coordination_score === "number" ? entry.coordination_score : 0,
+    decision_score: typeof entry.decision_score === "number" ? entry.decision_score : 0,
+    reuse_by_others: typeof entry.influence_score === "number" ? entry.influence_score : 0,
+    score_over_time: [
+      typeof entry.contribution_score === "number" ? entry.contribution_score : 0,
+      typeof entry.consistency_score === "number" ? entry.consistency_score : 0,
+      typeof entry.total_value === "number" ? entry.total_value : 0,
+    ],
+    created_at: typeof entry.created_at === "string" ? entry.created_at : undefined,
+  }));
 }
 
 function byteSize(value: unknown) {
@@ -179,6 +237,92 @@ async function saveLearningCycle(userId: string | null, result: ExecutionEngineR
   await supabase
     .from("mindslice_learning_cycles")
     .insert(buildLearningCycleRow(userId, result));
+}
+
+async function saveAuthorValueProfile(userId: string | null, result: ExecutionEngineResult) {
+  if (!userId || isExecutionFailure(result)) {
+    return;
+  }
+
+  let supabase;
+  try {
+    supabase = createServerSupabaseClient();
+  } catch {
+    return;
+  }
+
+  const learningLoop = result.learning_loop;
+  const classification =
+    "status" in learningLoop
+      ? result.threshold_model.threshold_state.classification
+      : learningLoop.learning_cycle_output.threshold.threshold_state.classification;
+  const canonicalState =
+    !("status" in learningLoop) &&
+    !("status" in learningLoop.learning_cycle_output.canon_result) &&
+    learningLoop.learning_cycle_output.canon_result.canon_status === "CANONICAL";
+  const conceptId =
+    !("status" in learningLoop) && !("status" in learningLoop.learning_cycle_output.canon_result)
+      ? learningLoop.learning_cycle_output.canon_result.concept_id
+      : result.parsed_slice.content.text.slice(0, 64);
+
+  await supabase.from("mindslice_author_value_states").insert({
+    user_id: userId,
+    author_id: result.author_value_profile.author_id || userId,
+    concept_id: conceptId,
+    classification,
+    current_rank: result.author_reputation_result.current_rank,
+    next_rank: result.author_reputation_result.next_rank,
+    promoted: result.author_reputation_result.promoted,
+    canonical_state: canonicalState,
+    contribution_score: result.author_value_profile.contribution,
+    consistency_score: result.author_value_profile.consistency,
+    canon_score: result.author_value_profile.canon,
+    influence_score: result.author_value_profile.influence,
+    growth_score: result.author_value_profile.growth,
+    journal_score: result.author_reputation_result.scores.journal_score,
+    structure_score: result.author_reputation_result.scores.structure_score,
+    slice_score: result.author_reputation_result.scores.slice_score,
+    coordination_score: result.author_reputation_result.scores.coordination_score,
+    decision_score: result.author_reputation_result.scores.decision_score,
+    total_value: result.author_value_profile.total_value,
+    profile_payload: result.author_value_profile,
+    reputation_payload: result.author_reputation_result,
+  });
+}
+
+async function saveAuthorReputationEvent(userId: string | null, result: ExecutionEngineResult) {
+  if (!userId || isExecutionFailure(result) || !result.author_reputation_result.promoted) {
+    return;
+  }
+
+  const promotionEvent = result.author_reputation_result.promotion_event;
+
+  if (!promotionEvent) {
+    return;
+  }
+
+  let supabase;
+  try {
+    supabase = createServerSupabaseClient();
+  } catch {
+    return;
+  }
+
+  const learningLoop = result.learning_loop;
+  const conceptId =
+    !("status" in learningLoop) && !("status" in learningLoop.learning_cycle_output.canon_result)
+      ? learningLoop.learning_cycle_output.canon_result.concept_id
+      : result.parsed_slice.content.text.slice(0, 64);
+
+  await supabase.from("author_reputation_events").insert({
+    user_id: userId,
+    author_id: result.author_reputation_result.author_id || userId,
+    concept_id: conceptId,
+    from_rank: promotionEvent.from_rank,
+    to_rank: promotionEvent.to_rank,
+    event_type: promotionEvent.event_type,
+    event_payload: promotionEvent,
+  });
 }
 
 async function loadCanonHistoricalMemory(userId: string, supabase: ReturnType<typeof createServerSupabaseClient>) {
@@ -336,13 +480,19 @@ export async function POST(request: Request) {
   }
 
   const { userId } = await auth();
-  const profile = await loadProfile(userId);
+  const [profile, authorValueHistory] = await Promise.all([
+    loadProfile(userId),
+    loadAuthorValueHistory(userId),
+  ]);
   const result = runExecutionEngineV3({
     rawSliceText,
     user: profile,
+    authorValueHistory,
   });
 
   await saveLearningCycle(userId, result);
+  await saveAuthorValueProfile(userId, result);
+  await saveAuthorReputationEvent(userId, result);
   await saveCanonResult(userId, result);
 
   if (isExecutionFailure(result)) {

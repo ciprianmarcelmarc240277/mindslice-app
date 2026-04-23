@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { resolvePermissions } from "@/lib/mindslice/concept-author-reputation-system";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type CreateDraftPayload = {
@@ -50,6 +51,35 @@ function withAuthorPseudonym<T extends Record<string, unknown>>(blogPost: T, pse
   };
 }
 
+async function loadAuthorPermissions(
+  supabase: ReturnType<typeof createServerSupabaseClient>,
+  userId: string,
+) {
+  const { data } = await supabase
+    .from("mindslice_author_value_states")
+    .select("current_rank, next_rank")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const resolvedRank =
+    typeof data?.next_rank === "string" && data.next_rank.trim()
+      ? data.next_rank
+      : typeof data?.current_rank === "string" && data.current_rank.trim()
+        ? data.current_rank
+        : "PSEUDONYM";
+
+  return resolvePermissions(
+    resolvedRank === "TECHNOLOGIST" ||
+      resolvedRank === "AUTHOR_ARTIST" ||
+      resolvedRank === "ORCHESTRATOR" ||
+      resolvedRank === "EXECUTIVE"
+      ? resolvedRank
+      : "PSEUDONYM",
+  );
+}
+
 export async function GET() {
   const { userId } = await auth();
 
@@ -64,6 +94,15 @@ export async function GET() {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Supabase configuration error" },
       { status: 500 },
+    );
+  }
+
+  const permissions = await loadAuthorPermissions(supabase, userId);
+
+  if (!permissions.can_write_journal) {
+    return NextResponse.json(
+      { error: "Rank-ul curent nu permite încă scrierea în jurnal." },
+      { status: 403 },
     );
   }
 

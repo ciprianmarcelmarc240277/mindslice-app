@@ -5,6 +5,7 @@ import styles from "../page.module.css";
 
 type LiveControlsPanelProps = {
   isActive: boolean;
+  canCreateSlice?: boolean;
   current: Pick<ThoughtState, "mood" | "palette" | "materials" | "motion" | "triad">;
   saveState: "idle" | "saving" | "saved" | "error";
   onToggleActive: () => void;
@@ -16,6 +17,7 @@ type LiveControlsPanelProps = {
 export function LiveControlsPanel(props: LiveControlsPanelProps) {
   const {
     isActive,
+    canCreateSlice = true,
     current,
     saveState,
     onToggleActive,
@@ -41,10 +43,11 @@ export function LiveControlsPanel(props: LiveControlsPanelProps) {
           <button type="button" className={styles.secondary} onClick={onGeneratePrompt}>
             Generează prompt
           </button>
-          <button type="button" className={styles.ghost} onClick={onSaveMoment}>
+          <button type="button" className={styles.ghost} onClick={onSaveMoment} disabled={!canCreateSlice}>
             {saveState === "saving" ? "Se salvează..." : "Salvează momentul"}
           </button>
         </div>
+        {!canCreateSlice ? <p>Rank-ul curent nu permite încă crearea de slice-uri.</p> : null}
       </section>
 
       <section className={`${styles.panelBlock} ${styles.metricsGrid}`}>

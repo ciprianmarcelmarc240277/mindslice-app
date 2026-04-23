@@ -793,6 +793,16 @@ export default function Home() {
     () => buildExecutionSliceText(adjustedCurrent, profile),
     [adjustedCurrent, profile],
   );
+  const canWriteJournal =
+    executionEngineResult &&
+    !("status" in executionEngineResult)
+      ? executionEngineResult.author_reputation_result.unlocked_permissions.can_write_journal
+      : false;
+  const canCreateSlice =
+    executionEngineResult &&
+    !("status" in executionEngineResult)
+      ? executionEngineResult.author_reputation_result.unlocked_permissions.can_create_slice
+      : false;
   const handleBioSaveWithAccess = () => handleBioSave(hasProfileAccess);
   const handleDebutProgramSaveWithAccess = () => handleDebutProgramSave(hasProfileAccess);
 
@@ -974,6 +984,12 @@ export default function Home() {
       return;
     }
 
+    if (!canCreateSlice) {
+      setAccountMessage("Rank-ul curent nu permite încă salvarea și crearea de slice-uri.");
+      setSaveState("error");
+      return;
+    }
+
     setSaveState("saving");
     try {
       const response = await fetch("/api/user-state", {
@@ -1019,6 +1035,11 @@ export default function Home() {
       setAccountMessage(
         "Completează numele și declarația din PANEL · Account Profile ca să poți continua.",
       );
+      return;
+    }
+
+    if (!canWriteJournal) {
+      setAccountMessage("Rank-ul curent nu permite încă scrierea în jurnal.");
       return;
     }
 
@@ -1725,11 +1746,12 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
 
       <aside className={styles.controlPanel}>
         {viewMode === "live" && canViewArtistThinking ? (
-          <LiveControlsPanel
-            isActive={isActive}
-            current={adjustedCurrent}
-            saveState={saveState}
-            onToggleActive={() => setIsActive((previous) => !previous)}
+            <LiveControlsPanel
+              isActive={isActive}
+              canCreateSlice={canCreateSlice}
+              current={adjustedCurrent}
+              saveState={saveState}
+              onToggleActive={() => setIsActive((previous) => !previous)}
             onNextDirection={() =>
               setCurrentIndex((previous) => (previous + 1) % libraryLength)
             }
