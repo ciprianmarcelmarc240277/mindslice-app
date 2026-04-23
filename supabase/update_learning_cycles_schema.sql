@@ -18,10 +18,14 @@ create table if not exists public.mindslice_learning_cycles (
   threshold_state jsonb not null default '{}'::jsonb,
   decision_flags jsonb not null default '{}'::jsonb,
   updated_state jsonb not null default '{}'::jsonb,
+  slice_repetition_state jsonb not null default '{}'::jsonb,
   learning_summary jsonb not null default '{}'::jsonb,
   full_payload jsonb,
   created_at timestamptz not null default now()
 );
+
+alter table public.mindslice_learning_cycles
+  add column if not exists slice_repetition_state jsonb not null default '{}'::jsonb;
 
 create index if not exists mindslice_learning_cycles_user_created_at_idx
   on public.mindslice_learning_cycles (user_id, created_at desc);

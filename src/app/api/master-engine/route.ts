@@ -30,7 +30,9 @@ async function loadProfile(userId: string | null): Promise<UserProfile | null> {
       .maybeSingle(),
     supabase
       .from("author_identities")
-      .select("type, first_name, last_name, indexed_name, consent_flag")
+      .select(
+        "type, first_name, middle_name, last_name, indexed_name, executive_name, executive_index, consent_flag",
+      )
       .eq("user_id", userId)
       .maybeSingle(),
     supabase
@@ -48,8 +50,11 @@ async function loadProfile(userId: string | null): Promise<UserProfile | null> {
     ...profile,
     identity_type: (identity?.type as UserProfile["identity_type"]) ?? "pseudonym",
     first_name: identity?.first_name ?? null,
+    middle_name: identity?.middle_name ?? null,
     last_name: identity?.last_name ?? null,
     indexed_name: identity?.indexed_name ?? null,
+    executive_name: identity?.executive_name ?? null,
+    executive_index: identity?.executive_index ?? null,
     consent_flag: identity?.consent_flag ?? false,
     author_role: role?.role ?? "free",
   };

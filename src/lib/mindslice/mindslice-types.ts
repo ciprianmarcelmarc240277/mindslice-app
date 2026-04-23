@@ -108,8 +108,11 @@ export type UserProfile = {
   pseudonym?: string | null;
   identity_type?: AuthorIdentityType | null;
   first_name?: string | null;
+  middle_name?: string | null;
   last_name?: string | null;
   indexed_name?: string | null;
+  executive_name?: string | null;
+  executive_index?: string | null;
   consent_flag?: boolean | null;
   author_role?: AuthorRole | null;
   email?: string | null;

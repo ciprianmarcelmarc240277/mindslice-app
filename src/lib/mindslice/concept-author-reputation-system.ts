@@ -1,4 +1,10 @@
 import type { AuthorValueProfile } from "@/lib/mindslice/concept-author-value-system";
+import {
+  generateMeta,
+  runIdentityFormatEngineV1,
+  type IdentityFormatMeta,
+  type IdentityFormatPreferences,
+} from "@/lib/mindslice/concept-identity-format-engine-system";
 import type { UserProfile } from "@/lib/mindslice/mindslice-types";
 
 export type AuthorReputationRank =
@@ -29,6 +35,7 @@ export type AuthorIdentityFormat = {
   display_name: string | null;
   index_name: string | null;
   layout: "single_line" | "horizontal_index" | "vertical_index" | "executive_layout";
+  meta: IdentityFormatMeta;
 };
 
 export type AuthorPermissions = {
@@ -100,18 +107,6 @@ function average(values: number[]) {
   }
 
   return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
-
-function firstLetter(text: string | null | undefined) {
-  return text?.trim().charAt(0).toUpperCase() ?? "";
-}
-
-function shortenFirstName(name: string | null | undefined) {
-  if (!name?.trim()) {
-    return "";
-  }
-
-  return name.trim().split(/[\s-]+/u)[0] ?? name.trim();
 }
 
 function now() {
@@ -261,53 +256,25 @@ export function determineNextRank(
 export function resolveIdentityFormat(
   rank: AuthorReputationRank,
   identityData: UserProfile,
+  formatPreferences?: IdentityFormatPreferences | null,
 ): AuthorIdentityFormat {
-  const firstName = identityData.first_name?.trim() ?? "";
-  const lastName = identityData.last_name?.trim() ?? "";
-  const pseudonym = identityData.pseudonym?.trim() ?? null;
-  const indexedName = identityData.indexed_name?.trim() ?? null;
+  const formatted = runIdentityFormatEngineV1(rank, identityData, formatPreferences);
 
-  switch (rank) {
-    case "PSEUDONYM":
-      return {
-        display_name: pseudonym,
-        index_name: null,
-        layout: "single_line",
-      };
-    case "TECHNOLOGIST":
-      return {
-        display_name: firstName ? `${firstName} ${firstLetter(lastName)}.` : pseudonym,
-        index_name: firstName ? `${firstLetter(lastName)}., ${firstName}` : indexedName,
-        layout: "horizontal_index",
-      };
-    case "AUTHOR_ARTIST":
-      return {
-        display_name: [firstName, lastName].filter(Boolean).join(" ") || indexedName || pseudonym,
-        index_name: lastName && firstName ? `${lastName}, ${firstName}` : indexedName,
-        layout: "horizontal_index",
-      };
-    case "ORCHESTRATOR":
-      return {
-        display_name:
-          [shortenFirstName(firstName), firstLetter(lastName) ? `${firstLetter(lastName)}.` : "", lastName]
-            .filter(Boolean)
-            .join(" ") || indexedName || pseudonym,
-        index_name: lastName && firstName ? `${lastName},\n${firstName}` : indexedName,
-        layout: "vertical_index",
-      };
-    case "EXECUTIVE":
-      return {
-        display_name: [firstName, lastName].filter(Boolean).join(" ") || indexedName || pseudonym,
-        index_name: lastName && firstName ? `${lastName},\n${firstName}` : indexedName,
-        layout: "executive_layout",
-      };
-    default:
-      return {
-        display_name: pseudonym,
-        index_name: null,
-        layout: "single_line",
-      };
+  if ("status" in formatted) {
+    return {
+      display_name: identityData.pseudonym?.trim() ?? null,
+      index_name: null,
+      layout: "single_line",
+      meta: generateMeta(rank),
+    };
   }
+
+  return {
+    display_name: formatted.display_name,
+    index_name: formatted.index_name,
+    layout: formatted.layout,
+    meta: formatted.meta,
+  };
 }
 
 export function resolvePermissions(rank: AuthorReputationRank): AuthorPermissions {
@@ -383,7 +350,12 @@ export function runAuthorReputationSystemV1(
   const scores = computeScores(authorHistory, authorValueProfile, canonicalHistory);
   const currentRank = detectCurrentRank(authorHistory);
   const nextRank = determineNextRank(currentRank, scores);
-  const unlockedIdentity = resolveIdentityFormat(nextRank, identityData);
+  const formatPreferences: IdentityFormatPreferences = {
+    middle_name: identityData.middle_name ?? null,
+    executive_name: identityData.executive_name ?? null,
+    executive_index: identityData.executive_index ?? null,
+  };
+  const unlockedIdentity = resolveIdentityFormat(nextRank, identityData, formatPreferences);
   const unlockedPermissions = resolvePermissions(nextRank);
   const promoted = detectPromotion(currentRank, nextRank);
   const promotionEvent = promoted ? createPromotionEvent(authorId, currentRank, nextRank) : null;

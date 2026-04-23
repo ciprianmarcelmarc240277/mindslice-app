@@ -2704,6 +2704,67 @@ export function LiveSceneView(props: LiveSceneViewProps) {
                   : "none"}
               </li>
               <li>
+                slice learning loop: {executionEngineSuccess
+                  ? "status" in executionEngineSuccess.slice_learning_loop
+                    ? executionEngineSuccess.slice_learning_loop.message
+                    : executionEngineSuccess.slice_learning_loop.learning_cycle_output.threshold.threshold_state.classification
+                  : "none"}
+              </li>
+              <li>
+                slice learning canon: {executionEngineSuccess && !("status" in executionEngineSuccess.slice_learning_loop)
+                  ? executionEngineSuccess.slice_learning_loop.canonical_state
+                  : "none"}
+              </li>
+              <li>
+                slice learning score: {executionEngineSuccess && !("status" in executionEngineSuccess.slice_learning_loop)
+                  ? executionEngineSuccess.slice_learning_loop.learning_cycle_output.score
+                    ? executionEngineSuccess.slice_learning_loop.learning_cycle_output.score.total.toFixed(2)
+                    : "0.00"
+                  : "0.00"}
+              </li>
+              <li>
+                scoring engine: {executionEngineSuccess
+                  ? executionEngineSuccess.scoring_engine_result.total.toFixed(2)
+                  : "0.00"}
+              </li>
+              <li>
+                scoring C/I/F/R/E: {executionEngineSuccess
+                  ? `C ${executionEngineSuccess.scoring_engine_result.clarity.toFixed(2)} · I ${executionEngineSuccess.scoring_engine_result.impact.toFixed(2)} · F ${executionEngineSuccess.scoring_engine_result.frequency.toFixed(2)} · R ${executionEngineSuccess.scoring_engine_result.reusability.toFixed(2)} · E ${executionEngineSuccess.scoring_engine_result.expansion.toFixed(2)}`
+                  : "none"}
+              </li>
+              <li>
+                slice learning bias: {executionEngineSuccess && !("status" in executionEngineSuccess.slice_learning_loop)
+                  ? `${executionEngineSuccess.slice_learning_loop.updated_state.semantic_bias} · ${executionEngineSuccess.slice_learning_loop.updated_state.repetition_bias}`
+                  : "none"}
+              </li>
+              <li>
+                slice learning next context: {executionEngineSuccess && !("status" in executionEngineSuccess.slice_learning_loop)
+                  ? `${executionEngineSuccess.slice_learning_loop.updated_state.next_context.focus} · ${executionEngineSuccess.slice_learning_loop.updated_state.next_context.cluster_id}`
+                  : "none"}
+              </li>
+              <li>
+                slice repetition: {executionEngineSuccess
+                  ? `${executionEngineSuccess.slice_repetition_result.repetition_type} · ${executionEngineSuccess.slice_repetition_result.semantic_axis}`
+                  : "none"}
+              </li>
+              <li>
+                slice cluster: {executionEngineSuccess
+                  ? `${executionEngineSuccess.slice_repetition_result.cluster_id} · similarity ${executionEngineSuccess.slice_repetition_result.similarity.toFixed(2)}`
+                  : "none"}
+              </li>
+              <li>
+                slice evolution: {executionEngineSuccess
+                  ? executionEngineSuccess.slice_repetition_result.evolution
+                    ? `magnitude ${executionEngineSuccess.slice_repetition_result.evolution.magnitude.toFixed(2)} · structure ${executionEngineSuccess.slice_repetition_result.evolution.structure.toFixed(2)} · concepts ${executionEngineSuccess.slice_repetition_result.evolution.concepts.toFixed(2)} · intent ${executionEngineSuccess.slice_repetition_result.evolution.intent.toFixed(2)}`
+                    : "none"
+                  : "none"}
+              </li>
+              <li>
+                slice context: {executionEngineSuccess
+                  ? `${executionEngineSuccess.slice_repetition_result.context.total_slices} slices · axis ${executionEngineSuccess.slice_repetition_result.context.dominant_axis}`
+                  : "none"}
+              </li>
+              <li>
                 author value: {executionEngineSuccess
                   ? `${executionEngineSuccess.author_value_profile.total_value.toFixed(2)} · contribution ${executionEngineSuccess.author_value_profile.contribution.toFixed(2)} · consistency ${executionEngineSuccess.author_value_profile.consistency.toFixed(2)}`
                   : "none"}
@@ -2730,6 +2791,11 @@ export function LiveSceneView(props: LiveSceneViewProps) {
               <li>
                 unlocked identity: {executionEngineSuccess
                   ? `${executionEngineSuccess.author_reputation_result.unlocked_identity.display_name ?? "none"} · ${executionEngineSuccess.author_reputation_result.unlocked_identity.layout}`
+                  : "none"}
+              </li>
+              <li>
+                identity meta: {executionEngineSuccess
+                  ? `${executionEngineSuccess.author_reputation_result.unlocked_identity.meta.tier} · weight ${executionEngineSuccess.author_reputation_result.unlocked_identity.meta.visual_weight} · prestige ${executionEngineSuccess.author_reputation_result.unlocked_identity.meta.prestige_level}`
                   : "none"}
               </li>
               <li>

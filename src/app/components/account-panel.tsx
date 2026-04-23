@@ -25,6 +25,14 @@ type AccountPanelProps = {
   isEditingPseudonym: boolean;
   setIsEditingPseudonym: (value: boolean) => void;
   handlePseudonymSave: () => void;
+  middleNameInput: string;
+  setMiddleNameInput: (value: string) => void;
+  executiveNameInput: string;
+  setExecutiveNameInput: (value: string) => void;
+  executiveIndexInput: string;
+  setExecutiveIndexInput: (value: string) => void;
+  isSavingIdentityFormat: boolean;
+  handleIdentityFormatSave: () => void;
   bioInput: string;
   setBioInput: (value: string) => void;
   bioSaveState: "idle" | "saved";
@@ -88,6 +96,14 @@ export function AccountPanel(props: AccountPanelProps) {
     isEditingPseudonym,
     setIsEditingPseudonym,
     handlePseudonymSave,
+    middleNameInput,
+    setMiddleNameInput,
+    executiveNameInput,
+    setExecutiveNameInput,
+    executiveIndexInput,
+    setExecutiveIndexInput,
+    isSavingIdentityFormat,
+    handleIdentityFormatSave,
     bioInput,
     setBioInput,
     bioSaveState,
@@ -284,6 +300,50 @@ export function AccountPanel(props: AccountPanelProps) {
                     : bioSaveState === "saved"
                       ? "Bio salvat"
                       : "Salvează bio"}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.accountProfileItem}>
+            <span>Format identitate</span>
+            <div className={styles.accountInlineEditor}>
+              <input
+                type="text"
+                value={middleNameInput}
+                onChange={(event) => setMiddleNameInput(event.target.value)}
+                disabled={isSavingIdentityFormat}
+                className={styles.accountInput}
+                placeholder="Prenume median sau inițială pentru ORCHESTRATOR"
+              />
+              <input
+                type="text"
+                value={executiveNameInput}
+                onChange={(event) => setExecutiveNameInput(event.target.value)}
+                disabled={isSavingIdentityFormat}
+                className={styles.accountInput}
+                placeholder="Nume executiv afișat"
+              />
+              <textarea
+                value={executiveIndexInput}
+                onChange={(event) => setExecutiveIndexInput(event.target.value)}
+                disabled={isSavingIdentityFormat}
+                className={styles.accountTextarea}
+                placeholder={"Index executiv, ex:\nIonescu,\nAndrei"}
+                rows={3}
+              />
+              <p className={styles.accountHint}>
+                Aceste preferințe intră în joc doar la rank-urile care deblochează formate mai
+                avansate ale identității.
+              </p>
+              <div className={styles.accountActionRow}>
+                <button
+                  type="button"
+                  className={styles.accountButton}
+                  onClick={handleIdentityFormatSave}
+                  disabled={isSavingIdentityFormat}
+                >
+                  {isSavingIdentityFormat ? "Se salvează..." : "Salvează formatul"}
                 </button>
               </div>
             </div>

@@ -35,6 +35,9 @@ type UpdateProfilePayload = {
   addressForm?: string;
   displayName?: string;
   pseudonym?: string;
+  middleName?: string;
+  executiveName?: string;
+  executiveIndex?: string;
   nameDeclarationAccepted?: boolean;
   bio?: string;
   artistStatement?: string;
@@ -54,6 +57,14 @@ function normalizeArtistStatement(value: string) {
 }
 
 function normalizeBio(value: string) {
+  return value.trim().replace(/\r\n/g, "\n");
+}
+
+function normalizeOptionalIdentityValue(value: string) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function normalizeOptionalIdentityIndex(value: string) {
   return value.trim().replace(/\r\n/g, "\n");
 }
 
@@ -132,7 +143,9 @@ export async function GET() {
 
   const { data: existingIdentity } = await supabase
     .from("author_identities")
-    .select("type, pseudonym, first_name, last_name, indexed_name, consent_flag")
+    .select(
+      "type, pseudonym, first_name, middle_name, last_name, indexed_name, executive_name, executive_index, consent_flag",
+    )
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -234,8 +247,11 @@ export async function GET() {
       ...profile,
       identity_type: identityPayload.identityType,
       first_name: identityPayload.firstName,
+      middle_name: existingIdentity?.middle_name ?? null,
       last_name: identityPayload.lastName,
       indexed_name: identityPayload.indexedName,
+      executive_name: existingIdentity?.executive_name ?? null,
+      executive_index: existingIdentity?.executive_index ?? null,
       consent_flag: identityPayload.consentFlag,
       author_role: rolePayload,
     },
@@ -281,6 +297,18 @@ export async function PATCH(request: Request) {
     payload.displayName === undefined ? undefined : normalizeDisplayName(payload.displayName);
   const nextPseudonym =
     payload.pseudonym === undefined ? undefined : normalizePseudonym(payload.pseudonym);
+  const nextMiddleName =
+    payload.middleName === undefined
+      ? undefined
+      : normalizeOptionalIdentityValue(payload.middleName);
+  const nextExecutiveName =
+    payload.executiveName === undefined
+      ? undefined
+      : normalizeOptionalIdentityValue(payload.executiveName);
+  const nextExecutiveIndex =
+    payload.executiveIndex === undefined
+      ? undefined
+      : normalizeOptionalIdentityIndex(payload.executiveIndex);
   const nextNameDeclarationAccepted =
     payload.nameDeclarationAccepted === undefined
       ? undefined
@@ -332,6 +360,12 @@ export async function PATCH(request: Request) {
     .eq("user_id", userId)
     .maybeSingle();
 
+  const { data: existingIdentity } = await supabase
+    .from("author_identities")
+    .select("middle_name, executive_name, executive_index")
+    .eq("user_id", userId)
+    .maybeSingle();
+
   const hasActiveSubscription = existingProfile?.subscription_status === "active";
 
   if (
@@ -351,6 +385,9 @@ export async function PATCH(request: Request) {
     payload.addressForm === undefined &&
     nextDisplayName === undefined &&
     nextPseudonym === undefined &&
+    nextMiddleName === undefined &&
+    nextExecutiveName === undefined &&
+    nextExecutiveIndex === undefined &&
     nextNameDeclarationAccepted === undefined &&
     nextBio === undefined &&
     nextArtistStatement === undefined &&
@@ -359,7 +396,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json(
       {
         error:
-          "Trimite cel puțin addressForm, displayName, pseudonym, nameDeclarationAccepted, bio, artistStatement sau debutStatus.",
+          "Trimite cel puțin addressForm, displayName, pseudonym, middleName, executiveName, executiveIndex, nameDeclarationAccepted, bio, artistStatement sau debutStatus.",
       },
       { status: 400 },
     );
@@ -438,8 +475,20 @@ export async function PATCH(request: Request) {
       type: identityPayload.identityType,
       pseudonym: identityPayload.pseudonym,
       first_name: identityPayload.firstName,
+      middle_name:
+        nextMiddleName !== undefined
+          ? nextMiddleName || null
+          : (existingIdentity?.middle_name ?? null),
       last_name: identityPayload.lastName,
       indexed_name: identityPayload.indexedName,
+      executive_name:
+        nextExecutiveName !== undefined
+          ? nextExecutiveName || null
+          : (existingIdentity?.executive_name ?? null),
+      executive_index:
+        nextExecutiveIndex !== undefined
+          ? nextExecutiveIndex || null
+          : (existingIdentity?.executive_index ?? null),
       consent_flag: identityPayload.consentFlag,
       updated_at: new Date().toISOString(),
     },
@@ -468,8 +517,20 @@ export async function PATCH(request: Request) {
       ...profile,
       identity_type: identityPayload.identityType,
       first_name: identityPayload.firstName,
+      middle_name:
+        nextMiddleName !== undefined
+          ? nextMiddleName || null
+          : (existingIdentity?.middle_name ?? null),
       last_name: identityPayload.lastName,
       indexed_name: identityPayload.indexedName,
+      executive_name:
+        nextExecutiveName !== undefined
+          ? nextExecutiveName || null
+          : (existingIdentity?.executive_name ?? null),
+      executive_index:
+        nextExecutiveIndex !== undefined
+          ? nextExecutiveIndex || null
+          : (existingIdentity?.executive_index ?? null),
       consent_flag: identityPayload.consentFlag,
       author_role: rolePayload,
     },

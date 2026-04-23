@@ -434,6 +434,13 @@ export default function Home() {
     isSavingPseudonym,
     isEditingPseudonym,
     setIsEditingPseudonym,
+    middleNameInput,
+    setMiddleNameInput,
+    executiveNameInput,
+    setExecutiveNameInput,
+    executiveIndexInput,
+    setExecutiveIndexInput,
+    isSavingIdentityFormat,
     bioInput,
     setBioInput,
     bioSaveState,
@@ -455,6 +462,7 @@ export default function Home() {
     handleAddressFormChange,
     handleDisplayNameSave,
     handlePseudonymSave,
+    handleIdentityFormatSave,
     handleBioSave,
     handleNameDeclarationChange,
     handleDebutProgramSave,
@@ -1778,6 +1786,14 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
           isEditingPseudonym={isEditingPseudonym}
           setIsEditingPseudonym={setIsEditingPseudonym}
           handlePseudonymSave={handlePseudonymSave}
+          middleNameInput={middleNameInput}
+          setMiddleNameInput={setMiddleNameInput}
+          executiveNameInput={executiveNameInput}
+          setExecutiveNameInput={setExecutiveNameInput}
+          executiveIndexInput={executiveIndexInput}
+          setExecutiveIndexInput={setExecutiveIndexInput}
+          isSavingIdentityFormat={isSavingIdentityFormat}
+          handleIdentityFormatSave={handleIdentityFormatSave}
           bioInput={bioInput}
           setBioInput={setBioInput}
           bioSaveState={bioSaveState}

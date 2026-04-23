@@ -17,12 +17,24 @@ import {
   runLearningLoopEngineV2,
   type LearningLoopResult,
 } from "@/lib/mindslice/concept-learning-loop-engine-system";
+import {
+  runLearningLoopEngineV2Slices,
+  type SliceLearningLoopResult,
+} from "@/lib/mindslice/concept-learning-loop-engine-slices-system";
 import { runParserEngine, type ParsedSliceObject } from "@/lib/mindslice/concept-parser-engine-system";
+import {
+  runScoringEngineV1,
+  type ScoringProfile,
+} from "@/lib/mindslice/concept-scoring-engine-system";
 import {
   runThresholdModelV2,
   type HistoricalMemorySignal,
   type ThresholdModelResult,
 } from "@/lib/mindslice/concept-threshold-model-system";
+import type {
+  SliceRepetitionInput,
+  SliceRepetitionResult,
+} from "@/lib/mindslice/concept-slice-repetition-engine-system";
 import type {
   CanonInfluenceContext,
   ClockDisplayState,
@@ -104,6 +116,9 @@ export type ExecutionEngineResult =
       learning_state: ExecutionLearningState;
       threshold_model: ThresholdModelResult;
       learning_loop: LearningLoopResult;
+      slice_learning_loop: SliceLearningLoopResult;
+      scoring_engine_result: ScoringProfile;
+      slice_repetition_result: SliceRepetitionResult;
       author_value_profile: AuthorValueProfile;
       author_reputation_result: AuthorReputationResult;
     }
@@ -115,6 +130,7 @@ type RunExecutionEngineInput = {
   history?: HistoryEntry[];
   thoughtMemory?: ThoughtMemoryEntry[];
   authorValueHistory?: AuthorHistoricalDataPoint[];
+  sliceRepetitionHistory?: SliceRepetitionInput[];
   interference?: LiveInterference | null;
   canonInfluence?: CanonInfluenceContext | null;
   clockDisplay?: ClockDisplayState | null;
@@ -814,6 +830,27 @@ function buildAuthorHistoricalData(input: Omit<RunExecutionEngineInput, "rawSlic
   return [...fromDedicatedHistory, ...fromThoughtMemory, ...fromHistory];
 }
 
+function buildHistoricalSlices(
+  input: Omit<RunExecutionEngineInput, "rawSliceText">,
+): SliceRepetitionInput[] {
+  const fromDedicatedHistory = input.sliceRepetitionHistory ?? [];
+  const fromThoughtMemory = (input.thoughtMemory ?? []).map((entry) => ({
+    id: entry.id,
+    text: entry.thought,
+    cluster_id: entry.keywords[0] ?? null,
+    created_at: entry.created_at,
+  }));
+
+  const fromHistory = (input.history ?? []).map((entry, index) => ({
+    id: `history_${index}`,
+    text: entry.text,
+    cluster_id: null,
+    created_at: entry.time,
+  }));
+
+  return [...fromDedicatedHistory, ...fromThoughtMemory, ...fromHistory];
+}
+
 function buildAuthorReputationHistory(
   input: Omit<RunExecutionEngineInput, "rawSliceText">,
   authorHistory: AuthorHistoricalDataPoint[],
@@ -930,8 +967,58 @@ export function runExecutionEngineV3(
     author_id: normalizedInput.user?.user_id ?? "anonymous_author",
     historical_author_data: buildAuthorHistoricalData(normalizedInput),
     historical_memory: buildHistoricalMemorySignals(normalizedInput),
+    historical_slices: buildHistoricalSlices(normalizedInput),
     analytic_profile: analyticProfile,
   });
+  const sliceLearningLoop = runLearningLoopEngineV2Slices({
+    parsed_slice: parsedSlice,
+    historical_slices: buildHistoricalSlices(normalizedInput),
+    system_memory: {
+      legacy: [],
+      canon: [],
+    },
+    historical_memory: buildHistoricalMemorySignals(normalizedInput),
+  });
+  const sliceRepetitionResult =
+    "status" in sliceLearningLoop
+      ? {
+          slice_id: "current_slice",
+          cluster_id: "cluster_fallback",
+          semantic_axis: analyticProfile.subject || "general",
+          similarity: 0,
+          repetition_type: "NEW_SLICE" as const,
+          evolution: null,
+          context: {
+            total_slices: 0,
+            dominant_axis: "general",
+            evolution_path: [],
+          },
+        }
+      : sliceLearningLoop.learning_cycle_output.repetition;
+  const scoringEngineResult =
+    "status" in sliceLearningLoop
+      ? runScoringEngineV1(
+          {
+            stored_concepts: unique([
+              analyticProfile.subject,
+              ...(parsedSlice.metadata.tags ?? []).slice(0, 4),
+            ].filter((value): value is string => Boolean(value))),
+            stored_insights: splitSentences(parsedSlice.content.text).slice(0, 5),
+            stored_structure: "single_block",
+          },
+          {
+            repetition_type: sliceRepetitionResult.repetition_type,
+            evolution: sliceRepetitionResult.evolution,
+          },
+          thresholdModel,
+          sliceRepetitionResult.context,
+        )
+      : runScoringEngineV1(
+          sliceLearningLoop.learning_cycle_output.legacy,
+          sliceLearningLoop.learning_cycle_output.repetition,
+          sliceLearningLoop.learning_cycle_output.threshold,
+          sliceLearningLoop.learning_cycle_output.repetition.context,
+        );
   const authorValueProfile =
     "status" in learningLoop
       ? runAuthorValueSystemV1(
@@ -977,6 +1064,9 @@ export function runExecutionEngineV3(
     learning_state: learningState,
     threshold_model: thresholdModel,
     learning_loop: learningLoop,
+    slice_learning_loop: sliceLearningLoop,
+    scoring_engine_result: scoringEngineResult,
+    slice_repetition_result: sliceRepetitionResult,
     author_value_profile: authorValueProfile,
     author_reputation_result: authorReputationResult,
   };

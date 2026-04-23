@@ -13,6 +13,11 @@ import {
   type HistoricalMemorySignal,
   type ThresholdModelResult,
 } from "@/lib/mindslice/concept-threshold-model-system";
+import {
+  runSliceRepetitionEngineV1,
+  type SliceRepetitionInput,
+  type SliceRepetitionResult,
+} from "@/lib/mindslice/concept-slice-repetition-engine-system";
 
 export type LearningLoopDecision = "RESTART" | "LOOP_BACK" | "REFINE" | "STORE" | "CANON_CHECK";
 
@@ -75,6 +80,7 @@ export type LearningCycleOutput = {
   learning: LearningLoopLearning;
   recap: LearningLoopRecap;
   threshold: ThresholdModelResult;
+  slice_repetition_result: SliceRepetitionResult;
   legacy: LearningLoopLegacy;
   score: LearningLoopScore;
   canon_result: CanonEngineResult;
@@ -95,6 +101,7 @@ export type LearningLoopInput = {
   historical_author_data?: AuthorHistoricalDataPoint[];
   system_memory?: LearningLoopLegacy[];
   historical_memory?: HistoricalMemorySignal[];
+  historical_slices?: SliceRepetitionInput[];
   analytic_profile?: AnalyticProfile;
   max_depth?: number;
 };
@@ -432,6 +439,25 @@ function refine(recap: LearningLoopRecap) {
   };
 }
 
+function buildCurrentSlice(executionInput: unknown): SliceRepetitionInput {
+  const record = asRecord(executionInput);
+  const parsedSlice = asRecord(record.parsed_slice);
+  const parsedContent = asRecord(parsedSlice.content);
+  const analytic = asRecord(record.analytic_profile);
+
+  return {
+    id:
+      (typeof parsedSlice.slice_id === "string" && parsedSlice.slice_id) ||
+      (typeof record.slice_id === "string" && record.slice_id) ||
+      "current_slice",
+    text:
+      (typeof parsedContent.text === "string" && parsedContent.text) ||
+      (typeof record.thought === "string" && record.thought) ||
+      (typeof analytic.quote === "string" && analytic.quote) ||
+      "",
+  };
+}
+
 export function runLearningLoopEngineV2(input: LearningLoopInput, depth = 0): LearningLoopResult {
   const maxDepth = input.max_depth ?? 2;
   const systemMemory = input.system_memory ?? [];
@@ -458,6 +484,10 @@ export function runLearningLoopEngineV2(input: LearningLoopInput, depth = 0): Le
     );
   }
 
+  const sliceRepetitionResult = runSliceRepetitionEngineV1(
+    buildCurrentSlice(input.execution_input),
+    input.historical_slices ?? [],
+  );
   const legacy = processLegacy(recap, systemMemory);
   const score = processScoring(legacy);
   const canonResult = processCanon(score, legacy, threshold, historicalMemory);
@@ -478,6 +508,7 @@ export function runLearningLoopEngineV2(input: LearningLoopInput, depth = 0): Le
       learning,
       recap,
       threshold,
+      slice_repetition_result: sliceRepetitionResult,
       legacy,
       score,
       canon_result: canonResult,

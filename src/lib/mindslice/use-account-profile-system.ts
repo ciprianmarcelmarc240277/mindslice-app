@@ -50,6 +50,10 @@ export function useAccountProfileSystem({
   const [pseudonymInput, setPseudonymInput] = useState("");
   const [isSavingPseudonym, setIsSavingPseudonym] = useState(false);
   const [isEditingPseudonym, setIsEditingPseudonym] = useState(false);
+  const [middleNameInput, setMiddleNameInput] = useState("");
+  const [executiveNameInput, setExecutiveNameInput] = useState("");
+  const [executiveIndexInput, setExecutiveIndexInput] = useState("");
+  const [isSavingIdentityFormat, setIsSavingIdentityFormat] = useState(false);
   const [bioInput, setBioInput] = useState("");
   const [bioSaveState, setBioSaveState] = useState<"idle" | "saved">("idle");
   const [isSavingBio, setIsSavingBio] = useState(false);
@@ -100,6 +104,9 @@ export function useAccountProfileSystem({
           setIsAdmin(Boolean(payload.isAdmin));
           setDisplayNameInput(payload.profile?.display_name ?? "");
           setPseudonymInput(payload.profile?.pseudonym ?? "");
+          setMiddleNameInput(payload.profile?.middle_name ?? "");
+          setExecutiveNameInput(payload.profile?.executive_name ?? "");
+          setExecutiveIndexInput(payload.profile?.executive_index ?? "");
           setBioInput(payload.profile?.bio ?? "");
           setBioSaveState("idle");
           setArtistStatementInput(payload.profile?.artist_statement ?? "");
@@ -296,6 +303,44 @@ export function useAccountProfileSystem({
       onMessage(error instanceof Error ? error.message : "Nu am putut actualiza pseudonimul.");
     } finally {
       setIsSavingPseudonym(false);
+    }
+  }
+
+  async function handleIdentityFormatSave() {
+    if (!isSignedIn) {
+      onMessage("Autentifică-te ca să-ți poți seta formatul identității.");
+      return;
+    }
+
+    setIsSavingIdentityFormat(true);
+
+    try {
+      const response = await fetch("/api/user-state", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          middleName: middleNameInput,
+          executiveName: executiveNameInput,
+          executiveIndex: executiveIndexInput,
+        }),
+      });
+
+      const payload = (await response.json()) as { profile?: UserProfile; error?: string };
+      if (!response.ok || !payload.profile) {
+        throw new Error(payload.error || "Nu am putut actualiza formatul identității.");
+      }
+
+      setProfile(payload.profile);
+      setMiddleNameInput(payload.profile.middle_name ?? "");
+      setExecutiveNameInput(payload.profile.executive_name ?? "");
+      setExecutiveIndexInput(payload.profile.executive_index ?? "");
+      onMessage("Preferințele de format pentru identitate au fost actualizate.");
+    } catch (error) {
+      onMessage(
+        error instanceof Error ? error.message : "Nu am putut actualiza formatul identității.",
+      );
+    } finally {
+      setIsSavingIdentityFormat(false);
     }
   }
 
@@ -514,6 +559,13 @@ export function useAccountProfileSystem({
     isSavingPseudonym,
     isEditingPseudonym,
     setIsEditingPseudonym,
+    middleNameInput,
+    setMiddleNameInput,
+    executiveNameInput,
+    setExecutiveNameInput,
+    executiveIndexInput,
+    setExecutiveIndexInput,
+    isSavingIdentityFormat,
     bioInput,
     setBioInput,
     bioSaveState,
@@ -535,6 +587,7 @@ export function useAccountProfileSystem({
     handleAddressFormChange,
     handleDisplayNameSave,
     handlePseudonymSave,
+    handleIdentityFormatSave,
     handleBioSave,
     handleNameDeclarationChange,
     handleDebutProgramSave,

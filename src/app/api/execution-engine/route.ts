@@ -12,6 +12,7 @@ import {
 } from "@/lib/mindslice/concept-canon-engine-system";
 import type { AuthorHistoricalDataPoint } from "@/lib/mindslice/concept-author-value-system";
 import { runExecutionEngineV3, type ExecutionEngineResult } from "@/lib/mindslice/concept-execution-engine-system";
+import type { SliceRepetitionInput } from "@/lib/mindslice/concept-slice-repetition-engine-system";
 import type { UserProfile } from "@/lib/mindslice/mindslice-types";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -44,7 +45,9 @@ async function loadProfile(userId: string | null): Promise<UserProfile | null> {
       .maybeSingle(),
     supabase
       .from("author_identities")
-      .select("type, first_name, last_name, indexed_name, consent_flag")
+      .select(
+        "type, first_name, middle_name, last_name, indexed_name, executive_name, executive_index, consent_flag",
+      )
       .eq("user_id", userId)
       .maybeSingle(),
     supabase
@@ -62,8 +65,11 @@ async function loadProfile(userId: string | null): Promise<UserProfile | null> {
     ...profile,
     identity_type: (identity?.type as UserProfile["identity_type"]) ?? "pseudonym",
     first_name: identity?.first_name ?? null,
+    middle_name: identity?.middle_name ?? null,
     last_name: identity?.last_name ?? null,
     indexed_name: identity?.indexed_name ?? null,
+    executive_name: identity?.executive_name ?? null,
+    executive_index: identity?.executive_index ?? null,
     consent_flag: identity?.consent_flag ?? false,
     author_role: role?.role ?? "free",
   };
@@ -126,6 +132,37 @@ async function loadAuthorValueHistory(userId: string | null): Promise<AuthorHist
   }));
 }
 
+async function loadSliceRepetitionHistory(userId: string | null): Promise<SliceRepetitionInput[]> {
+  if (!userId) {
+    return [];
+  }
+
+  let supabase;
+  try {
+    supabase = createServerSupabaseClient();
+  } catch {
+    return [];
+  }
+
+  const { data } = await supabase
+    .from("mindslice_slice_repetition_states")
+    .select("slice_id, cluster_id, slice_text, created_at")
+    .eq("user_id", userId)
+    .order("updated_at", { ascending: false })
+    .limit(96);
+
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
+  return data.map((entry) => ({
+    id: typeof entry.slice_id === "string" ? entry.slice_id : undefined,
+    text: typeof entry.slice_text === "string" ? entry.slice_text : "",
+    cluster_id: typeof entry.cluster_id === "string" ? entry.cluster_id : null,
+    created_at: typeof entry.created_at === "string" ? entry.created_at : undefined,
+  }));
+}
+
 function byteSize(value: unknown) {
   return new TextEncoder().encode(JSON.stringify(value)).length;
 }
@@ -171,6 +208,7 @@ function buildLearningCycleRow(userId: string, result: ExecutionEngineResult) {
       threshold_state: {},
       decision_flags: {},
       updated_state: {},
+      slice_repetition_state: {},
       learning_summary: compactPayload,
       full_payload: null,
     };
@@ -195,6 +233,10 @@ function buildLearningCycleRow(userId: string, result: ExecutionEngineResult) {
     parsed_content_type: result.parsed_slice.content.type,
     analytic_subject: result.analytic_profile.subject,
     analytic_importance: result.analytic_profile.importance,
+    slice_cluster_id: result.slice_repetition_result.cluster_id,
+    slice_semantic_axis: result.slice_repetition_result.semantic_axis,
+    slice_repetition_type: result.slice_repetition_result.repetition_type,
+    slice_similarity: result.slice_repetition_result.similarity,
     executed_steps: result.execution_log.map((entry) => entry.step),
     weak_steps: result.learning_state.weak_steps,
     learning_loop_status: learningLoopFailed ? learningLoop.message : "ok",
@@ -217,6 +259,7 @@ function buildLearningCycleRow(userId: string, result: ExecutionEngineResult) {
     threshold_state: thresholdState,
     decision_flags: result.threshold_model.flags,
     updated_state: learningLoopFailed ? {} : learningLoop.updated_state,
+    slice_repetition_state: result.slice_repetition_result,
     learning_summary: compactPayload,
     full_payload: shouldStoreFullPayload ? result : null,
   };
@@ -237,6 +280,115 @@ async function saveLearningCycle(userId: string | null, result: ExecutionEngineR
   await supabase
     .from("mindslice_learning_cycles")
     .insert(buildLearningCycleRow(userId, result));
+}
+
+async function saveSliceRepetitionMemory(userId: string | null, result: ExecutionEngineResult) {
+  if (!userId || isExecutionFailure(result)) {
+    return;
+  }
+
+  let supabase;
+  try {
+    supabase = createServerSupabaseClient();
+  } catch {
+    return;
+  }
+
+  const sliceRepetition = result.slice_repetition_result;
+  const sliceId = sliceRepetition.slice_id || result.parsed_slice.content.text.slice(0, 64);
+  const sliceText = result.parsed_slice.content.text;
+
+  await supabase.from("mindslice_slice_clusters").upsert(
+    {
+      user_id: userId,
+      cluster_id: sliceRepetition.cluster_id,
+      semantic_axis: sliceRepetition.semantic_axis,
+      dominant_axis: sliceRepetition.context.dominant_axis,
+      total_slices: sliceRepetition.context.total_slices,
+      evolution_path: sliceRepetition.context.evolution_path,
+      cluster_payload: sliceRepetition,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,cluster_id" },
+  );
+
+  await supabase.from("mindslice_slice_repetition_states").upsert(
+    {
+      user_id: userId,
+      slice_id: sliceId,
+      cluster_id: sliceRepetition.cluster_id,
+      semantic_axis: sliceRepetition.semantic_axis,
+      similarity: sliceRepetition.similarity,
+      repetition_type: sliceRepetition.repetition_type,
+      evolution: sliceRepetition.evolution ?? {},
+      context: sliceRepetition.context,
+      slice_text: sliceText,
+      slice_payload: sliceRepetition,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,slice_id" },
+  );
+}
+
+async function saveSliceLearningCycle(
+  userId: string | null,
+  result: ExecutionEngineResult,
+) {
+  if (!userId || isExecutionFailure(result)) {
+    return;
+  }
+
+  let supabase;
+  try {
+    supabase = createServerSupabaseClient();
+  } catch {
+    return;
+  }
+
+  const sliceLearningLoop = result.slice_learning_loop;
+  const cycleStatus =
+    "status" in sliceLearningLoop
+      ? "failure"
+      : sliceLearningLoop.canonical_state === "CANONICAL"
+        ? "canonical_candidate"
+        : sliceLearningLoop.learning_cycle_output.threshold.threshold_state.classification === "FRAGMENT"
+          ? "fragment"
+          : "success";
+  const classification =
+    "status" in sliceLearningLoop
+      ? "NOISE"
+      : sliceLearningLoop.learning_cycle_output.threshold.threshold_state.classification;
+  const sliceId = result.slice_repetition_result.slice_id || result.parsed_slice.content.text.slice(0, 64);
+
+  await supabase.from("mindslice_slice_learning_cycles").upsert(
+    {
+      user_id: userId,
+      slice_id: sliceId,
+      cluster_id: result.slice_repetition_result.cluster_id,
+      cycle_status: cycleStatus,
+      classification,
+      canonical_state: "status" in sliceLearningLoop ? "NON_CANON" : sliceLearningLoop.canonical_state,
+      score_total:
+        "status" in sliceLearningLoop || !sliceLearningLoop.learning_cycle_output.score
+          ? null
+          : sliceLearningLoop.learning_cycle_output.score.total,
+      repetition_type: result.slice_repetition_result.repetition_type,
+      updated_state: "status" in sliceLearningLoop ? {} : sliceLearningLoop.updated_state,
+      learning_summary:
+        "status" in sliceLearningLoop
+          ? { status: sliceLearningLoop.status, message: sliceLearningLoop.message }
+          : {
+              semantic_axis: result.slice_repetition_result.semantic_axis,
+              repetition_type: result.slice_repetition_result.repetition_type,
+              threshold_classification:
+                sliceLearningLoop.learning_cycle_output.threshold.threshold_state.classification,
+              next_context: sliceLearningLoop.updated_state.next_context,
+            },
+      full_payload: "status" in sliceLearningLoop ? null : sliceLearningLoop,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,slice_id" },
+  );
 }
 
 async function saveAuthorValueProfile(userId: string | null, result: ExecutionEngineResult) {
@@ -480,17 +632,21 @@ export async function POST(request: Request) {
   }
 
   const { userId } = await auth();
-  const [profile, authorValueHistory] = await Promise.all([
+  const [profile, authorValueHistory, sliceRepetitionHistory] = await Promise.all([
     loadProfile(userId),
     loadAuthorValueHistory(userId),
+    loadSliceRepetitionHistory(userId),
   ]);
   const result = runExecutionEngineV3({
     rawSliceText,
     user: profile,
     authorValueHistory,
+    sliceRepetitionHistory,
   });
 
   await saveLearningCycle(userId, result);
+  await saveSliceLearningCycle(userId, result);
+  await saveSliceRepetitionMemory(userId, result);
   await saveAuthorValueProfile(userId, result);
   await saveAuthorReputationEvent(userId, result);
   await saveCanonResult(userId, result);

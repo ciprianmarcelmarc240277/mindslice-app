@@ -12,8 +12,11 @@ create table if not exists public.author_identities (
     check (type in ('pseudonym', 'indexed')),
   pseudonym text,
   first_name text,
+  middle_name text,
   last_name text,
   indexed_name text,
+  executive_name text,
+  executive_index text,
   consent_flag boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

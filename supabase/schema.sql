@@ -36,8 +36,11 @@ create table if not exists public.author_identities (
     check (type in ('pseudonym', 'indexed')),
   pseudonym text,
   first_name text,
+  middle_name text,
   last_name text,
   indexed_name text,
+  executive_name text,
+  executive_index text,
   consent_flag boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -95,6 +98,15 @@ alter table public.profiles
 
 alter table public.profiles
   add column if not exists bio text;
+
+alter table public.author_identities
+  add column if not exists middle_name text;
+
+alter table public.author_identities
+  add column if not exists executive_name text;
+
+alter table public.author_identities
+  add column if not exists executive_index text;
 
 create index if not exists author_identities_user_type_idx
   on public.author_identities (user_id, type);
@@ -328,6 +340,7 @@ create table if not exists public.mindslice_learning_cycles (
   threshold_state jsonb not null default '{}'::jsonb,
   decision_flags jsonb not null default '{}'::jsonb,
   updated_state jsonb not null default '{}'::jsonb,
+  slice_repetition_state jsonb not null default '{}'::jsonb,
   learning_summary jsonb not null default '{}'::jsonb,
   full_payload jsonb,
   created_at timestamptz not null default now()
@@ -357,6 +370,59 @@ create table if not exists public.mindslice_author_value_states (
   profile_payload jsonb not null default '{}'::jsonb,
   reputation_payload jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
+);
+
+create table if not exists public.mindslice_slice_clusters (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null references public.profiles(user_id) on delete cascade,
+  cluster_id text not null,
+  semantic_axis text,
+  dominant_axis text,
+  total_slices integer not null default 0,
+  evolution_path jsonb not null default '[]'::jsonb,
+  cluster_payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint mindslice_slice_clusters_user_cluster_unique unique (user_id, cluster_id)
+);
+
+create table if not exists public.mindslice_slice_repetition_states (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null references public.profiles(user_id) on delete cascade,
+  slice_id text not null,
+  cluster_id text not null,
+  semantic_axis text,
+  similarity numeric not null default 0,
+  repetition_type text not null
+    check (repetition_type in ('NEW_SLICE', 'STATIC_REPETITION', 'PROGRESSIVE_REPETITION', 'TRANSFORMATIVE_REPETITION')),
+  evolution jsonb not null default '{}'::jsonb,
+  context jsonb not null default '{}'::jsonb,
+  slice_text text,
+  slice_payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint mindslice_slice_repetitions_user_slice_unique unique (user_id, slice_id)
+);
+
+create table if not exists public.mindslice_slice_learning_cycles (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null references public.profiles(user_id) on delete cascade,
+  slice_id text not null,
+  cluster_id text,
+  cycle_status text not null
+    check (cycle_status in ('success', 'failure', 'fragment', 'canonical_candidate')),
+  classification text not null
+    check (classification in ('NOISE', 'FRAGMENT', 'PRE_CONCEPT', 'CONCEPT', 'CANONICAL_CANDIDATE')),
+  canonical_state text not null default 'NON_CANON',
+  score_total numeric,
+  repetition_type text
+    check (repetition_type in ('NEW_SLICE', 'STATIC_REPETITION', 'PROGRESSIVE_REPETITION', 'TRANSFORMATIVE_REPETITION')),
+  updated_state jsonb not null default '{}'::jsonb,
+  learning_summary jsonb not null default '{}'::jsonb,
+  full_payload jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint mindslice_slice_learning_cycles_user_slice_unique unique (user_id, slice_id)
 );
 
 create table if not exists public.author_reputation_events (
@@ -422,6 +488,18 @@ create index if not exists mindslice_author_value_states_user_created_at_idx
 create index if not exists mindslice_author_value_states_author_created_at_idx
   on public.mindslice_author_value_states (author_id, created_at desc);
 
+create index if not exists mindslice_slice_clusters_user_updated_at_idx
+  on public.mindslice_slice_clusters (user_id, updated_at desc);
+
+create index if not exists mindslice_slice_repetitions_user_created_at_idx
+  on public.mindslice_slice_repetition_states (user_id, created_at desc);
+
+create index if not exists mindslice_slice_repetitions_user_cluster_idx
+  on public.mindslice_slice_repetition_states (user_id, cluster_id, updated_at desc);
+
+create index if not exists mindslice_slice_learning_cycles_user_updated_at_idx
+  on public.mindslice_slice_learning_cycles (user_id, updated_at desc);
+
 create index if not exists author_reputation_events_user_created_at_idx
   on public.author_reputation_events (user_id, created_at desc);
 
@@ -447,6 +525,9 @@ alter table public.mindslice_memory_states enable row level security;
 alter table public.mindslice_canon_states enable row level security;
 alter table public.mindslice_learning_cycles enable row level security;
 alter table public.mindslice_author_value_states enable row level security;
+alter table public.mindslice_slice_clusters enable row level security;
+alter table public.mindslice_slice_repetition_states enable row level security;
+alter table public.mindslice_slice_learning_cycles enable row level security;
 alter table public.author_reputation_events enable row level security;
 
 drop policy if exists "users_owner_read" on public.users;
@@ -946,6 +1027,81 @@ create policy "mindslice_author_value_states_owner_insert"
 drop policy if exists "mindslice_author_value_states_owner_delete" on public.mindslice_author_value_states;
 create policy "mindslice_author_value_states_owner_delete"
   on public.mindslice_author_value_states
+  for delete
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_slice_clusters_owner_read" on public.mindslice_slice_clusters;
+create policy "mindslice_slice_clusters_owner_read"
+  on public.mindslice_slice_clusters
+  for select
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_slice_clusters_owner_insert" on public.mindslice_slice_clusters;
+create policy "mindslice_slice_clusters_owner_insert"
+  on public.mindslice_slice_clusters
+  for insert
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_slice_clusters_owner_update" on public.mindslice_slice_clusters;
+create policy "mindslice_slice_clusters_owner_update"
+  on public.mindslice_slice_clusters
+  for update
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''))
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_slice_clusters_owner_delete" on public.mindslice_slice_clusters;
+create policy "mindslice_slice_clusters_owner_delete"
+  on public.mindslice_slice_clusters
+  for delete
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_slice_repetitions_owner_read" on public.mindslice_slice_repetition_states;
+create policy "mindslice_slice_repetitions_owner_read"
+  on public.mindslice_slice_repetition_states
+  for select
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_slice_repetitions_owner_insert" on public.mindslice_slice_repetition_states;
+create policy "mindslice_slice_repetitions_owner_insert"
+  on public.mindslice_slice_repetition_states
+  for insert
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_slice_repetitions_owner_update" on public.mindslice_slice_repetition_states;
+create policy "mindslice_slice_repetitions_owner_update"
+  on public.mindslice_slice_repetition_states
+  for update
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''))
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_slice_repetitions_owner_delete" on public.mindslice_slice_repetition_states;
+create policy "mindslice_slice_repetitions_owner_delete"
+  on public.mindslice_slice_repetition_states
+  for delete
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_slice_learning_cycles_owner_read" on public.mindslice_slice_learning_cycles;
+create policy "mindslice_slice_learning_cycles_owner_read"
+  on public.mindslice_slice_learning_cycles
+  for select
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_slice_learning_cycles_owner_insert" on public.mindslice_slice_learning_cycles;
+create policy "mindslice_slice_learning_cycles_owner_insert"
+  on public.mindslice_slice_learning_cycles
+  for insert
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_slice_learning_cycles_owner_update" on public.mindslice_slice_learning_cycles;
+create policy "mindslice_slice_learning_cycles_owner_update"
+  on public.mindslice_slice_learning_cycles
+  for update
+  using (user_id = coalesce(auth.jwt() ->> 'sub', ''))
+  with check (user_id = coalesce(auth.jwt() ->> 'sub', ''));
+
+drop policy if exists "mindslice_slice_learning_cycles_owner_delete" on public.mindslice_slice_learning_cycles;
+create policy "mindslice_slice_learning_cycles_owner_delete"
+  on public.mindslice_slice_learning_cycles
   for delete
   using (user_id = coalesce(auth.jwt() ->> 'sub', ''));
 
