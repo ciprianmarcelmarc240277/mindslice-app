@@ -2,7 +2,7 @@ import type { InfluenceMode } from "@/lib/mindslice/mindslice-types";
 
 const THOUGHT_OVERLAY_HOLD_MS = 8000;
 const THOUGHT_STAGE_REST_MS = 15000;
-const THOUGHT_SLICE_DURATION_MS = 10 * 60 * 1000;
+const THOUGHT_SLICE_DURATION_MS = 30 * 1000;
 export type { InfluenceMode } from "@/lib/mindslice/mindslice-types";
 
 type ThoughtTriad = {

@@ -3,7 +3,10 @@ import type {
   InfluenceMode,
   ThoughtState,
 } from "@/lib/mindslice/mindslice-types";
-import { runParserEngine, type ParsedSliceObject } from "@/lib/mindslice/concept-parser-engine-system";
+import {
+  runMultiSliceParserEngine,
+  type ParsedSliceObject,
+} from "@/lib/mindslice/concept-parser-engine-system";
 import {
   contaminationModeRules,
   liveThoughtSceneRules,
@@ -584,8 +587,10 @@ export function buildSlicesEngineResult(
   content: string,
   contamination: ContaminationSource | null,
 ): SliceEngineResult {
-  const parsedSlice = runParserEngine(content);
-  const baseSlices = parsedSlice ? [buildSliceFromParsedObject(parsedSlice)].filter((slice): slice is SliceState => slice !== null) : [];
+  const parsedSlices = runMultiSliceParserEngine(content);
+  const baseSlices = parsedSlices
+    .map((parsedSlice) => buildSliceFromParsedObject(parsedSlice))
+    .filter((slice): slice is SliceState => slice !== null);
   const slices = contamination
     ? baseSlices.map((slice, index) => applyContamination(slice, contamination, index))
     : baseSlices;

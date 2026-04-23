@@ -135,6 +135,25 @@ export function extractBlock(raw: string, blockName: string) {
   return match?.[1]?.trim() ?? null;
 }
 
+export function extractSliceDocuments(raw: string) {
+  const normalized = normalizeLineEndings(raw);
+  const pattern = new RegExp(
+    `${escapeRegExp(MINDSLICE_SLICE_START)}([\\s\\S]*?)${escapeRegExp(MINDSLICE_SLICE_END)}`,
+    "g",
+  );
+  const documents: string[] = [];
+
+  for (const match of normalized.matchAll(pattern)) {
+    const documentBody = match[0]?.trim();
+
+    if (documentBody) {
+      documents.push(documentBody);
+    }
+  }
+
+  return documents;
+}
+
 export function parseIdentity(block: string | null): ParsedSliceIdentity {
   return {
     type: extractValue(block, "TYPE"),
@@ -256,4 +275,17 @@ export function runParserEngine(rawSliceText: string): ParsedSliceObject | null 
   const parsed = buildParsedSliceObject(identity, content, process, metadata, control);
 
   return normalizeParsedSlice(parsed);
+}
+
+export function runMultiSliceParserEngine(rawSliceText: string): ParsedSliceObject[] {
+  const sliceDocuments = extractSliceDocuments(rawSliceText);
+
+  if (!sliceDocuments.length) {
+    const single = runParserEngine(rawSliceText);
+    return single ? [single] : [];
+  }
+
+  return sliceDocuments
+    .map((document) => runParserEngine(document))
+    .filter((parsed): parsed is ParsedSliceObject => parsed !== null);
 }
