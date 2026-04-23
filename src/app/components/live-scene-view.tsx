@@ -862,6 +862,503 @@ export function LiveSceneView(props: LiveSceneViewProps) {
 
       return "translate(-50%, -50%)";
     })();
+    const anchorLeft = Number.parseFloat(subjectAnchor.left);
+    const anchorTop = Number.parseFloat(subjectAnchor.top);
+    const offsetPercent = (value: number, delta: number) => `${Math.min(86, Math.max(14, value + delta)).toFixed(3)}%`;
+    const fragmentHorizontalBias =
+      structure.subjectPosition === "upper-right-third"
+        ? -1
+        : structure.subjectPosition === "left-third-entry"
+          ? 1
+          : 0;
+    const fragmentSpread =
+      shapeGrammar.ruleset.includes("fragment") || liveInfluenceMode === "rupture"
+        ? 12
+        : shapeGrammar.ruleset.includes("repeat")
+          ? 8
+          : 6;
+    const keywordSpread =
+      shapeGrammar.ruleset.includes("translate")
+        ? 10
+        : shapeGrammar.ruleset.includes("mirror")
+          ? 8
+          : 6;
+    const fragmentOffsets = [
+      { x: -22 - fragmentHorizontalBias * 4, y: -18 },
+      { x: 18 - fragmentHorizontalBias * 3, y: -12 },
+      { x: -16 - fragmentHorizontalBias * 2, y: 20 },
+      { x: 20 - fragmentHorizontalBias * 4, y: 26 },
+    ];
+    const keywordOffsets = [
+      { x: -8, y: -26 },
+      { x: -24 - fragmentHorizontalBias * 2, y: -2 },
+      { x: 22 - fragmentHorizontalBias * 3, y: 0 },
+      { x: 4, y: 28 },
+      { x: -18 - fragmentHorizontalBias * 2, y: 34 },
+      { x: 24 - fragmentHorizontalBias * 2, y: 30 },
+    ];
+    const fragmentAnimations = ["driftOne", "driftTwo", "driftThree", "driftFour"] as const;
+    const keywordAnimations = ["shimmerOne", "shimmerTwo", "shimmerThree", "shimmerOne", "shimmerTwo", "shimmerThree"] as const;
+    const fragmentLayouts = fragmentOffsets.map((offset, index) => ({
+      left: offsetPercent(anchorLeft, offset.x + (index % 2 === 0 ? -fragmentSpread : fragmentSpread) * 0.18),
+      top: offsetPercent(anchorTop, offset.y),
+      animation: `${fragmentAnimations[index]} var(--clock-keyword-duration, ${index % 2 === 0 ? "10.2s" : "11.4s"}) infinite alternate`,
+    })) as React.CSSProperties[];
+    const keywordLayouts = keywordOffsets.map((offset, index) => ({
+      left: offsetPercent(anchorLeft, offset.x + (shapeGrammar.scores.relation >= 0.72 ? (index % 2 === 0 ? -keywordSpread : keywordSpread) * 0.16 : 0)),
+      top: offsetPercent(anchorTop, offset.y),
+      animation: `${keywordAnimations[index]} var(--clock-keyword-duration, ${7 + index * 0.4}s) infinite alternate`,
+    })) as React.CSSProperties[];
+    const grammarParticleOffsets = [
+      { x: -26, y: -28 },
+      { x: 22, y: -16 },
+      { x: -18, y: 24 },
+      { x: 24, y: 30 },
+    ];
+    const grammarParticleLayouts = grammarParticleOffsets.map((offset, index) => ({
+      left: offsetPercent(anchorLeft, offset.x + (shapeGrammar.ruleset.includes("translate") ? (index % 2 === 0 ? -4 : 4) : 0)),
+      top: offsetPercent(anchorTop, offset.y + (shapeGrammar.ruleset.includes("rotate") ? (index < 2 ? -2 : 2) : 0)),
+    })) as React.CSSProperties[];
+    const strayLetterOffsets = [
+      { x: -14, y: -40, size: "clamp(0.9rem, 1vw, 1.15rem)", animation: "shimmerOne calc(var(--clock-keyword-duration, 7.8s) * 0.9) infinite alternate" },
+      { x: 26, y: -28, size: "clamp(1.2rem, 1.5vw, 1.8rem)", animation: "driftTwo calc(var(--clock-keyword-duration, 7.8s) * 1.05) infinite alternate" },
+      { x: -30, y: -2, size: "clamp(0.76rem, 0.92vw, 1rem)", animation: "shimmerThree calc(var(--clock-keyword-duration, 7.8s) * 0.82) infinite alternate" },
+      { x: 34, y: 12, size: "clamp(1.6rem, 2vw, 2.3rem)", animation: "driftFour calc(var(--clock-keyword-duration, 7.8s) * 1.15) infinite alternate" },
+      { x: -2, y: 24, size: "clamp(1rem, 1.2vw, 1.4rem)", animation: "shimmerTwo calc(var(--clock-keyword-duration, 7.8s) * 0.96) infinite alternate" },
+      { x: 6, y: 34, size: "clamp(0.84rem, 1vw, 1.1rem)", animation: "driftOne calc(var(--clock-keyword-duration, 7.8s) * 0.88) infinite alternate" },
+      { x: -22, y: 42, size: "clamp(1.3rem, 1.6vw, 1.9rem)", animation: "shimmerOne calc(var(--clock-keyword-duration, 7.8s) * 1.08) infinite alternate" },
+      { x: 20, y: 40, size: "clamp(0.72rem, 0.88vw, 0.96rem)", animation: "shimmerThree calc(var(--clock-keyword-duration, 7.8s) * 0.78) infinite alternate" },
+    ];
+    const strayLetterLayouts = strayLetterOffsets.map((offset, index) => ({
+      left: offsetPercent(anchorLeft, offset.x + (liveInfluenceMode === "counterpoint" ? (index % 2 === 0 ? -4 : 4) : 0)),
+      top: offsetPercent(anchorTop, offset.y + (liveInfluenceMode === "rupture" ? (index % 2 === 0 ? -3 : 3) : 0)),
+      fontSize: offset.size,
+      animation: offset.animation,
+    })) as React.CSSProperties[];
+    const memoryFragmentOffsets = [
+      { x: -18 - fragmentHorizontalBias * 3, y: -30, rotation: "-8deg", animation: "driftOne", duration: "8.9s" },
+      { x: 22 - fragmentHorizontalBias * 4, y: -16, rotation: "7deg", animation: "driftTwo", duration: "9.8s" },
+      { x: -20 - fragmentHorizontalBias * 2, y: 22, rotation: "-5deg", animation: "driftThree", duration: "9.4s" },
+      { x: 18 - fragmentHorizontalBias * 3, y: 34, rotation: "9deg", animation: "driftFour", duration: "10.2s" },
+    ];
+    const memoryTraceOffsets = [
+      { x: 6, y: -18, animation: "shimmerOne", duration: "7.1s" },
+      { x: -8 - fragmentHorizontalBias * 2, y: 24, animation: "shimmerTwo", duration: "7.8s" },
+      { x: 20 - fragmentHorizontalBias * 2, y: 38, animation: "shimmerThree", duration: "8.4s" },
+    ];
+    const isFragmentedMemory = shapeGrammar.ruleset.includes("fragment");
+    const memoryDrift =
+      shapeGrammar.ruleset.includes("translate")
+        ? 10
+        : shapeGrammar.ruleset.includes("rotate")
+          ? -8
+          : 4;
+    const liveMemoryShift = liveInfluenceMode === "rupture" ? 6 : liveInfluenceMode === "counterpoint" ? -4 : 0;
+    const memoryFragmentLayouts = memoryFragmentOffsets.map((offset, index) => {
+      const directionalDrift = isFragmentedMemory ? (index % 2 === 0 ? memoryDrift : -memoryDrift) : 0;
+      const ruptureLift = liveInfluenceMode === "rupture" ? (index % 2 === 0 ? -4 : 6) : 0;
+      return {
+        left: offsetPercent(anchorLeft, offset.x + directionalDrift * 0.12 + liveMemoryShift),
+        top: offsetPercent(anchorTop, offset.y + ruptureLift),
+        transform: `translate(${directionalDrift}px, ${ruptureLift}px) rotate(${liveInfluenceMode === "rupture"
+          ? index % 2 === 0 ? "-14deg" : "14deg"
+          : offset.rotation})`,
+        animation: `${offset.animation} var(--clock-memory-duration, ${offset.duration}) infinite alternate`,
+      };
+    }) as React.CSSProperties[];
+    const memoryTraceLayouts = memoryTraceOffsets.map((offset, index) => {
+      const directionalDrift = isFragmentedMemory ? (index % 2 === 0 ? -memoryDrift : memoryDrift) : 0;
+      const counterpointShift = liveInfluenceMode === "counterpoint" ? (index === 1 ? -10 : index === 2 ? 10 : 0) : 0;
+      return {
+        left: offsetPercent(anchorLeft, offset.x + directionalDrift * 0.14 + counterpointShift),
+        top: offsetPercent(anchorTop, offset.y),
+        transform: `translateX(${directionalDrift + counterpointShift}px)`,
+        animation: `${offset.animation} var(--clock-memory-duration, ${offset.duration}) infinite alternate`,
+      };
+    }) as React.CSSProperties[];
+    const relationAxisLayouts = [
+      {
+        left: offsetPercent(anchorLeft, -32),
+        top: offsetPercent(anchorTop, -3),
+        width: `${Math.min(84, Math.max(34, 64 + (scenarioProgression - 0.5) * 36)).toFixed(3)}%`,
+        height: "1px",
+      },
+      {
+        left: offsetPercent(anchorLeft, -4),
+        top: offsetPercent(anchorTop, -31),
+        width: `${Math.min(72, Math.max(24, 46 + (shape.scores.attention - 0.5) * 28)).toFixed(3)}%`,
+        height: "1px",
+      },
+      {
+        left: offsetPercent(anchorLeft, -26 + (shape.positionTendency === "edge" ? -6 : shape.positionTendency === "scatter" ? 6 : 0)),
+        top: offsetPercent(anchorTop, -22),
+        width: `${Math.min(68, Math.max(22, 48 + (shapeGrammar.scores.relation - 0.5) * 24)).toFixed(3)}%`,
+        height: "1px",
+        transform: `rotate(${liveInfluenceMode === "rupture" ? 34 : liveInfluenceMode === "counterpoint" ? -18 : 22}deg)`,
+      },
+    ] as React.CSSProperties[];
+    const relationLineLayouts = [
+      {
+        left: offsetPercent(anchorLeft, -28 + (shape.positionTendency === "scatter" ? -4 : 0)),
+        top: offsetPercent(anchorTop, -16),
+        width: `${Math.min(42, Math.max(16, 28 + scenarioConflict * 14)).toFixed(3)}%`,
+        height: "2px",
+        transform: `rotate(${liveInfluenceMode === "rupture" ? 34 : 18}deg)`,
+      },
+      {
+        left: offsetPercent(anchorLeft, 6 + (liveInfluenceMode === "counterpoint" ? 10 : 0)),
+        top: offsetPercent(anchorTop, 12),
+        width: `${Math.min(32, Math.max(14, 20 + scenarioProgression * 12)).toFixed(3)}%`,
+        height: "2px",
+        transform: `rotate(${liveInfluenceMode === "rupture" ? 34 : -26}deg)`,
+      },
+      {
+        left: offsetPercent(anchorLeft, -18),
+        top: offsetPercent(anchorTop, 20),
+        width: `${Math.min(28, Math.max(12, 16 + scenarioAttention * 10)).toFixed(3)}%`,
+        height: "2px",
+        transform: `rotate(${liveInfluenceMode === "rupture" ? -34 : -12}deg)`,
+      },
+    ] as React.CSSProperties[];
+    const relationNodeOffsets = [
+      { x: -30 + (shape.positionTendency === "edge" ? -5 : 0), y: -18 },
+      { x: 28 + (shape.positionTendency === "edge" ? 5 : 0), y: -24 },
+      { x: -20 + (shape.positionTendency === "edge" ? -7 : 0), y: 24 },
+      { x: 26 + (shape.positionTendency === "edge" ? 7 : 0), y: 30 },
+    ];
+    const relationNodeLayouts = relationNodeOffsets.map((offset) => ({
+      left: offsetPercent(anchorLeft, offset.x),
+      top: offsetPercent(anchorTop, offset.y),
+    })) as React.CSSProperties[];
+    const relationCenterLayout = {
+      left: subjectAnchor.left,
+      top: subjectAnchor.top,
+      transform: "translate(-50%, -50%)",
+    } as React.CSSProperties;
+    const temporalLineLayouts = [
+      {
+        left: offsetPercent(anchorLeft, -12),
+        top: offsetPercent(anchorTop, -8),
+        width: "18%",
+        transform: "rotate(-14deg)",
+      },
+      {
+        left: offsetPercent(anchorLeft, 12),
+        top: offsetPercent(anchorTop, 28),
+        width: "16%",
+        transform: "rotate(18deg)",
+      },
+    ] as React.CSSProperties[];
+    const temporalPulseLayouts = [
+      {
+        left: offsetPercent(anchorLeft, 4),
+        top: offsetPercent(anchorTop, -10),
+      },
+      {
+        left: offsetPercent(anchorLeft, 14),
+        top: offsetPercent(anchorTop, 34),
+      },
+    ] as React.CSSProperties[];
+    const temporalParticleOffsets = [
+      { x: 22, y: -24, animation: "shimmerOne 7.1s infinite alternate" },
+      { x: 30, y: 8, animation: "shimmerTwo 7.8s infinite alternate" },
+      { x: 6, y: 30, animation: "shimmerThree 8.4s infinite alternate" },
+      { x: 24, y: 42, animation: "shimmerOne 8.2s infinite alternate", maxWidth: "12ch", lineHeight: "1.35" },
+    ];
+    const temporalParticleLayouts = temporalParticleOffsets.map((offset) => ({
+      left: offsetPercent(anchorLeft, offset.x + (clockDisplay?.attentionAnchor === "seconds_pulse" ? 4 : 0)),
+      top: offsetPercent(anchorTop, offset.y + (clockDisplay?.transition === "memory_trail" ? 4 : 0)),
+      animation: offset.animation,
+      maxWidth: offset.maxWidth,
+      lineHeight: offset.lineHeight,
+    })) as React.CSSProperties[];
+    const guideLabelLayouts = {
+      primary: {
+        left: offsetPercent(anchorLeft, 16 + (structure.subjectPosition === "left-third-entry" ? 6 : 0)),
+        top: offsetPercent(anchorTop, -24),
+      },
+      secondary: {
+        left: offsetPercent(anchorLeft, -28 + (structure.subjectPosition === "upper-right-third" ? -4 : 0)),
+        top: offsetPercent(anchorTop, 34),
+      },
+    } as {
+      primary: React.CSSProperties;
+      secondary: React.CSSProperties;
+    };
+    const negativeSpaceLayouts = {
+      primary: {
+        left: offsetPercent(anchorLeft, structure.subjectPosition === "left-third-entry" ? -30 : -34),
+        top: offsetPercent(anchorTop, shape.behavior === "expanding" ? -26 : -22),
+        width: `${Math.min(42, Math.max(20, 26 + scenarioAttention * 14 + (shape.type === "void" ? 4 : 0))).toFixed(3)}%`,
+        height: `${Math.min(38, Math.max(16, 18 + shape.scores.tension * 12 + (shape.behavior === "expanding" ? 4 : 0))).toFixed(3)}%`,
+        borderRadius:
+          shape.type === "organic"
+            ? "38% 62% 44% 56% / 46% 42% 58% 54%"
+            : shape.type === "void"
+              ? "44% 56% 52% 48% / 52% 40% 60% 48%"
+              : undefined,
+      },
+      secondary: {
+        left: offsetPercent(anchorLeft, structure.subjectPosition === "upper-right-third" ? 6 : 10),
+        top: offsetPercent(anchorTop, scenarioConflict >= 0.74 ? 8 : 12),
+        width: `${Math.min(38, Math.max(18, 22 + scenarioConflict * 14 + (shapeGrammar.ruleset.includes("repeat") ? 4 : 0))).toFixed(3)}%`,
+        height: `${Math.min(34, Math.max(14, 16 + shapeGrammar.scores.expressivePower * 10)).toFixed(3)}%`,
+        borderRadius:
+          shape.type === "organic"
+            ? "42% 58% 46% 54% / 44% 48% 52% 56%"
+            : shape.type === "void"
+              ? "48% 52% 56% 44% / 50% 42% 58% 50%"
+              : undefined,
+      },
+    } as {
+      primary: React.CSSProperties;
+      secondary: React.CSSProperties;
+    };
+    const guideMirrorMarkerLayouts = [
+      {
+        top: "22%",
+        left: `calc(50% - ${structure.symmetryState === "symmetry_precise" ? "5.8rem" : "5.4rem"})`,
+      },
+      {
+        top: "22%",
+        right: `calc(50% - ${structure.symmetryState === "symmetry_precise" ? "5.8rem" : "5.4rem"})`,
+      },
+    ] as React.CSSProperties[];
+    const guideMirrorAxisLayout = {
+      top: structure.centerState === "centered_intentional" ? "8%" : "10%",
+      bottom: structure.centerState === "decentered_tension" ? "14%" : "10%",
+      left: "50%",
+      transform: "translateX(-50%)",
+    } as React.CSSProperties;
+    const guideRepeatEchoLayouts = [
+      { top: "16%", left: "16%" },
+      { top: "32%", left: shapeGrammar.scores.coherence >= 0.72 ? "30%" : "32%" },
+      { top: "48%", left: shapeGrammar.scores.expressivePower >= 0.72 ? "46%" : "48%" },
+    ] as React.CSSProperties[];
+    const guideTranslateTrailLayouts = [
+      {
+        top: "24%",
+        left: structure.subjectPosition === "left-third-entry" ? "12%" : "14%",
+        transform: `rotate(${shapeGrammar.ruleset.includes("translate") ? -12 : -10}deg)`,
+      },
+      {
+        bottom: "22%",
+        left: structure.subjectPosition === "upper-right-third" ? "30%" : "34%",
+        transform: `rotate(${shapeGrammar.ruleset.includes("translate") ? -8 : -6}deg)`,
+      },
+    ] as React.CSSProperties[];
+    const guideTranslateMarkerLayouts = [
+      {
+        top: "23%",
+        left: structure.subjectPosition === "upper-right-third" ? "56%" : "58%",
+      },
+      {
+        bottom: "20%",
+        right: structure.subjectPosition === "left-third-entry" ? "14%" : "16%",
+      },
+    ] as React.CSSProperties[];
+    const guideRotateArcLayouts = [
+      {
+        top: "20%",
+        right: liveInfluenceMode === "counterpoint" ? "16%" : "18%",
+      },
+      {
+        bottom: "18%",
+        left: liveInfluenceMode === "counterpoint" ? "16%" : "18%",
+        transform: "rotate(180deg)",
+      },
+    ] as React.CSSProperties[];
+    const guideFragmentShardLayouts = [
+      {
+        top: "22%",
+        left: structure.subjectPosition === "left-third-entry" ? "16%" : "18%",
+        transform: `rotate(${shapeGrammar.ruleset.includes("fragment") ? -20 : -18}deg)`,
+      },
+      {
+        top: "48%",
+        right: structure.subjectPosition === "upper-right-third" ? "20%" : "22%",
+        transform: `rotate(${shapeGrammar.ruleset.includes("fragment") ? 18 : 16}deg)`,
+      },
+      {
+        bottom: "20%",
+        left: shape.positionTendency === "scatter" ? "32%" : "36%",
+        transform: `rotate(${shapeGrammar.ruleset.includes("fragment") ? -14 : -12}deg)`,
+      },
+    ] as React.CSSProperties[];
+    const guideMergeBridgeLayout = {
+      top: "50%",
+      left: shapeGrammar.ruleset.includes("merge") ? "29%" : "31%",
+      transform: "translateY(-50%)",
+    } as React.CSSProperties;
+    const guideMergeNodeLayouts = [
+      {
+        top: "calc(50% - 0.6rem)",
+        left: shapeGrammar.ruleset.includes("merge") ? "22%" : "24%",
+      },
+      {
+        top: "calc(50% - 0.6rem)",
+        right: shapeGrammar.ruleset.includes("merge") ? "22%" : "24%",
+      },
+    ] as React.CSSProperties[];
+    const guideSplitAxisLayout = {
+      top: structure.centerState === "centered_intentional" ? "16%" : "18%",
+      bottom: structure.centerState === "decentered_tension" ? "20%" : "18%",
+      left: "50%",
+      transform: "translateX(-50%)",
+    } as React.CSSProperties;
+    const guideSplitNodeLayouts = [
+      {
+        top: "calc(50% - 0.55rem)",
+        left: shapeGrammar.ruleset.includes("split") ? "32%" : "34%",
+      },
+      {
+        top: "calc(50% - 0.55rem)",
+        right: shapeGrammar.ruleset.includes("split") ? "32%" : "34%",
+      },
+    ] as React.CSSProperties[];
+    const centerTokenLayouts = [
+      {
+        position: "absolute",
+        top: "18%",
+        left: structure.subjectPosition === "left-third-entry" ? "18%" : "20%",
+        transform: `translateY(${shapeGrammar.rulesApplied.includes("add") ? "-2px" : "-1px"})`,
+      },
+      {
+        position: "absolute",
+        right: structure.subjectPosition === "upper-right-third" ? "18%" : "20%",
+        bottom: "18%",
+        transform: `translateY(${shapeGrammar.rulesApplied.includes("subtract") ? "2px" : "1px"})`,
+      },
+    ] as React.CSSProperties[];
+    const centerAccentLayouts = [
+      {
+        top: shape.behavior === "expanding" ? "16%" : "18%",
+        left: structure.subjectPosition === "left-third-entry" ? "16%" : "18%",
+      },
+      {
+        right: structure.subjectPosition === "upper-right-third" ? "16%" : "18%",
+        bottom: shape.behavior === "contracting" ? "18%" : "20%",
+      },
+    ] as React.CSSProperties[];
+    const centerCutLayouts = [
+      {
+        top: `${34 + (scenarioConflict - 0.5) * 8}%`,
+        left: "26%",
+        transform: `rotate(${liveInfluenceMode === "rupture" ? -16 : -12}deg)`,
+      },
+      {
+        bottom: `${32 + (scenarioProgression - 0.5) * 6}%`,
+        left: "24%",
+        transform: `rotate(${liveInfluenceMode === "rupture" ? 14 : 10}deg)`,
+      },
+    ] as React.CSSProperties[];
+    const centerMirrorMarkerLayouts = [
+      {
+        top: "24%",
+        left: structure.symmetryState === "symmetry_precise" ? "16%" : "18%",
+      },
+      {
+        top: "24%",
+        right: structure.symmetryState === "symmetry_precise" ? "16%" : "18%",
+      },
+    ] as React.CSSProperties[];
+    const centerMirrorAxisLayout = {
+      top: structure.centerState === "centered_intentional" ? "14%" : "16%",
+      bottom: structure.centerState === "decentered_tension" ? "20%" : "16%",
+      left: "50%",
+      transform: "translateX(-50%)",
+    } as React.CSSProperties;
+    const centerMergeBridgeLayout = {
+      top: "50%",
+      left: shapeGrammar.ruleset.includes("merge") ? "24%" : "28%",
+      transform: "translateY(-50%)",
+    } as React.CSSProperties;
+    const centerMergeNodeLayouts = [
+      {
+        top: "calc(50% - 0.52rem)",
+        left: shapeGrammar.ruleset.includes("merge") ? "18%" : "20%",
+      },
+      {
+        top: "calc(50% - 0.52rem)",
+        right: shapeGrammar.ruleset.includes("merge") ? "18%" : "20%",
+      },
+    ] as React.CSSProperties[];
+    const centerSplitAxisLayout = {
+      top: structure.centerState === "centered_intentional" ? "14%" : "16%",
+      bottom: structure.centerState === "decentered_tension" ? "20%" : "16%",
+      left: "50%",
+      transform: "translateX(-50%)",
+    } as React.CSSProperties;
+    const centerSplitNodeLayouts = [
+      {
+        top: "calc(50% - 0.52rem)",
+        left: shapeGrammar.ruleset.includes("split") ? "26%" : "28%",
+      },
+      {
+        top: "calc(50% - 0.52rem)",
+        right: shapeGrammar.ruleset.includes("split") ? "26%" : "28%",
+      },
+    ] as React.CSSProperties[];
+    const centerRotateArcLayouts = [
+      {
+        top: "16%",
+        right: liveInfluenceMode === "counterpoint" ? "16%" : "18%",
+      },
+      {
+        bottom: "16%",
+        left: liveInfluenceMode === "counterpoint" ? "16%" : "18%",
+        transform: "rotate(180deg)",
+      },
+    ] as React.CSSProperties[];
+    const centerTranslateTrailLayouts = [
+      {
+        top: "24%",
+        left: "20%",
+        transform: `rotate(${shapeGrammar.ruleset.includes("translate") ? -10 : -8}deg)`,
+      },
+      {
+        bottom: "22%",
+        left: "28%",
+        transform: `rotate(${shapeGrammar.ruleset.includes("translate") ? -6 : -4}deg)`,
+      },
+    ] as React.CSSProperties[];
+    const centerTranslateMarkerLayouts = [
+      {
+        top: "24%",
+        left: structure.subjectPosition === "upper-right-third" ? "60%" : "62%",
+      },
+      {
+        bottom: "20%",
+        right: structure.subjectPosition === "left-third-entry" ? "16%" : "18%",
+      },
+    ] as React.CSSProperties[];
+    const centerFragmentShardLayouts = [
+      {
+        top: "32%",
+        left: "26%",
+        transform: `rotate(${shapeGrammar.ruleset.includes("fragment") ? -16 : -14}deg)`,
+      },
+      {
+        bottom: "30%",
+        left: "24%",
+        transform: `rotate(${shapeGrammar.ruleset.includes("fragment") ? 14 : 12}deg)`,
+      },
+    ] as React.CSSProperties[];
+    const centerRepeatEchoLayouts = [
+      { inset: shapeGrammar.scores.coherence >= 0.72 ? "14%" : "16%" },
+      { inset: shapeGrammar.scores.expressivePower >= 0.72 ? "22%" : "24%" },
+    ] as React.CSSProperties[];
+    const layerOrderStyle = {
+      "--z-text-backdrop": "0",
+      "--z-relation-field": scenarioAttention >= 0.74 ? "2" : "1",
+      "--z-composition-guide": structure.centerState === "centered_intentional" ? "3" : "2",
+      "--z-memory-field": shapeGrammar.ruleset.includes("fragment") ? "3" : "4",
+      "--z-text-constellation": shapeGrammar.scores.expressivePower >= 0.72 ? "5" : "4",
+      "--z-thought-center": scenarioAttention >= 0.74 || structure.centerState === "centered_intentional" ? "6" : "5",
+      "--z-clock-field": clockDisplay ? (clockDisplay.attentionAnchor === "hours_minutes_seconds" ? "7" : "6") : "6",
+      "--z-composition-rules": "7",
+      "--z-corner-signature": "8",
+    } as React.CSSProperties;
 
     return {
       structure,
@@ -917,13 +1414,54 @@ export function LiveSceneView(props: LiveSceneViewProps) {
       clockStyle: clockPlacement.style as React.CSSProperties,
       clockPlacementLabel: clockPlacement.label,
       rulesStyle: rulesAnchor as React.CSSProperties,
+      guideLabelLayouts,
+      negativeSpaceLayouts,
+      guideMirrorAxisLayout,
+      guideMirrorMarkerLayouts,
+      guideRepeatEchoLayouts,
+      guideTranslateTrailLayouts,
+      guideTranslateMarkerLayouts,
+      guideRotateArcLayouts,
+      guideFragmentShardLayouts,
+      guideMergeBridgeLayout,
+      guideMergeNodeLayouts,
+      guideSplitAxisLayout,
+      guideSplitNodeLayouts,
       guideClass: [guideClass, shapeGuideClass, grammarGuideClass].filter(Boolean).join(" "),
       centerClass: [centerClass, grammarCenterClass].filter(Boolean).join(" "),
       relationClass: [relationClass, grammarRelationClass].filter(Boolean).join(" "),
+      relationAxisLayouts,
+      relationLineLayouts,
+      relationNodeLayouts,
+      relationCenterLayout,
+      temporalLineLayouts,
+      temporalPulseLayouts,
+      temporalParticleLayouts,
+      strayLetterLayouts,
+      centerTokenLayouts,
+      centerAccentLayouts,
+      centerCutLayouts,
+      centerMirrorAxisLayout,
+      centerMirrorMarkerLayouts,
+      centerMergeBridgeLayout,
+      centerMergeNodeLayouts,
+      centerSplitAxisLayout,
+      centerSplitNodeLayouts,
+      centerRotateArcLayouts,
+      centerTranslateTrailLayouts,
+      centerTranslateMarkerLayouts,
+      centerFragmentShardLayouts,
+      centerRepeatEchoLayouts,
+      layerOrderStyle,
       grammarMemoryClass,
       grammarMemoryStyle,
+      memoryFragmentLayouts,
+      memoryTraceLayouts,
       grammarConstellationClass,
       grammarConstellationStyle,
+      fragmentLayouts,
+      keywordLayouts,
+      grammarParticleLayouts,
       grammarCenterStyle,
       shapeGrammar,
     };
@@ -939,7 +1477,20 @@ export function LiveSceneView(props: LiveSceneViewProps) {
   ]);
 
   const sliceCanvasSection = (
-    <div className={styles.canvasCard}>
+    <div
+      className={styles.canvasCard}
+      style={
+        {
+          "--slice-background": current.visual.background,
+          "--slice-accent": current.visual.accent,
+          "--slice-ink": current.visual.ink,
+          "--clock-accent": current.visual.accent,
+          "--clock-ink": current.visual.ink,
+          "--clock-background": current.visual.background,
+          ...structureSceneConfig.layerOrderStyle,
+        } as React.CSSProperties
+      }
+    >
       <span className={styles.panelMarker}>PANEL · Slice Canvas</span>
       <div className={styles.visualStage}>
         <div className={`${styles.textStage} ${liveInfluenceMode ? styles[`textStage${liveInfluenceMode}`] : ""}`}>
@@ -957,37 +1508,37 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             <span className={`${styles.thirdLine} ${styles.thirdHorizontalTwo}`} />
             {structureSceneConfig.shapeGrammar.ruleset.includes("mirror") ? (
               <>
-                <span className={styles.grammarMirrorAxis} />
-                <span className={`${styles.grammarMirrorMarker} ${styles.grammarMirrorMarkerLeft}`} />
-                <span className={`${styles.grammarMirrorMarker} ${styles.grammarMirrorMarkerRight}`} />
+                <span className={styles.grammarMirrorAxis} style={structureSceneConfig.guideMirrorAxisLayout} />
+                <span className={`${styles.grammarMirrorMarker} ${styles.grammarMirrorMarkerLeft}`} style={structureSceneConfig.guideMirrorMarkerLayouts[0]} />
+                <span className={`${styles.grammarMirrorMarker} ${styles.grammarMirrorMarkerRight}`} style={structureSceneConfig.guideMirrorMarkerLayouts[1]} />
               </>
             ) : null}
             {structureSceneConfig.shapeGrammar.ruleset.includes("repeat") ? (
               <>
-                <span className={`${styles.grammarRepeatEcho} ${styles.grammarRepeatEchoOne}`} />
-                <span className={`${styles.grammarRepeatEcho} ${styles.grammarRepeatEchoTwo}`} />
-                <span className={`${styles.grammarRepeatEcho} ${styles.grammarRepeatEchoThree}`} />
+                <span className={`${styles.grammarRepeatEcho} ${styles.grammarRepeatEchoOne}`} style={structureSceneConfig.guideRepeatEchoLayouts[0]} />
+                <span className={`${styles.grammarRepeatEcho} ${styles.grammarRepeatEchoTwo}`} style={structureSceneConfig.guideRepeatEchoLayouts[1]} />
+                <span className={`${styles.grammarRepeatEcho} ${styles.grammarRepeatEchoThree}`} style={structureSceneConfig.guideRepeatEchoLayouts[2]} />
               </>
             ) : null}
             {structureSceneConfig.shapeGrammar.ruleset.includes("translate") ? (
               <>
-                <span className={`${styles.grammarTranslateTrail} ${styles.grammarTranslateTrailOne}`} />
-                <span className={`${styles.grammarTranslateTrail} ${styles.grammarTranslateTrailTwo}`} />
-                <span className={`${styles.grammarTranslateMarker} ${styles.grammarTranslateMarkerOne}`} />
-                <span className={`${styles.grammarTranslateMarker} ${styles.grammarTranslateMarkerTwo}`} />
+                <span className={`${styles.grammarTranslateTrail} ${styles.grammarTranslateTrailOne}`} style={structureSceneConfig.guideTranslateTrailLayouts[0]} />
+                <span className={`${styles.grammarTranslateTrail} ${styles.grammarTranslateTrailTwo}`} style={structureSceneConfig.guideTranslateTrailLayouts[1]} />
+                <span className={`${styles.grammarTranslateMarker} ${styles.grammarTranslateMarkerOne}`} style={structureSceneConfig.guideTranslateMarkerLayouts[0]} />
+                <span className={`${styles.grammarTranslateMarker} ${styles.grammarTranslateMarkerTwo}`} style={structureSceneConfig.guideTranslateMarkerLayouts[1]} />
               </>
             ) : null}
             {structureSceneConfig.shapeGrammar.ruleset.includes("rotate") ? (
               <>
-                <span className={`${styles.grammarRotateArc} ${styles.grammarRotateArcOne}`} />
-                <span className={`${styles.grammarRotateArc} ${styles.grammarRotateArcTwo}`} />
+                <span className={`${styles.grammarRotateArc} ${styles.grammarRotateArcOne}`} style={structureSceneConfig.guideRotateArcLayouts[0]} />
+                <span className={`${styles.grammarRotateArc} ${styles.grammarRotateArcTwo}`} style={structureSceneConfig.guideRotateArcLayouts[1]} />
               </>
             ) : null}
             {structureSceneConfig.shapeGrammar.ruleset.includes("fragment") ? (
               <>
-                <span className={`${styles.grammarFragmentShard} ${styles.grammarFragmentShardOne}`} />
-                <span className={`${styles.grammarFragmentShard} ${styles.grammarFragmentShardTwo}`} />
-                <span className={`${styles.grammarFragmentShard} ${styles.grammarFragmentShardThree}`} />
+                <span className={`${styles.grammarFragmentShard} ${styles.grammarFragmentShardOne}`} style={structureSceneConfig.guideFragmentShardLayouts[0]} />
+                <span className={`${styles.grammarFragmentShard} ${styles.grammarFragmentShardTwo}`} style={structureSceneConfig.guideFragmentShardLayouts[1]} />
+                <span className={`${styles.grammarFragmentShard} ${styles.grammarFragmentShardThree}`} style={structureSceneConfig.guideFragmentShardLayouts[2]} />
               </>
             ) : null}
             <span className={`${styles.guideLine} ${styles.leadingLineOne}`} style={clockGuideKinetics.leadingLines[0]} />
@@ -1007,16 +1558,16 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             ) : null}
             {structureSceneConfig.shapeGrammar.ruleset.includes("merge") ? (
               <>
-                <span className={`${styles.grammarMergeBridge} ${styles.grammarMergeBridgeOne}`} />
-                <span className={`${styles.grammarMergeNode} ${styles.grammarMergeNodeLeft}`} />
-                <span className={`${styles.grammarMergeNode} ${styles.grammarMergeNodeRight}`} />
+                <span className={`${styles.grammarMergeBridge} ${styles.grammarMergeBridgeOne}`} style={structureSceneConfig.guideMergeBridgeLayout} />
+                <span className={`${styles.grammarMergeNode} ${styles.grammarMergeNodeLeft}`} style={structureSceneConfig.guideMergeNodeLayouts[0]} />
+                <span className={`${styles.grammarMergeNode} ${styles.grammarMergeNodeRight}`} style={structureSceneConfig.guideMergeNodeLayouts[1]} />
               </>
             ) : null}
             {structureSceneConfig.shapeGrammar.ruleset.includes("split") ? (
               <>
-                <span className={styles.grammarSplitAxis} />
-                <span className={`${styles.grammarSplitNode} ${styles.grammarSplitNodeLeft}`} />
-                <span className={`${styles.grammarSplitNode} ${styles.grammarSplitNodeRight}`} />
+                <span className={styles.grammarSplitAxis} style={structureSceneConfig.guideSplitAxisLayout} />
+                <span className={`${styles.grammarSplitNode} ${styles.grammarSplitNodeLeft}`} style={structureSceneConfig.guideSplitNodeLayouts[0]} />
+                <span className={`${styles.grammarSplitNode} ${styles.grammarSplitNodeRight}`} style={structureSceneConfig.guideSplitNodeLayouts[1]} />
               </>
             ) : null}
             <span className={`${styles.focalHalo} ${styles.focalHaloPrimary}`} style={clockGuideKinetics.focalHalos.primary}>
@@ -1025,10 +1576,18 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             <span className={`${styles.focalHalo} ${styles.focalHaloSecondary}`} style={clockGuideKinetics.focalHalos.secondary}>
               <span className={styles.focalHaloNumber}>2</span>
             </span>
-            <span className={`${styles.spaceFrame} ${styles.negativeSpaceOne}`} style={clockNegativeSpaceKinetics.primary} />
-            <span className={`${styles.spaceFrame} ${styles.negativeSpaceTwo}`} style={clockNegativeSpaceKinetics.secondary} />
-            <span className={styles.guideLabelPrimary}>focus</span>
-            <span className={styles.guideLabelSecondary}>thirds</span>
+            <span
+              className={`${styles.spaceFrame} ${styles.negativeSpaceOne}`}
+              style={{ ...clockNegativeSpaceKinetics.primary, ...structureSceneConfig.negativeSpaceLayouts.primary }}
+            />
+            <span
+              className={`${styles.spaceFrame} ${styles.negativeSpaceTwo}`}
+              style={{ ...clockNegativeSpaceKinetics.secondary, ...structureSceneConfig.negativeSpaceLayouts.secondary }}
+            />
+            <span className={styles.guideLabelPrimary} style={structureSceneConfig.guideLabelLayouts.primary}>focus</span>
+            <span className={styles.guideLabelSecondary} style={structureSceneConfig.guideLabelLayouts.secondary}>
+              {structureSceneConfig.structure.grid}
+            </span>
             {clockDisplay ? (
               <span className={styles.guideLabelTemporal}>
                 {clockDisplay.attentionAnchor.replaceAll("_", " ")}
@@ -1073,23 +1632,23 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             aria-hidden="true"
           >
             <span className={styles.layerMarker}>LAYER · Relation Field</span>
-            <span className={`${styles.axisLine} ${styles.axisPrimary}`} />
-            <span className={`${styles.axisLine} ${styles.axisSecondary}`} />
-            <span className={`${styles.axisLine} ${styles.axisDiagonal}`} />
-            <span className={`${styles.relationLine} ${styles.relationLineOne}`} />
-            <span className={`${styles.relationLine} ${styles.relationLineTwo}`} />
-            <span className={`${styles.relationLine} ${styles.relationLineThree}`} />
-            <span className={`${styles.relationNode} ${styles.relationNodeOne}`} />
-            <span className={`${styles.relationNode} ${styles.relationNodeTwo}`} />
-            <span className={`${styles.relationNode} ${styles.relationNodeThree}`} />
-            <span className={`${styles.relationNode} ${styles.relationNodeFour}`} />
-            <span className={`${styles.relationNode} ${styles.relationNodeCenter}`} />
+            <span className={`${styles.axisLine} ${styles.axisPrimary}`} style={structureSceneConfig.relationAxisLayouts[0]} />
+            <span className={`${styles.axisLine} ${styles.axisSecondary}`} style={structureSceneConfig.relationAxisLayouts[1]} />
+            <span className={`${styles.axisLine} ${styles.axisDiagonal}`} style={structureSceneConfig.relationAxisLayouts[2]} />
+            <span className={`${styles.relationLine} ${styles.relationLineOne}`} style={structureSceneConfig.relationLineLayouts[0]} />
+            <span className={`${styles.relationLine} ${styles.relationLineTwo}`} style={structureSceneConfig.relationLineLayouts[1]} />
+            <span className={`${styles.relationLine} ${styles.relationLineThree}`} style={structureSceneConfig.relationLineLayouts[2]} />
+            <span className={`${styles.relationNode} ${styles.relationNodeOne}`} style={structureSceneConfig.relationNodeLayouts[0]} />
+            <span className={`${styles.relationNode} ${styles.relationNodeTwo}`} style={structureSceneConfig.relationNodeLayouts[1]} />
+            <span className={`${styles.relationNode} ${styles.relationNodeThree}`} style={structureSceneConfig.relationNodeLayouts[2]} />
+            <span className={`${styles.relationNode} ${styles.relationNodeFour}`} style={structureSceneConfig.relationNodeLayouts[3]} />
+            <span className={`${styles.relationNode} ${styles.relationNodeCenter}`} style={structureSceneConfig.relationCenterLayout} />
             {clockDisplay ? (
               <>
-                <span className={`${styles.temporalRelationLine} ${styles.temporalRelationLineOne}`} />
-                <span className={`${styles.temporalRelationLine} ${styles.temporalRelationLineTwo}`} />
-                <span className={`${styles.temporalRelationPulse} ${styles.temporalRelationPulseOne}`} />
-                <span className={`${styles.temporalRelationPulse} ${styles.temporalRelationPulseTwo}`} />
+                <span className={`${styles.temporalRelationLine} ${styles.temporalRelationLineOne}`} style={structureSceneConfig.temporalLineLayouts[0]} />
+                <span className={`${styles.temporalRelationLine} ${styles.temporalRelationLineTwo}`} style={structureSceneConfig.temporalLineLayouts[1]} />
+                <span className={`${styles.temporalRelationPulse} ${styles.temporalRelationPulseOne}`} style={structureSceneConfig.temporalPulseLayouts[0]} />
+                <span className={`${styles.temporalRelationPulse} ${styles.temporalRelationPulseTwo}`} style={structureSceneConfig.temporalPulseLayouts[1]} />
               </>
             ) : null}
           </div>
@@ -1103,7 +1662,8 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             {current.fragments.slice(0, 4).map((fragment, index) => (
               <span
                 key={`${current.direction}-memory-fragment-${fragment}`}
-                className={`${styles.memoryFragment} ${styles[`memoryFragment${index + 1}`]}`}
+                className={styles.memoryFragment}
+                style={structureSceneConfig.memoryFragmentLayouts[index]}
               >
                 {fragment}
               </span>
@@ -1111,7 +1671,8 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             {current.keywords.slice(0, 3).map((keyword, index) => (
               <span
                 key={`${current.direction}-memory-keyword-${keyword}`}
-                className={`${styles.memoryTrace} ${styles[`memoryTrace${index + 1}`]}`}
+                className={styles.memoryTrace}
+                style={structureSceneConfig.memoryTraceLayouts[index]}
               >
                 {keyword}
               </span>
@@ -1126,9 +1687,10 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             {current.fragments.map((fragment, index) => (
               <span
                 key={`${current.direction}-fragment-${fragment}`}
-                className={`${styles.floatingFragment} ${styles[`fragment${index + 1}`]} ${
+                className={`${styles.floatingFragment} ${
                   liveInfluenceMode ? styles[`floatingFragment${liveInfluenceMode}`] : ""
                 }`}
+                style={structureSceneConfig.fragmentLayouts[index]}
               >
                 {fragment}
               </span>
@@ -1136,9 +1698,10 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             {current.keywords.slice(0, 6).map((keyword, index) => (
               <span
                 key={`${current.direction}-keyword-${keyword}`}
-                className={`${styles.keywordParticle} ${styles[`keyword${index + 1}`]} ${
+                className={`${styles.keywordParticle} ${
                   liveInfluenceMode ? styles[`keywordParticle${liveInfluenceMode}`] : ""
                 }`}
+                style={structureSceneConfig.keywordLayouts[index]}
               >
                 {keyword}
               </span>
@@ -1146,9 +1709,10 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             {strayLetters.map((letter, index) => (
               <span
                 key={`${current.direction}-stray-letter-${index}-${letter}`}
-                className={`${styles.strayLetter} ${styles[`strayLetter${index + 1}`]} ${
+                className={`${styles.strayLetter} ${
                   liveInfluenceMode ? styles[`strayLetter${liveInfluenceMode}`] : ""
                 }`}
+                style={structureSceneConfig.strayLetterLayouts[index]}
               >
                 {letter}
               </span>
@@ -1156,23 +1720,24 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             {structureSceneConfig.shapeGrammar.rulesApplied.slice(0, 4).map((rule, index) => (
               <span
                 key={`${current.direction}-grammar-rule-${rule}-${index}`}
-                className={`${styles.grammarParticle} ${styles[`grammarParticle${(index % 4) + 1}`]}`}
+                className={styles.grammarParticle}
+                style={structureSceneConfig.grammarParticleLayouts[index]}
               >
                 {rule}
               </span>
             ))}
             {clockDisplay ? (
               <>
-                <span className={`${styles.temporalParticle} ${styles.temporalParticleOne}`}>
+                <span className={styles.temporalParticle} style={structureSceneConfig.temporalParticleLayouts[0]}>
                   {clockDisplay.hours}
                 </span>
-                <span className={`${styles.temporalParticle} ${styles.temporalParticleTwo}`}>
+                <span className={styles.temporalParticle} style={structureSceneConfig.temporalParticleLayouts[1]}>
                   {clockDisplay.minutes}
                 </span>
-                <span className={`${styles.temporalParticle} ${styles.temporalParticleThree}`}>
+                <span className={styles.temporalParticle} style={structureSceneConfig.temporalParticleLayouts[2]}>
                   {clockDisplay.seconds}
                 </span>
-                <span className={`${styles.temporalParticle} ${styles.temporalParticleFour}`}>
+                <span className={styles.temporalParticle} style={structureSceneConfig.temporalParticleLayouts[3]}>
                   {clockDisplay.transition.replaceAll("_", " ")}
                 </span>
               </>
@@ -1193,61 +1758,61 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             <span className={styles.centerLayerMarker}>LAYER · Thought Center</span>
             {structureSceneConfig.shapeGrammar.ruleset.includes("mirror") ? (
               <>
-                <span className={styles.grammarCenterMirrorAxis} aria-hidden="true" />
-                <span className={`${styles.grammarCenterMirrorMarker} ${styles.grammarCenterMirrorMarkerLeft}`} aria-hidden="true" />
-                <span className={`${styles.grammarCenterMirrorMarker} ${styles.grammarCenterMirrorMarkerRight}`} aria-hidden="true" />
+                <span className={styles.grammarCenterMirrorAxis} style={structureSceneConfig.centerMirrorAxisLayout} aria-hidden="true" />
+                <span className={`${styles.grammarCenterMirrorMarker} ${styles.grammarCenterMirrorMarkerLeft}`} style={structureSceneConfig.centerMirrorMarkerLayouts[0]} aria-hidden="true" />
+                <span className={`${styles.grammarCenterMirrorMarker} ${styles.grammarCenterMirrorMarkerRight}`} style={structureSceneConfig.centerMirrorMarkerLayouts[1]} aria-hidden="true" />
               </>
             ) : null}
             {structureSceneConfig.shapeGrammar.ruleset.includes("repeat") ? (
               <>
-                <span className={`${styles.grammarCenterRepeatEcho} ${styles.grammarCenterRepeatEchoOne}`} aria-hidden="true" />
-                <span className={`${styles.grammarCenterRepeatEcho} ${styles.grammarCenterRepeatEchoTwo}`} aria-hidden="true" />
+                <span className={`${styles.grammarCenterRepeatEcho} ${styles.grammarCenterRepeatEchoOne}`} style={structureSceneConfig.centerRepeatEchoLayouts[0]} aria-hidden="true" />
+                <span className={`${styles.grammarCenterRepeatEcho} ${styles.grammarCenterRepeatEchoTwo}`} style={structureSceneConfig.centerRepeatEchoLayouts[1]} aria-hidden="true" />
               </>
             ) : null}
             {structureSceneConfig.shapeGrammar.ruleset.includes("merge") ? (
               <>
-                <span className={styles.grammarCenterMergeBridge} aria-hidden="true" />
-                <span className={`${styles.grammarCenterMergeNode} ${styles.grammarCenterMergeNodeLeft}`} aria-hidden="true" />
-                <span className={`${styles.grammarCenterMergeNode} ${styles.grammarCenterMergeNodeRight}`} aria-hidden="true" />
+                <span className={styles.grammarCenterMergeBridge} style={structureSceneConfig.centerMergeBridgeLayout} aria-hidden="true" />
+                <span className={`${styles.grammarCenterMergeNode} ${styles.grammarCenterMergeNodeLeft}`} style={structureSceneConfig.centerMergeNodeLayouts[0]} aria-hidden="true" />
+                <span className={`${styles.grammarCenterMergeNode} ${styles.grammarCenterMergeNodeRight}`} style={structureSceneConfig.centerMergeNodeLayouts[1]} aria-hidden="true" />
               </>
             ) : null}
             {structureSceneConfig.shapeGrammar.ruleset.includes("split") ? (
               <>
-                <span className={styles.grammarCenterSplitAxis} aria-hidden="true" />
-                <span className={`${styles.grammarCenterSplitNode} ${styles.grammarCenterSplitNodeLeft}`} aria-hidden="true" />
-                <span className={`${styles.grammarCenterSplitNode} ${styles.grammarCenterSplitNodeRight}`} aria-hidden="true" />
+                <span className={styles.grammarCenterSplitAxis} style={structureSceneConfig.centerSplitAxisLayout} aria-hidden="true" />
+                <span className={`${styles.grammarCenterSplitNode} ${styles.grammarCenterSplitNodeLeft}`} style={structureSceneConfig.centerSplitNodeLayouts[0]} aria-hidden="true" />
+                <span className={`${styles.grammarCenterSplitNode} ${styles.grammarCenterSplitNodeRight}`} style={structureSceneConfig.centerSplitNodeLayouts[1]} aria-hidden="true" />
               </>
             ) : null}
             {structureSceneConfig.shapeGrammar.ruleset.includes("rotate") ? (
               <>
-                <span className={`${styles.grammarCenterRotateArc} ${styles.grammarCenterRotateArcOne}`} aria-hidden="true" />
-                <span className={`${styles.grammarCenterRotateArc} ${styles.grammarCenterRotateArcTwo}`} aria-hidden="true" />
+                <span className={`${styles.grammarCenterRotateArc} ${styles.grammarCenterRotateArcOne}`} style={structureSceneConfig.centerRotateArcLayouts[0]} aria-hidden="true" />
+                <span className={`${styles.grammarCenterRotateArc} ${styles.grammarCenterRotateArcTwo}`} style={structureSceneConfig.centerRotateArcLayouts[1]} aria-hidden="true" />
               </>
             ) : null}
             {structureSceneConfig.shapeGrammar.ruleset.includes("translate") ? (
               <>
-                <span className={`${styles.grammarCenterTranslateTrail} ${styles.grammarCenterTranslateTrailOne}`} aria-hidden="true" />
-                <span className={`${styles.grammarCenterTranslateTrail} ${styles.grammarCenterTranslateTrailTwo}`} aria-hidden="true" />
-                <span className={`${styles.grammarCenterTranslateMarker} ${styles.grammarCenterTranslateMarkerOne}`} aria-hidden="true" />
-                <span className={`${styles.grammarCenterTranslateMarker} ${styles.grammarCenterTranslateMarkerTwo}`} aria-hidden="true" />
+                <span className={`${styles.grammarCenterTranslateTrail} ${styles.grammarCenterTranslateTrailOne}`} style={structureSceneConfig.centerTranslateTrailLayouts[0]} aria-hidden="true" />
+                <span className={`${styles.grammarCenterTranslateTrail} ${styles.grammarCenterTranslateTrailTwo}`} style={structureSceneConfig.centerTranslateTrailLayouts[1]} aria-hidden="true" />
+                <span className={`${styles.grammarCenterTranslateMarker} ${styles.grammarCenterTranslateMarkerOne}`} style={structureSceneConfig.centerTranslateMarkerLayouts[0]} aria-hidden="true" />
+                <span className={`${styles.grammarCenterTranslateMarker} ${styles.grammarCenterTranslateMarkerTwo}`} style={structureSceneConfig.centerTranslateMarkerLayouts[1]} aria-hidden="true" />
               </>
             ) : null}
             {structureSceneConfig.shapeGrammar.ruleset.includes("fragment") ? (
               <>
-                <span className={`${styles.grammarCenterFragmentShard} ${styles.grammarCenterFragmentShardOne}`} aria-hidden="true" />
-                <span className={`${styles.grammarCenterFragmentShard} ${styles.grammarCenterFragmentShardTwo}`} aria-hidden="true" />
+                <span className={`${styles.grammarCenterFragmentShard} ${styles.grammarCenterFragmentShardOne}`} style={structureSceneConfig.centerFragmentShardLayouts[0]} aria-hidden="true" />
+                <span className={`${styles.grammarCenterFragmentShard} ${styles.grammarCenterFragmentShardTwo}`} style={structureSceneConfig.centerFragmentShardLayouts[1]} aria-hidden="true" />
               </>
             ) : null}
             {structureSceneConfig.shapeGrammar.rulesApplied.includes("add") ? (
               <>
-                <span className={`${styles.grammarCenterAccent} ${styles.grammarCenterAccentOne}`} aria-hidden="true" />
-                <span className={`${styles.grammarCenterAccent} ${styles.grammarCenterAccentTwo}`} aria-hidden="true" />
+                <span className={`${styles.grammarCenterAccent} ${styles.grammarCenterAccentOne}`} style={structureSceneConfig.centerAccentLayouts[0]} aria-hidden="true" />
+                <span className={`${styles.grammarCenterAccent} ${styles.grammarCenterAccentTwo}`} style={structureSceneConfig.centerAccentLayouts[1]} aria-hidden="true" />
               </>
             ) : null}
             {structureSceneConfig.shapeGrammar.rulesApplied.includes("subtract") ? (
               <>
-                <span className={`${styles.grammarCenterCut} ${styles.grammarCenterCutOne}`} aria-hidden="true" />
-                <span className={`${styles.grammarCenterCut} ${styles.grammarCenterCutTwo}`} aria-hidden="true" />
+                <span className={`${styles.grammarCenterCut} ${styles.grammarCenterCutOne}`} style={structureSceneConfig.centerCutLayouts[0]} aria-hidden="true" />
+                <span className={`${styles.grammarCenterCut} ${styles.grammarCenterCutTwo}`} style={structureSceneConfig.centerCutLayouts[1]} aria-hidden="true" />
               </>
             ) : null}
             {clockDisplay ? (
@@ -1278,6 +1843,7 @@ export function LiveSceneView(props: LiveSceneViewProps) {
               <span
                 key={`${current.direction}-center-grammar-${rule}-${index}`}
                 className={`${styles.grammarCenterToken} ${styles[`grammarCenterToken${index + 1}`]}`}
+                style={structureSceneConfig.centerTokenLayouts[index]}
               >
                 {rule}
               </span>
@@ -2004,6 +2570,10 @@ export function LiveSceneView(props: LiveSceneViewProps) {
               <li>
                 importance: {executionEngineSuccess?.analytic_profile.importance ?? "none"}
               </li>
+              <li>subject: {executionEngineSuccess?.analytic_profile.subject ?? "none"}</li>
+              <li>
+                context: {executionEngineSuccess?.analytic_profile.context.join(" / ") ?? "none"}
+              </li>
               <li>nature: {executionEngineSuccess?.analytic_profile.nature ?? "none"}</li>
               <li>
                 presentation: {executionEngineSuccess?.analytic_profile.presentation ?? "none"}
@@ -2011,6 +2581,7 @@ export function LiveSceneView(props: LiveSceneViewProps) {
               <li>
                 difficulty: {executionEngineSuccess?.analytic_profile.difficulty ?? 0}
               </li>
+              <li>quote: {executionEngineSuccess?.analytic_profile.quote ?? "none"}</li>
               <li>
                 total score: {executionEngineSuccess?.score.total.toFixed(2) ?? "0.00"}
               </li>

@@ -176,10 +176,10 @@ function buildPaletteFromAnalytic(analytic: AnalyticProfile, parsedSlice: Parsed
     return taggedPalette;
   }
 
-  if (analytic.context === "filozofic") {
+  if (analytic.context.includes("filozofic")) {
     return ["ink", "bone", "graphite"];
   }
-  if (analytic.context === "social") {
+  if (analytic.context.includes("social")) {
     return ["crimson", "ash", "steel"];
   }
 
@@ -188,7 +188,7 @@ function buildPaletteFromAnalytic(analytic: AnalyticProfile, parsedSlice: Parsed
 
 function buildThoughtState(parsedSlice: ParsedSliceObject, analytic: AnalyticProfile): ThoughtState {
   const fragments = splitSentences(parsedSlice.content.text).slice(0, 4);
-  const subjectLead = analytic.subject[0] ?? parsedSlice.content.type ?? "concept";
+  const subjectLead = analytic.subject || parsedSlice.content.type || "concept";
   const direction = analytic.quote || `${subjectLead} în devenire`;
   const intensity = parsedSlice.metadata.intensity ?? 0.5;
   const difficultyRatio = clamp(analytic.difficulty / 5, 0, 1);
@@ -197,7 +197,7 @@ function buildThoughtState(parsedSlice: ParsedSliceObject, analytic: AnalyticPro
     direction,
     thought: parsedSlice.content.text.trim(),
     fragments: fragments.length ? fragments : [parsedSlice.content.text.trim()],
-    mood: analytic.context,
+    mood: analytic.context.join(", "),
     palette: buildPaletteFromAnalytic(analytic, parsedSlice),
     materials: unique([
       ...(parsedSlice.metadata.tags.length ? parsedSlice.metadata.tags : []),
@@ -224,7 +224,7 @@ function buildThoughtState(parsedSlice: ParsedSliceObject, analytic: AnalyticPro
       },
     },
     visual: {
-      background: analytic.context === "filozofic" ? "bone" : "paper",
+      background: analytic.context.includes("filozofic") ? "bone" : "paper",
       accent: buildPaletteFromAnalytic(analytic, parsedSlice)[0] ?? "ink",
       ink: "graphite",
       mode: analytic.presentation,
@@ -234,7 +234,7 @@ function buildThoughtState(parsedSlice: ParsedSliceObject, analytic: AnalyticPro
       drift: clamp(analytic.time === "future" ? 0.64 : 0.32, 0, 1),
       convergence: clamp(0.3 + accessToScore(analytic.access) * 0.44, 0, 1),
     },
-    keywords: unique([...analytic.subject, ...parsedSlice.metadata.tags]).slice(0, 8),
+    keywords: unique([analytic.subject, ...parsedSlice.metadata.tags]).slice(0, 8),
   };
 }
 

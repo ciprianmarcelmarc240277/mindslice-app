@@ -8,9 +8,18 @@ export type AnalyticAccess = "self" | "advanced" | "expert";
 export type AnalyticFlexibility = "rigid" | "semi_flexible" | "adaptive";
 
 export type AnalyticProfile = {
-  subject: string[];
+  subject: string;
   importance: AnalyticImportance;
-  context: string;
+  context: Array<
+    | "filozofic"
+    | "social"
+    | "economic"
+    | "politic"
+    | "tehnologic"
+    | "artistic"
+    | "psihologic"
+    | "general"
+  >;
   time: AnalyticTime;
   nature: AnalyticNature;
   execution: string;
@@ -61,6 +70,16 @@ function tokenize(text: string) {
 
 function unique(values: string[]) {
   return [...new Set(values.filter(Boolean))];
+}
+
+function truncate(value: string, maxLength: number) {
+  const normalized = value.trim();
+
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return normalized.slice(0, maxLength).trim();
 }
 
 function containsAny(text: string, values: string[]) {
@@ -284,7 +303,8 @@ function synthesizeActionLogic(text: string) {
 }
 
 export function analyzeSubject(content: ParsedSliceContent) {
-  return unique(extractKeywords(content.text));
+  const [primaryKeyword] = unique(extractKeywords(content.text));
+  return truncate(primaryKeyword ?? content.type ?? "concept", 100) || "concept";
 }
 
 export function evaluateImportance(content: ParsedSliceContent): AnalyticImportance {
@@ -305,16 +325,50 @@ export function evaluateImportance(content: ParsedSliceContent): AnalyticImporta
   return "low";
 }
 
-export function detectContext(content: ParsedSliceContent) {
+export function detectContext(content: ParsedSliceContent): AnalyticProfile["context"] {
+  const contexts: AnalyticProfile["context"] = [];
+
   if (containsPhilosophicalTerms(content.text)) {
-    return "filozofic";
+    contexts.push("filozofic");
   }
 
   if (containsSocialTerms(content.text)) {
-    return "social";
+    contexts.push("social");
   }
 
-  return "general";
+  if (containsAny(content.text, ["economic", "economie", "capital", "piață", "market", "business"])) {
+    contexts.push("economic");
+  }
+
+  if (containsAny(content.text, ["politic", "politică", "guvernare", "putere publică"])) {
+    contexts.push("politic");
+  }
+
+  if (
+    containsAny(content.text, [
+      "tehnologie",
+      "tehnologic",
+      "ai",
+      "artificial",
+      "pipeline",
+      "framework",
+      "architecture",
+      "sistem",
+    ])
+  ) {
+    contexts.push("tehnologic");
+  }
+
+  if (containsAny(content.text, ["artă", "artistic", "vizual", "compoziție", "culoare", "scenă"])) {
+    contexts.push("artistic");
+  }
+
+  if (containsAny(content.text, ["psihologie", "emoție", "trăire", "credință", "voință", "determinare"])) {
+    contexts.push("psihologic");
+  }
+
+  const normalized = unique(contexts).slice(0, 3) as AnalyticProfile["context"];
+  return normalized.length ? normalized : ["general"];
 }
 
 export function detectTime(content: ParsedSliceContent): AnalyticTime {
@@ -346,7 +400,7 @@ export function detectNature(content: ParsedSliceContent): AnalyticNature {
 }
 
 export function generateExecution(content: ParsedSliceContent) {
-  return synthesizeActionLogic(content.text);
+  return truncate(synthesizeActionLogic(content.text), 300);
 }
 
 export function detectPresentation(content: ParsedSliceContent): AnalyticPresentation {
@@ -390,7 +444,84 @@ export function evaluateFlexibility(content: ParsedSliceContent): AnalyticFlexib
 }
 
 export function generateQuote(content: ParsedSliceContent) {
-  return compressToStatement(content.text);
+  return truncate(compressToStatement(content.text), 200);
+}
+
+export function validateAnalyticProfile(profile: AnalyticProfile) {
+  const requiredFieldsExist =
+    Boolean(profile.subject?.trim()) &&
+    Array.isArray(profile.context) &&
+    profile.context.length >= 1 &&
+    profile.context.length <= 3 &&
+    Boolean(profile.execution?.trim());
+
+  const validImportance = ["low", "medium", "high", "critical"].includes(profile.importance);
+  const validTime = ["past", "present", "future", "timeless"].includes(profile.time);
+  const validNature = ["abstract", "concrete", "hybrid"].includes(profile.nature);
+  const validPresentation = ["static", "dynamic", "emergent"].includes(profile.presentation);
+  const validAccess = ["self", "advanced", "expert"].includes(profile.access);
+  const validFlexibility = ["rigid", "semi_flexible", "adaptive"].includes(profile.flexibility);
+  const validContexts = profile.context.every((context) =>
+    ["filozofic", "social", "economic", "politic", "tehnologic", "artistic", "psihologic", "general"].includes(context),
+  );
+  const validDifficulty = Number.isInteger(profile.difficulty) && profile.difficulty >= 1 && profile.difficulty <= 5;
+  const validLengths =
+    profile.subject.length <= 100 &&
+    profile.execution.length <= 300 &&
+    (!profile.quote || profile.quote.length <= 200);
+
+  const rulesPass =
+    !(profile.importance === "critical" && profile.difficulty < 3) &&
+    !(profile.nature === "abstract" && profile.presentation === "static") &&
+    !(profile.access === "expert" && profile.difficulty < 4) &&
+    !(profile.context.includes("tehnologic") && profile.nature === "abstract");
+
+  return (
+    requiredFieldsExist &&
+    validImportance &&
+    validTime &&
+    validNature &&
+    validPresentation &&
+    validAccess &&
+    validFlexibility &&
+    validContexts &&
+    validDifficulty &&
+    validLengths &&
+    rulesPass
+  );
+}
+
+export function normalizeAnalyticProfile(profile: AnalyticProfile): AnalyticProfile {
+  const normalizedContext = unique(profile.context)
+    .filter((context): context is AnalyticProfile["context"][number] =>
+      ["filozofic", "social", "economic", "politic", "tehnologic", "artistic", "psihologic", "general"].includes(context),
+    )
+    .slice(0, 3);
+  const normalizedNature =
+    normalizedContext.includes("tehnologic") && profile.nature === "abstract"
+      ? "hybrid"
+      : profile.nature;
+  const normalizedPresentation =
+    normalizedNature === "abstract" && profile.presentation === "static"
+      ? "emergent"
+      : profile.presentation;
+  const normalizedDifficulty =
+    profile.importance === "critical"
+      ? Math.max(profile.difficulty, 3)
+      : profile.access === "expert"
+        ? Math.max(profile.difficulty, 4)
+        : profile.difficulty;
+
+  return {
+    ...profile,
+    subject: truncate(profile.subject || "concept", 100) || "concept",
+    context: (normalizedContext.length ? normalizedContext : ["general"]) as AnalyticProfile["context"],
+    nature: normalizedNature,
+    presentation: normalizedPresentation,
+    execution: truncate(profile.execution || "reflective static logic", 300) || "reflective static logic",
+    difficulty: Math.max(1, Math.min(5, Math.round(normalizedDifficulty))),
+    quote: truncate(profile.quote || "", 200),
+  };
 }
 
 export function runAnalyticEngine(parsedSliceObject: ParsedSliceObject): AnalyticProfile {
@@ -408,7 +539,7 @@ export function runAnalyticEngine(parsedSliceObject: ParsedSliceObject): Analyti
   const flexibility = evaluateFlexibility(content);
   const quote = generateQuote(content);
 
-  return {
+  const profile = normalizeAnalyticProfile({
     subject,
     importance,
     context,
@@ -420,5 +551,23 @@ export function runAnalyticEngine(parsedSliceObject: ParsedSliceObject): Analyti
     access,
     flexibility,
     quote,
-  };
+  });
+
+  if (!validateAnalyticProfile(profile)) {
+    return normalizeAnalyticProfile({
+      subject: "concept",
+      importance: "medium",
+      context: ["general"],
+      time: "timeless",
+      nature: "hybrid",
+      execution: "reflective static logic",
+      presentation: "emergent",
+      difficulty: 3,
+      access: "self",
+      flexibility: "adaptive",
+      quote: "",
+    });
+  }
+
+  return profile;
 }

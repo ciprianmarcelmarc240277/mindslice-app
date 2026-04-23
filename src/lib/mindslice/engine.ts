@@ -3,6 +3,7 @@ import type {
   InfluenceMode,
   ThoughtState,
 } from "@/lib/mindslice/mindslice-types";
+import { runParserEngine, type ParsedSliceObject } from "@/lib/mindslice/concept-parser-engine-system";
 import {
   contaminationModeRules,
   liveThoughtSceneRules,
@@ -355,25 +356,19 @@ function inferMode(keywords: string[]) {
   return "fractured_field";
 }
 
-function parseSliceBlock(block: string, index: number): SliceState | null {
-  const rawLines = block.replace("[SLICE_START]", "").replace("[SLICE_END]", "").split(/\r?\n/);
-
+function buildSliceFromParsedObject(parsed: ParsedSliceObject): SliceState | null {
+  const rawLines = parsed.content.text.split(/\r?\n/);
   const structuredLines = rawLines
-    .map((raw) => ({
-      raw,
-      indent: (raw.match(/^\s+/)?.[0].length || 0) / 4,
-      line: normalizeSliceLine(raw),
-    }))
-    .filter((entry) => isMeaningfulSliceLine(entry.line));
-
+    .map((raw) => normalizeSliceLine(raw))
+    .filter((line) => isMeaningfulSliceLine(line));
   const uniqueLines: string[] = [];
   const seen = new Set<string>();
 
-  structuredLines.forEach((entry) => {
-    const dedupeKey = entry.line.toLowerCase();
+  structuredLines.forEach((line) => {
+    const dedupeKey = line.toLowerCase();
     if (!seen.has(dedupeKey)) {
       seen.add(dedupeKey);
-      uniqueLines.push(entry.line);
+      uniqueLines.push(line);
     }
   });
 
@@ -381,23 +376,27 @@ function parseSliceBlock(block: string, index: number): SliceState | null {
     return null;
   }
 
-  const joinedRaw = rawLines.join("\n");
-  const lineCount = structuredLines.length || 1;
-  const repetition = clamp(1 - uniqueLines.length / lineCount, 0, 0.9);
-  const avgIndent =
-    structuredLines.reduce((sum, entry) => sum + entry.indent, 0) / structuredLines.length || 0;
+  const joinedRaw = parsed.content.text;
+  const lineCount = uniqueLines.length || 1;
+  const repetition = clamp(1 - uniqueLines.length / Math.max(structuredLines.length || 1, 1), 0, 0.9);
   const slashCount = (joinedRaw.match(/\//g) || []).length;
   const punctuationCount = (joinedRaw.match(/[+*()[\].,]/g) || []).length;
   const fracture = clamp((slashCount / (lineCount * 3) + punctuationCount / 220) / 2, 0.18, 0.95);
-  const density = clamp(0.9 + lineCount / 40 + repetition * 0.45, 0.9, 1.95);
-  const drift = clamp(0.22 + avgIndent / 8, 0.25, 1.2);
-  const convergence = clamp(0.45 + repetition * 0.35 + density * 0.08, 0.45, 0.95);
+  const baseIntensity = clamp(parsed.metadata.intensity, 0.1, 1);
+  const density = clamp(0.84 + baseIntensity * 0.8 + lineCount / 42 + repetition * 0.32, 0.9, 1.95);
+  const drift = clamp(0.24 + parsed.process.pipeline.length * 0.04, 0.25, 1.2);
+  const convergence = clamp(0.45 + repetition * 0.3 + density * 0.08, 0.45, 0.95);
   const wave = clamp(0.35 + fracture * 0.7 + drift * 0.22, 0.35, 1.55);
-  const extractedKeywords = extractKeywords(uniqueLines);
+  const extractedKeywords = extractKeywords([
+    ...uniqueLines,
+    ...parsed.metadata.tags,
+    ...parsed.process.pipeline,
+    parsed.identity.priority ?? "",
+  ]);
   const keywords = buildMindSliceKeywords(extractedKeywords);
-  const direction = extractedKeywords.length
-    ? titleCase(extractedKeywords.slice(0, 3).join(" / "))
-    : `Slice ${index + 1}`;
+  const direction = parsed.identity.index_name?.trim()
+    || parsed.identity.pseudonym?.trim()
+    || (extractedKeywords.length ? titleCase(extractedKeywords.slice(0, 3).join(" / ")) : "MindSlice Structured Slice");
   const palette = inferPalette(keywords, density, fracture);
   const materials = inferMaterials(keywords, fracture);
   const colors = inferColors(keywords, fracture, density);
@@ -423,17 +422,6 @@ function parseSliceBlock(block: string, index: number): SliceState | null {
     },
     keywords,
   };
-}
-
-function parseSlicesContent(content: string): SliceState[] {
-  const blockMatches = content.match(/\[SLICE_START\]([\s\S]*?)\[SLICE_END\]/g) || [];
-  if (!blockMatches.length) {
-    return [];
-  }
-
-  return blockMatches
-    .map(parseSliceBlock)
-    .filter((slice): slice is SliceState => slice !== null);
 }
 
 function buildContaminationKeywords(source: ContaminationSource) {
@@ -596,7 +584,8 @@ export function buildSlicesEngineResult(
   content: string,
   contamination: ContaminationSource | null,
 ): SliceEngineResult {
-  const baseSlices = parseSlicesContent(content);
+  const parsedSlice = runParserEngine(content);
+  const baseSlices = parsedSlice ? [buildSliceFromParsedObject(parsedSlice)].filter((slice): slice is SliceState => slice !== null) : [];
   const slices = contamination
     ? baseSlices.map((slice, index) => applyContamination(slice, contamination, index))
     : baseSlices;
