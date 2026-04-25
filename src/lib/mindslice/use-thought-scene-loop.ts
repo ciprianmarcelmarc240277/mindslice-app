@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useEffectEvent, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { InfluenceMode } from "@/lib/mindslice/thought-scene-engine";
 
 type UseThoughtSceneLoopOptions = {
@@ -29,9 +29,16 @@ export function useThoughtSceneLoop({
   const [animatedThought, setAnimatedThought] = useState(currentThought);
   const [isThoughtOverlayVisible, setIsThoughtOverlayVisible] = useState(true);
   const [thoughtAnimationKey, setThoughtAnimationKey] = useState(0);
+  const advanceSliceRef = useRef(onAdvanceSlice);
+  const advanceImageRef = useRef(onAdvanceImage);
 
-  const advanceSlice = useEffectEvent(onAdvanceSlice);
-  const advanceImage = useEffectEvent(onAdvanceImage);
+  useEffect(() => {
+    advanceSliceRef.current = onAdvanceSlice;
+  }, [onAdvanceSlice]);
+
+  useEffect(() => {
+    advanceImageRef.current = onAdvanceImage;
+  }, [onAdvanceImage]);
 
   useEffect(() => {
     setThoughtAnimationKey((previous) => previous + 1);
@@ -44,11 +51,11 @@ export function useThoughtSceneLoop({
       return;
     }
 
-    const timeout = window.setTimeout(() => {
-      advanceSlice();
+    const interval = window.setInterval(() => {
+      advanceSliceRef.current();
     }, sliceCycleDuration);
 
-    return () => window.clearTimeout(timeout);
+    return () => window.clearInterval(interval);
   }, [isActive, sliceCycleDuration]);
 
   useEffect(() => {
@@ -57,7 +64,7 @@ export function useThoughtSceneLoop({
     }
 
     const interval = window.setInterval(() => {
-      advanceImage();
+      advanceImageRef.current();
     }, 4200);
 
     return () => window.clearInterval(interval);

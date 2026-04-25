@@ -47,7 +47,16 @@ async function getActiveContamination(userId: string | null) {
   } satisfies ContaminationSource;
 }
 
-export async function GET() {
+function shouldRefineSlices(request: Request) {
+  const url = new URL(request.url);
+
+  return (
+    url.searchParams.get("refine") === "openai" ||
+    process.env.OPENAI_SLICE_REFINEMENT_ENABLED === "true"
+  );
+}
+
+export async function GET(request: Request) {
   const fallback = {
     slices: [] as unknown[],
     engineMode: "MindSlice live thought scene / unavailable",
@@ -68,6 +77,10 @@ export async function GET() {
     const content = await readFile(filePath, "utf8");
     const contamination = await getActiveContamination(userId);
     const baseResult = buildSlicesEngineResult(content, contamination);
+
+    if (!shouldRefineSlices(request)) {
+      return Response.json(baseResult);
+    }
 
     try {
       const refinedResult = await refineSlicesWithOpenAI(baseResult, contamination);

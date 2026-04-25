@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  finalizeSlicesRuntimeState,
+  requestRemoteSlicesWithGuard,
+  selectInitialSlices,
+  type SlicesApiHydrationStatus,
+  type SlicesRuntimeState,
+} from "@/lib/mindslice/concept-slices-api-performance-guard-system";
 
 type UseSlicesEngineSystemOptions<TSlice> = {
   fallbackSlices: TSlice[];
   fallbackEngineMode: string;
   isSignedIn: boolean;
   refreshKey: string;
+  requestTimeoutMs?: number;
 };
 
 export function useSlicesEngineSystem<TSlice, TProfile>({
@@ -14,57 +22,78 @@ export function useSlicesEngineSystem<TSlice, TProfile>({
   fallbackEngineMode,
   isSignedIn,
   refreshKey,
+  requestTimeoutMs = 6000,
 }: UseSlicesEngineSystemOptions<TSlice>) {
-  const [stateLibrary, setStateLibrary] = useState<TSlice[]>(fallbackSlices);
-  const [engineMode, setEngineMode] = useState(fallbackEngineMode);
-  const [engineProfile, setEngineProfile] = useState<TProfile | null>(null);
+  const fallbackLibrary = useMemo(
+    () => ({
+      default_slices: fallbackSlices,
+      engine_mode: fallbackEngineMode,
+    }),
+    [fallbackEngineMode, fallbackSlices],
+  );
+  const [slicesRuntimeState, setSlicesRuntimeState] = useState<SlicesRuntimeState<TSlice, TProfile>>(
+    () => selectInitialSlices(fallbackLibrary),
+  );
   const [hydrationVersion, setHydrationVersion] = useState(0);
+  const staleCacheRef = useRef<{
+    slices: TSlice[];
+    engine_mode?: string;
+    engine_profile?: TProfile | null;
+    expires_at?: number;
+  } | null>(null);
 
   useEffect(() => {
     let ignore = false;
+    const controller = new AbortController();
+    const initialState = selectInitialSlices(fallbackLibrary, staleCacheRef.current);
+
+    setSlicesRuntimeState(initialState);
 
     async function loadSlices() {
-      try {
-        const response = await fetch("/api/slices", { cache: "no-store" });
-        if (!response.ok) {
-          throw new Error(`Slices request failed with status ${response.status}`);
-        }
+      const remoteResult = await requestRemoteSlicesWithGuard<TSlice, TProfile>({
+        url: "/api/slices",
+        timeout_ms: requestTimeoutMs,
+        signal: controller.signal,
+      });
 
-        const payload = (await response.json()) as {
-          slices?: TSlice[];
-          engineMode?: string;
-          engineProfile?: TProfile;
-        };
-        const slices = Array.isArray(payload.slices) ? payload.slices : [];
-        if (!slices.length || ignore) {
-          return;
-        }
-
-        setStateLibrary(slices);
-        setEngineMode(payload.engineMode || fallbackEngineMode);
-        setEngineProfile(payload.engineProfile || null);
-        setHydrationVersion((previous) => previous + 1);
-      } catch {
-        if (!ignore) {
-          setStateLibrary(fallbackSlices);
-          setEngineMode(fallbackEngineMode);
-          setEngineProfile(null);
-          setHydrationVersion((previous) => previous + 1);
-        }
+      if (ignore) {
+        return;
       }
+
+      const nextState = finalizeSlicesRuntimeState(initialState, remoteResult, fallbackLibrary);
+
+      if (remoteResult.status === "success") {
+        staleCacheRef.current = {
+          slices: remoteResult.slices,
+          engine_mode: remoteResult.engine_mode,
+          engine_profile: remoteResult.engine_profile,
+          expires_at: Date.now() + 1000 * 60 * 5,
+        };
+      }
+
+      setSlicesRuntimeState(nextState);
+      setHydrationVersion((previous) => previous + 1);
     }
 
-    loadSlices();
+    if (isSignedIn) {
+      void loadSlices();
+    }
 
     return () => {
       ignore = true;
+      controller.abort();
     };
-  }, [fallbackEngineMode, fallbackSlices, isSignedIn, refreshKey]);
+  }, [fallbackLibrary, isSignedIn, refreshKey, requestTimeoutMs]);
+
+  const hydrationStatus: SlicesApiHydrationStatus = slicesRuntimeState.hydration_status;
 
   return {
-    stateLibrary,
-    engineMode,
-    engineProfile,
+    stateLibrary: slicesRuntimeState.active_slices,
+    engineMode: slicesRuntimeState.engine_mode ?? fallbackEngineMode,
+    engineProfile: slicesRuntimeState.engine_profile,
     hydrationVersion,
+    librarySource: hydrationStatus === "remote_hydrated" ? ("remote" as const) : ("fallback" as const),
+    hydrationStatus,
+    slicesWarnings: slicesRuntimeState.warnings,
   };
 }

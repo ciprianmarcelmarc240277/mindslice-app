@@ -27,6 +27,14 @@ import {
   type ScoringProfile,
 } from "@/lib/mindslice/concept-scoring-engine-system";
 import {
+  runVisualMappingRulesV1,
+  type VisualBlueprint,
+} from "@/lib/mindslice/concept-visual-mapping-rules-system";
+import {
+  runVisualComposerV1,
+  type VisualComposerResult,
+} from "@/lib/mindslice/concept-visual-composer-system";
+import {
   runThresholdModelV2,
   type HistoricalMemorySignal,
   type ThresholdModelResult,
@@ -118,6 +126,8 @@ export type ExecutionEngineResult =
       learning_loop: LearningLoopResult;
       slice_learning_loop: SliceLearningLoopResult;
       scoring_engine_result: ScoringProfile;
+      visual_blueprint: VisualBlueprint;
+      render_composition: VisualComposerResult;
       slice_repetition_result: SliceRepetitionResult;
       author_value_profile: AuthorValueProfile;
       author_reputation_result: AuthorReputationResult;
@@ -235,6 +245,10 @@ function buildPaletteFromAnalytic(analytic: AnalyticProfile, parsedSlice: Parsed
   }
 
   return ["paper", "graphite", "ember"];
+}
+
+function currentVisualBackgroundName(analytic: AnalyticProfile) {
+  return analytic.context.includes("filozofic") ? "bone" : "paper";
 }
 
 function buildThoughtState(parsedSlice: ParsedSliceObject, analytic: AnalyticProfile): ThoughtState {
@@ -995,6 +1009,24 @@ export function runExecutionEngineV3(
           },
         }
       : sliceLearningLoop.learning_cycle_output.repetition;
+  const visualBlueprint = runVisualMappingRulesV1(parsedSlice);
+  const renderComposition = runVisualComposerV1(visualBlueprint, {
+    width: 1080,
+    height: 1080,
+    margin:
+      analyticProfile.importance === "critical"
+        ? 104
+        : analyticProfile.presentation === "dynamic"
+          ? 112
+          : 120,
+    background: currentVisualBackgroundName(analyticProfile),
+    style:
+      analyticProfile.presentation === "static"
+        ? "minimal"
+        : analyticProfile.nature === "concrete"
+          ? "structural"
+          : "minimal_elegant",
+  });
   const scoringEngineResult =
     "status" in sliceLearningLoop
       ? runScoringEngineV1(
@@ -1066,6 +1098,8 @@ export function runExecutionEngineV3(
     learning_loop: learningLoop,
     slice_learning_loop: sliceLearningLoop,
     scoring_engine_result: scoringEngineResult,
+    visual_blueprint: visualBlueprint,
+    render_composition: renderComposition,
     slice_repetition_result: sliceRepetitionResult,
     author_value_profile: authorValueProfile,
     author_reputation_result: authorReputationResult,

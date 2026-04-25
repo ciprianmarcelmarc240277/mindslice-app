@@ -46,6 +46,7 @@ import { useEngineDebuggerSystem } from "@/lib/mindslice/use-engine-debugger-sys
 import { useSystemModificationState } from "@/lib/mindslice/use-system-modification-state";
 import { useClockSystem } from "@/lib/mindslice/use-clock-system";
 import { useJournalEditorSystem } from "@/lib/mindslice/use-journal-editor-system";
+import { runCanvasAccessPolicyV1 } from "@/lib/mindslice/concept-canvas-access-policy-system";
 import type { ExecutionEngineResult } from "@/lib/mindslice/concept-execution-engine-system";
 import type {
   BlogPostDraft,
@@ -420,7 +421,6 @@ export default function Home() {
     savedMoments,
     setSavedMoments,
     isAdmin,
-    hasLoadedUserState,
     isSavingAddressForm,
     isEditingAddressForm,
     setIsEditingAddressForm,
@@ -529,10 +529,14 @@ export default function Home() {
     engineMode,
     engineProfile,
     hydrationVersion,
+    librarySource,
+    hydrationStatus,
+    slicesWarnings,
   } = useSlicesEngineSystem<ThoughtState, EngineProfile>({
     fallbackSlices: fallbackStateLibrary,
     fallbackEngineMode: "mock local",
     isSignedIn: isUserSignedIn,
+    requestTimeoutMs: 6000,
     refreshKey: [
       interference?.sourceId ?? "none",
       interference?.publishedAt ?? "none",
@@ -541,7 +545,8 @@ export default function Home() {
   });
   const { conceptArchive, isLoadingConceptArchive } = useConceptArchiveSystem();
   const libraryLength = stateLibrary.length;
-  const current = stateLibrary[currentIndex];
+  const safeCurrentIndex = libraryLength > 0 ? currentIndex % libraryLength : 0;
+  const current = stateLibrary[safeCurrentIndex] ?? fallbackStateLibrary[0];
   const {
     systemState,
     adjustedStateLibrary,
@@ -552,7 +557,7 @@ export default function Home() {
   } = useSystemModificationState({
     isSignedIn: isUserSignedIn,
     stateLibrary,
-    currentIndex,
+    currentIndex: safeCurrentIndex,
     current,
     engineMode,
     engineProfile,
@@ -576,10 +581,29 @@ export default function Home() {
     !isSignedIn ||
     (Boolean(normalizedProfileDisplayName) &&
       isValidFamilyAndGivenName(normalizedProfileDisplayName));
-  const hasProfileAccess =
-    !isSignedIn || (hasRequiredDisplayName && hasAcceptedNameDeclaration);
-  const canViewArtistThinking =
-    isUserSignedIn && hasLoadedUserState && hasRequiredDisplayName && hasAcceptedNameDeclaration;
+  const canvasAccessPolicy = useMemo(
+    () =>
+      runCanvasAccessPolicyV1(
+        {
+          role: isUserSignedIn ? "signed_in" : "anonymous",
+          signed_in: isUserSignedIn,
+          profile_complete: hasRequiredDisplayName && hasAcceptedNameDeclaration,
+          active_subscription: hasActiveSubscription,
+        },
+        viewMode === "archive" ? "view_archive" : "view_canvas",
+      ),
+    [
+      hasAcceptedNameDeclaration,
+      hasActiveSubscription,
+      hasRequiredDisplayName,
+      isUserSignedIn,
+      viewMode,
+    ],
+  );
+  const hasProfileAccess = canvasAccessPolicy.can_save_memory || !isSignedIn;
+  const canViewLiveCanvas = canvasAccessPolicy.can_view_canvas;
+  const canViewArtistThinking = canvasAccessPolicy.can_save_memory;
+  const needsProfileCompletion = canViewLiveCanvas && !canViewArtistThinking;
   const currentDebutStatus = profile?.debut_status ?? "aspirant";
   const hasDebutProgramChanges =
     normalizedArtistStatementInput !== (profile?.artist_statement ?? "").trim() ||
@@ -590,18 +614,15 @@ export default function Home() {
     isActive,
     hasProfileAccess,
     current: adjustedCurrent,
-    currentIndex,
+    currentIndex: safeCurrentIndex,
     influenceMode: effectiveInfluenceMode,
   });
   const canonInfluence = useCanonInfluenceContext(isUserSignedIn);
-  const thoughtCycleDuration = getThoughtCycleDuration(
-    adjustedCurrent.thought,
-    effectiveInfluenceMode,
-  );
+  const thoughtCycleDuration = getThoughtCycleDuration(adjustedCurrent.thought, effectiveInfluenceMode);
   const { animatedThought, isThoughtOverlayVisible, thoughtAnimationKey } = useThoughtSceneLoop({
     currentThought: adjustedCurrent.thought,
     currentDirection: adjustedCurrent.direction,
-    currentIndex,
+    currentIndex: safeCurrentIndex,
     influenceMode: effectiveInfluenceMode,
     isActive,
     sliceCycleDuration: thoughtCycleDuration,
@@ -615,7 +636,7 @@ export default function Home() {
   });
   const thoughtScene = buildThoughtSceneEngine({
     current: adjustedCurrent,
-    currentIndex,
+    currentIndex: safeCurrentIndex,
     influenceMode: effectiveInfluenceMode,
     animatedThought,
     isThoughtOverlayVisible,
@@ -631,7 +652,7 @@ export default function Home() {
     () =>
       runIdeaSetMainLoop({
         ideaSet: adjustedStateLibrary,
-        activeIdeaIndex: currentIndex,
+        activeIdeaIndex: safeCurrentIndex,
         history,
         thoughtMemory,
         interference,
@@ -645,7 +666,7 @@ export default function Home() {
     [
       canonInfluence,
       clockDisplay,
-      currentIndex,
+      safeCurrentIndex,
       adjustedStateLibrary,
       effectiveInfluenceMode,
       history,
@@ -801,16 +822,8 @@ export default function Home() {
     () => buildExecutionSliceText(adjustedCurrent, profile),
     [adjustedCurrent, profile],
   );
-  const canWriteJournal =
-    executionEngineResult &&
-    !("status" in executionEngineResult)
-      ? executionEngineResult.author_reputation_result.unlocked_permissions.can_write_journal
-      : false;
-  const canCreateSlice =
-    executionEngineResult &&
-    !("status" in executionEngineResult)
-      ? executionEngineResult.author_reputation_result.unlocked_permissions.can_create_slice
-      : false;
+  const canWriteJournal = canvasAccessPolicy.can_write_journal;
+  const canCreateSlice = canvasAccessPolicy.can_create_slice;
   const handleBioSaveWithAccess = () => handleBioSave(hasProfileAccess);
   const handleDebutProgramSaveWithAccess = () => handleDebutProgramSave(hasProfileAccess);
 
@@ -820,7 +833,17 @@ export default function Home() {
 
   useEffect(() => {
     setPromptOutput(buildPrompt(false, adjustedCurrent));
-  }, [adjustedCurrent, currentIndex]);
+  }, [adjustedCurrent, safeCurrentIndex]);
+
+  useEffect(() => {
+    if (!libraryLength) {
+      return;
+    }
+
+    if (currentIndex >= libraryLength) {
+      setCurrentIndex(0);
+    }
+  }, [currentIndex, libraryLength]);
 
   useEffect(() => {
     if (!canViewArtistThinking || viewMode !== "live") {
@@ -993,7 +1016,7 @@ export default function Home() {
     }
 
     if (!canCreateSlice) {
-      setAccountMessage("Rank-ul curent nu permite încă salvarea și crearea de slice-uri.");
+      setAccountMessage("Ai nevoie de abonament activ pentru salvarea și crearea de slice-uri.");
       setSaveState("error");
       return;
     }
@@ -1047,7 +1070,7 @@ export default function Home() {
     }
 
     if (!canWriteJournal) {
-      setAccountMessage("Rank-ul curent nu permite încă scrierea în jurnal.");
+      setAccountMessage("Completează profilul ca să poți scrie în jurnal.");
       return;
     }
 
@@ -1408,7 +1431,7 @@ export default function Home() {
             isLoading={isLoadingConceptArchive}
             canViewArtistThinking={canViewArtistThinking}
           />
-        ) : !canViewArtistThinking ? (
+        ) : !canViewLiveCanvas ? (
           <section className={styles.panelBlock}>
             <span className={styles.panelMarker}>PANEL · Access Gate</span>
             <p className={styles.eyebrow}>Access Locked</p>
@@ -1421,101 +1444,125 @@ export default function Home() {
             </p>
           </section>
         ) : viewMode === "live" ? (
-          <LiveSceneView
-            isActive={isActive}
-            engineMode={adjustedEngineMode}
-            engineProfile={adjustedEngineProfile}
-            current={adjustedCurrent}
-            currentIndex={currentIndex}
-            libraryLength={libraryLength}
-            clockDisplay={clockDisplay}
-            clockMemoryCount={clockMemoryCount}
-            latestClockTime={latestClockMemory
-              ? `${latestClockMemory.display.hours}:${latestClockMemory.display.minutes}:${latestClockMemory.display.seconds}`
-              : null}
-            liveInfluenceMode={effectiveInfluenceMode}
-            thoughtScene={thoughtScene}
-            leadingLineStyles={leadingLineStyles}
-            focalHaloStyles={focalHaloStyles}
-            negativeSpaceStyles={negativeSpaceStyles}
-            thoughtCenterAnchor={thoughtCenterAnchor}
-            thoughtCenterFragment={thoughtCenterFragment}
-            interference={interference}
-            profile={profile}
-            followedUserIds={followedUserIds}
-            followActionUserId={followActionUserId}
-            handleFollowToggle={handleFollowToggle}
-            formatPublicAuthor={formatPublicAuthor}
-            isThoughtOverlayVisible={isThoughtOverlayVisible}
-            thoughtAnimationKey={thoughtAnimationKey}
-            thoughtLines={thoughtLines}
-            liveAiResponseLines={liveAiResponseLines}
-            systemState={systemState}
-            engineDebuggerReport={engineDebuggerReport}
-            executionEngineStatus={executionEngineStatus}
-            executionEngineResult={executionEngineResult}
-            debugRunCount={debugRuns.length}
-            comparativeDelta={comparativeDelta}
-            ideaSetMainLoop={ideaSetMainLoop}
-            conceptProcess={conceptProcess}
-            conceptCandidate={conceptCandidate}
-            conceptValidation={conceptValidation}
-            conceptPoolCount={conceptPoolCount}
-            latestPoolConceptTitle={latestPoolEntry?.concept.core.title ?? null}
-            colorPoolCount={colorPoolCount}
-            latestColorPoolTitle={latestColorPoolEntry?.conceptTitle ?? null}
-            scenarioPoolCount={scenarioPoolCount}
-            latestScenarioPoolTitle={latestScenarioPoolEntry?.conceptTitle ?? null}
-            artCompositionPoolCount={artCompositionPoolCount}
-            latestArtCompositionPoolTitle={latestArtCompositionPoolEntry?.conceptTitle ?? null}
-            structurePoolCount={structurePoolCount}
-            latestStructurePoolTitle={latestStructurePoolEntry?.conceptTitle ?? null}
-            shapePoolCount={shapePoolCount}
-            latestShapePoolTitle={latestShapePoolEntry?.conceptTitle ?? null}
-            canonCount={canonCount}
-            primaryCanonTitle={primaryCanon?.concept.core.title ?? null}
-            colorCanonCount={colorCanonCount}
-            primaryColorCanonTitle={primaryColorCanon?.conceptTitle ?? null}
-            narrativeCanonCount={narrativeCanonCount}
-            primaryNarrativeCanonTitle={primaryNarrativeCanon?.conceptTitle ?? null}
-            structureCanonCount={structureCanonCount}
-            primaryStructureCanonTitle={primaryStructureCanon?.conceptTitle ?? null}
-            shapeCanonCount={shapeCanonCount}
-            primaryShapeCanonTitle={primaryShapeCanon?.conceptTitle ?? null}
-            shapeGrammarCanonCount={shapeGrammarCanonCount}
-            primaryShapeGrammarCanonTitle={primaryShapeGrammarCanon?.conceptTitle ?? null}
-            metaSystemCanonCount={metaSystemCanonCount}
-            primaryMetaSystemCanonTitle={primaryMetaSystemCanon?.conceptTitle ?? null}
-            conceptMemoryCount={conceptMemory.length}
-            resolvedConceptCount={resolvedConceptCount}
-            latestConceptTitle={latestConcept?.concept.core.title ?? null}
-            colorMemoryCount={colorMemory.length}
-            resolvedColorCount={resolvedColorCount}
-            latestColorTitle={latestColorMemory?.conceptTitle ?? null}
-            storyMemoryCount={storyMemory.length}
-            resolvedScenarioCount={resolvedScenarioCount}
-            latestScenarioTitle={latestStoryMemory?.conceptTitle ?? null}
-            artMemoryCount={artMemory.length}
-            resolvedArtCount={resolvedArtCount}
-            latestArtTitle={latestArtMemory?.conceptTitle ?? null}
-            structureMemoryCount={structureMemory.length}
-            resolvedStructureCount={resolvedStructureCount}
-            latestStructureTitle={latestStructureMemory?.conceptTitle ?? null}
-            shapeMemoryCount={shapeMemory.length}
-            resolvedShapeCount={resolvedShapeCount}
-            latestShapeTitle={latestShapeMemory?.conceptTitle ?? null}
-            shapeGrammarMemoryCount={shapeGrammarMemory.length}
-            resolvedShapeGrammarCount={resolvedShapeGrammarCount}
-            latestShapeGrammarTitle={latestShapeGrammarMemory?.conceptTitle ?? null}
-            metaSystemMemoryCount={metaSystemMemory.length}
-            resolvedMetaSystemCount={resolvedMetaSystemCount}
-            latestMetaSystemTitle={latestMetaSystemMemory?.conceptTitle ?? null}
-            artCanonCount={artCanonCount}
-            primaryArtCanonTitle={primaryArtCanon?.conceptTitle ?? null}
-            promotionStatus={latestPromotion?.promotedConcept.stage ?? conceptCandidate.stage}
-            canPromoteToCanonical={Boolean(latestPromotion?.canPromoteToCanonical)}
-            promotionNotes={latestPromotion?.notes ?? []}
-          />
+          <>
+            {needsProfileCompletion ? (
+              <section className={styles.panelBlock}>
+                <span className={styles.panelMarker}>PANEL · Profile Notice</span>
+                <p className={styles.eyebrow}>Canvas activ, memorie blocată</p>
+                <h2>Poți vedea Canvas-ul. Completează profilul ca sistemul să poată salva memorie.</h2>
+                <p className={styles.blogIntro}>
+                  Pentru jurnal, contaminare și memorie persistentă, setează `Nume` în formatul
+                  `Nume de familie, Prenume` și acceptă declarația de nume real în panoul de cont.
+                </p>
+              </section>
+            ) : null}
+            {slicesWarnings.length > 0 ? (
+              <section className={styles.panelBlock}>
+                <span className={styles.panelMarker}>PANEL · Slices Guard</span>
+                <p className={styles.eyebrow}>Canvas protejat</p>
+                <h2>Canvas-ul rulează pe fallback în timp ce slices remote se hidratează asincron.</h2>
+                <p className={styles.blogIntro}>
+                  Source: {librarySource}. Status: {hydrationStatus}. Warning:{" "}
+                  {slicesWarnings.join(", ")}
+                </p>
+              </section>
+            ) : null}
+            <LiveSceneView
+              isActive={isActive}
+              engineMode={adjustedEngineMode}
+              engineProfile={adjustedEngineProfile}
+              current={adjustedCurrent}
+              currentIndex={safeCurrentIndex}
+              libraryLength={libraryLength}
+              clockDisplay={clockDisplay}
+              clockMemoryCount={clockMemoryCount}
+              latestClockTime={latestClockMemory
+                ? `${latestClockMemory.display.hours}:${latestClockMemory.display.minutes}:${latestClockMemory.display.seconds}`
+                : null}
+              liveInfluenceMode={effectiveInfluenceMode}
+              thoughtScene={thoughtScene}
+              leadingLineStyles={leadingLineStyles}
+              focalHaloStyles={focalHaloStyles}
+              negativeSpaceStyles={negativeSpaceStyles}
+              thoughtCenterAnchor={thoughtCenterAnchor}
+              thoughtCenterFragment={thoughtCenterFragment}
+              interference={interference}
+              profile={profile}
+              followedUserIds={followedUserIds}
+              followActionUserId={followActionUserId}
+              handleFollowToggle={handleFollowToggle}
+              formatPublicAuthor={formatPublicAuthor}
+              isThoughtOverlayVisible={isThoughtOverlayVisible}
+              thoughtAnimationKey={thoughtAnimationKey}
+              thoughtLines={thoughtLines}
+              liveAiResponseLines={liveAiResponseLines}
+              systemState={systemState}
+              engineDebuggerReport={engineDebuggerReport}
+              executionEngineStatus={executionEngineStatus}
+              executionEngineResult={executionEngineResult}
+              debugRunCount={debugRuns.length}
+              comparativeDelta={comparativeDelta}
+              ideaSetMainLoop={ideaSetMainLoop}
+              conceptProcess={conceptProcess}
+              conceptCandidate={conceptCandidate}
+              conceptValidation={conceptValidation}
+              conceptPoolCount={conceptPoolCount}
+              latestPoolConceptTitle={latestPoolEntry?.concept.core.title ?? null}
+              colorPoolCount={colorPoolCount}
+              latestColorPoolTitle={latestColorPoolEntry?.conceptTitle ?? null}
+              scenarioPoolCount={scenarioPoolCount}
+              latestScenarioPoolTitle={latestScenarioPoolEntry?.conceptTitle ?? null}
+              artCompositionPoolCount={artCompositionPoolCount}
+              latestArtCompositionPoolTitle={latestArtCompositionPoolEntry?.conceptTitle ?? null}
+              structurePoolCount={structurePoolCount}
+              latestStructurePoolTitle={latestStructurePoolEntry?.conceptTitle ?? null}
+              shapePoolCount={shapePoolCount}
+              latestShapePoolTitle={latestShapePoolEntry?.conceptTitle ?? null}
+              canonCount={canonCount}
+              primaryCanonTitle={primaryCanon?.concept.core.title ?? null}
+              colorCanonCount={colorCanonCount}
+              primaryColorCanonTitle={primaryColorCanon?.conceptTitle ?? null}
+              narrativeCanonCount={narrativeCanonCount}
+              primaryNarrativeCanonTitle={primaryNarrativeCanon?.conceptTitle ?? null}
+              structureCanonCount={structureCanonCount}
+              primaryStructureCanonTitle={primaryStructureCanon?.conceptTitle ?? null}
+              shapeCanonCount={shapeCanonCount}
+              primaryShapeCanonTitle={primaryShapeCanon?.conceptTitle ?? null}
+              shapeGrammarCanonCount={shapeGrammarCanonCount}
+              primaryShapeGrammarCanonTitle={primaryShapeGrammarCanon?.conceptTitle ?? null}
+              metaSystemCanonCount={metaSystemCanonCount}
+              primaryMetaSystemCanonTitle={primaryMetaSystemCanon?.conceptTitle ?? null}
+              conceptMemoryCount={conceptMemory.length}
+              resolvedConceptCount={resolvedConceptCount}
+              latestConceptTitle={latestConcept?.concept.core.title ?? null}
+              colorMemoryCount={colorMemory.length}
+              resolvedColorCount={resolvedColorCount}
+              latestColorTitle={latestColorMemory?.conceptTitle ?? null}
+              storyMemoryCount={storyMemory.length}
+              resolvedScenarioCount={resolvedScenarioCount}
+              latestScenarioTitle={latestStoryMemory?.conceptTitle ?? null}
+              artMemoryCount={artMemory.length}
+              resolvedArtCount={resolvedArtCount}
+              latestArtTitle={latestArtMemory?.conceptTitle ?? null}
+              structureMemoryCount={structureMemory.length}
+              resolvedStructureCount={resolvedStructureCount}
+              latestStructureTitle={latestStructureMemory?.conceptTitle ?? null}
+              shapeMemoryCount={shapeMemory.length}
+              resolvedShapeCount={resolvedShapeCount}
+              latestShapeTitle={latestShapeMemory?.conceptTitle ?? null}
+              shapeGrammarMemoryCount={shapeGrammarMemory.length}
+              resolvedShapeGrammarCount={resolvedShapeGrammarCount}
+              latestShapeGrammarTitle={latestShapeGrammarMemory?.conceptTitle ?? null}
+              metaSystemMemoryCount={metaSystemMemory.length}
+              resolvedMetaSystemCount={resolvedMetaSystemCount}
+              latestMetaSystemTitle={latestMetaSystemMemory?.conceptTitle ?? null}
+              artCanonCount={artCanonCount}
+              primaryArtCanonTitle={primaryArtCanon?.conceptTitle ?? null}
+              promotionStatus={latestPromotion?.promotedConcept.stage ?? conceptCandidate.stage}
+              canPromoteToCanonical={Boolean(latestPromotion?.canPromoteToCanonical)}
+              promotionNotes={latestPromotion?.notes ?? []}
+            />
+          </>
         ) : null}
 
         {viewMode === "journal" ? (
@@ -1753,7 +1800,7 @@ Artist AI care gândește live și poate fi contaminat de autorii care publică 
       </section>
 
       <aside className={styles.controlPanel}>
-        {viewMode === "live" && canViewArtistThinking ? (
+        {viewMode === "live" && canViewLiveCanvas ? (
             <LiveControlsPanel
               isActive={isActive}
               canCreateSlice={canCreateSlice}

@@ -886,6 +886,77 @@
   place-items: center;
 }
 
+.svgEngineStage {
+  width: 100%;
+  min-height: 42rem;
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(24, 20, 17, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.svgEngineSvg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.svgEngineStage > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.svgEngineForm {
+  transition:
+    cx 780ms cubic-bezier(0.22, 1, 0.36, 1),
+    cy 780ms cubic-bezier(0.22, 1, 0.36, 1),
+    x 780ms cubic-bezier(0.22, 1, 0.36, 1),
+    y 780ms cubic-bezier(0.22, 1, 0.36, 1),
+    x1 780ms cubic-bezier(0.22, 1, 0.36, 1),
+    y1 780ms cubic-bezier(0.22, 1, 0.36, 1),
+    x2 780ms cubic-bezier(0.22, 1, 0.36, 1),
+    y2 780ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 780ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 780ms cubic-bezier(0.22, 1, 0.36, 1),
+    r 780ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 420ms ease;
+}
+
+.svgEngineLegend {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.svgEngineLegend span {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(24, 20, 17, 0.04);
+  border: 1px solid rgba(24, 20, 17, 0.08);
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+
+.svgEngineEmpty {
+  padding: 24px;
+  border-radius: 20px;
+  border: 1px dashed rgba(24, 20, 17, 0.12);
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.svgEngineEmpty p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
 .textStage {
   position: relative;
   width: 100%;

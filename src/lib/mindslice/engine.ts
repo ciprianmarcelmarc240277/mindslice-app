@@ -179,7 +179,54 @@ function buildThought(line: string, keywords: string[]) {
   return `Acum mă gândesc la ${normalized}, cu ${dominantAnchor} ca axă dominantă.`;
 }
 
+function buildSliceDirection(
+  uniqueLines: string[],
+  extractedKeywords: string[],
+  parsed: ParsedSliceObject,
+) {
+  const firstLine = uniqueLines[0]?.replace(/[.?!]+$/g, "").trim() ?? "";
+
+  if (firstLine) {
+    const compactLine = firstLine.length > 72 ? `${firstLine.slice(0, 69).trimEnd()}…` : firstLine;
+    return titleCase(compactLine);
+  }
+
+  if (extractedKeywords.length) {
+    return titleCase(extractedKeywords.slice(0, 3).join(" / "));
+  }
+
+  return (
+    parsed.identity.pseudonym?.trim() ||
+    parsed.identity.index_name?.trim() ||
+    "MindSlice Structured Slice"
+  );
+}
+
 function inferPalette(keywords: string[], density: number, fracture: number) {
+  if (
+    keywords.some((word) =>
+      ["identitate", "identity", "nume", "author", "autor", "signature"].includes(word),
+    )
+  ) {
+    return ["chalk", "ink", "bone", "signal red"];
+  }
+
+  if (
+    keywords.some((word) =>
+      ["conflict", "rupture", "friction", "ciocnire", "break", "split"].includes(word),
+    )
+  ) {
+    return ["ash", "charcoal", "rust", "paper"];
+  }
+
+  if (
+    keywords.some((word) =>
+      ["crestere", "growth", "expand", "emergence", "branch"].includes(word),
+    )
+  ) {
+    return ["mist", "sage", "stone", "ember"];
+  }
+
   if (keywords.some((word) => ["grădină", "curte", "terasă", "balcon"].includes(word))) {
     return ["sage", "earth", "stone", "mist"];
   }
@@ -200,6 +247,22 @@ function inferPalette(keywords: string[], density: number, fracture: number) {
 }
 
 function inferMaterials(keywords: string[], fracture: number) {
+  if (
+    keywords.some((word) =>
+      ["identitate", "identity", "author", "signature", "nume"].includes(word),
+    )
+  ) {
+    return ["ink", "vellum", "charcoal dust", "pressed paper"];
+  }
+
+  if (
+    keywords.some((word) =>
+      ["conflict", "rupture", "friction", "intersection", "split"].includes(word),
+    )
+  ) {
+    return ["cut paper", "graphite", "glass", "soot"];
+  }
+
   if (keywords.some((word) => ["grădină", "curte", "beci", "subsol"].includes(word))) {
     return ["soil dust", "stone", "lime wash", "aged paper"];
   }
@@ -288,6 +351,38 @@ function inferTriad(keywords: string[], density: number) {
 }
 
 function inferColors(keywords: string[], fracture: number, density: number) {
+  if (
+    keywords.some((word) =>
+      ["identitate", "identity", "author", "signature", "nume"].includes(word),
+    )
+  ) {
+    return {
+      background: "#f2eadf",
+      accent: "#a1312e",
+      ink: "#181211",
+    };
+  }
+
+  if (
+    keywords.some((word) =>
+      ["conflict", "rupture", "friction", "intersection", "split"].includes(word),
+    )
+  ) {
+    return {
+      background: "#eadfd5",
+      accent: "#8c2d1e",
+      ink: "#1f1714",
+    };
+  }
+
+  if (keywords.some((word) => ["growth", "crestere", "expand", "emergence"].includes(word))) {
+    return {
+      background: "#ebe6da",
+      accent: "#587a52",
+      ink: "#181b16",
+    };
+  }
+
   if (keywords.some((word) => ["plan", "spațiu", "cadru", "geometria", "suprafață"].includes(word))) {
     return {
       background: "#f4ede2",
@@ -336,6 +431,38 @@ function inferColors(keywords: string[], fracture: number, density: number) {
 }
 
 function inferMode(keywords: string[]) {
+  if (
+    keywords.some((word) =>
+      ["identitate", "identity", "author", "signature", "nume", "self"].includes(word),
+    )
+  ) {
+    return "centered_identity_field";
+  }
+
+  if (
+    keywords.some((word) =>
+      ["conflict", "rupture", "friction", "intersection", "split"].includes(word),
+    )
+  ) {
+    return "collision_field";
+  }
+
+  if (
+    keywords.some((word) =>
+      ["growth", "crestere", "expand", "emergence", "branch"].includes(word),
+    )
+  ) {
+    return "ascending_branch";
+  }
+
+  if (
+    keywords.some((word) =>
+      ["control", "disciplina", "regula", "ordine", "logic", "protocol"].includes(word),
+    )
+  ) {
+    return "control_spine";
+  }
+
   if (keywords.some((word) => ["plan", "spațiu", "cadru", "geometria", "suprafață"].includes(word))) {
     return "architectural_grid";
   }
@@ -397,9 +524,7 @@ function buildSliceFromParsedObject(parsed: ParsedSliceObject): SliceState | nul
     parsed.identity.priority ?? "",
   ]);
   const keywords = buildMindSliceKeywords(extractedKeywords);
-  const direction = parsed.identity.index_name?.trim()
-    || parsed.identity.pseudonym?.trim()
-    || (extractedKeywords.length ? titleCase(extractedKeywords.slice(0, 3).join(" / ")) : "MindSlice Structured Slice");
+  const direction = buildSliceDirection(uniqueLines, extractedKeywords, parsed);
   const palette = inferPalette(keywords, density, fracture);
   const materials = inferMaterials(keywords, fracture);
   const colors = inferColors(keywords, fracture, density);

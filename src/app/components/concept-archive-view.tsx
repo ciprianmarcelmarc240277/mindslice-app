@@ -254,8 +254,8 @@ export function ConceptArchiveView(props: ConceptArchiveViewProps) {
                   </p>
                 </div>
                 <div className={styles.conceptArchiveKeywords}>
-                  {entry.concept.core.keywords.slice(0, 4).map((keyword) => (
-                    <span key={keyword}>{keyword}</span>
+                  {entry.concept.core.keywords.slice(0, 4).map((keyword, index) => (
+                    <span key={`${entry.id}-keyword-${index}-${keyword}`}>{keyword}</span>
                   ))}
                 </div>
                 <strong>

@@ -1,7 +1,42 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { ParsedSliceObject } from "@/lib/mindslice/concept-parser-engine-system";
 import type { ExecutionEngineResult } from "@/lib/mindslice/concept-execution-engine-system";
+import type { VisualComposerForm } from "@/lib/mindslice/concept-visual-composer-system";
+import type { BackgroundLayerKind } from "@/lib/mindslice/concept-background-layer-orchestrator-system";
+import { runVisualPipelineControllerV2 } from "@/lib/mindslice/concept-visual-pipeline-controller-system";
+import { runVisualPipelineControllerVNext } from "@/lib/mindslice/concept-visual-pipeline-controller-vnext-system";
+import { runRuntimeBootControllerV1 } from "@/lib/mindslice/concept-runtime-boot-controller-system";
+import { runSafeSvgMountV1 } from "@/lib/mindslice/concept-safe-svg-mount-system";
+import { runVisualErrorBoundaryContractV1 } from "@/lib/mindslice/concept-visual-error-boundary-contract-system";
+import { runTextLayoutEngineV1 } from "@/lib/mindslice/concept-text-layout-engine-system";
+import {
+  runPatternSvgRendererV1,
+  type PatternSvgClipPathNode,
+  type PatternSvgNode,
+} from "@/lib/mindslice/concept-pattern-svg-renderer-system";
+import {
+  runTriangulationSvgRendererV1,
+  type TriangulationSvgNode,
+} from "@/lib/mindslice/concept-triangulation-svg-renderer-system";
+import {
+  runFlatAbstractPatternSvgRendererV1,
+  type FlatAbstractSvgClipPathNode,
+  type FlatAbstractSvgNode,
+} from "@/lib/mindslice/concept-flat-abstract-pattern-svg-renderer-system";
+import {
+  runIsometricPatternSvgRendererV1,
+  type IsometricSvgNode,
+} from "@/lib/mindslice/concept-isometric-pattern-svg-renderer-system";
+import {
+  runZigZagPatternSvgRendererV1,
+  type ZigZagSvgNode,
+} from "@/lib/mindslice/concept-zigzag-pattern-svg-renderer-system";
+import {
+  runRetroGridPatternSvgRendererV1,
+  type RetroGridSvgNode,
+} from "@/lib/mindslice/concept-retro-grid-pattern-svg-renderer-system";
 import type {
   ThoughtSceneEngineState,
 } from "@/lib/mindslice/thought-scene-engine";
@@ -20,6 +55,580 @@ import type {
   UserProfile,
 } from "@/lib/mindslice/mindslice-types";
 import styles from "../page.module.css";
+
+function buildSvgFallbackParsedSlice(current: ThoughtState): ParsedSliceObject {
+  return {
+    identity: {
+      type: "author",
+      index_name: current.direction,
+      pseudonym: null,
+      priority: "primary",
+    },
+    content: {
+      type: "idea_seed",
+      text: current.thought,
+    },
+    process: {
+      pipeline: ["Framework", "Design", "Memory", "Business"],
+    },
+    metadata: {
+      language: "ro",
+      intensity: current.visual.density,
+      tags: [...new Set([...current.keywords, ...current.palette, ...current.materials])].slice(0, 8),
+    },
+    control: {
+      allow_contamination: true,
+      allow_transformation: true,
+      visibility: "system",
+    },
+  };
+}
+
+function hexToRgba(hex: string, alpha: number) {
+  const normalized = hex.replace("#", "");
+
+  if (normalized.length !== 6) {
+    return hex;
+  }
+
+  const value = Number.parseInt(normalized, 16);
+  if (Number.isNaN(value)) {
+    return hex;
+  }
+
+  const r = (value >> 16) & 255;
+  const g = (value >> 8) & 255;
+  const b = value & 255;
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function compactSvgText(value: string, maxLength: number) {
+  const normalized = value.replace(/\s+/g, " ").trim();
+
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd()}...`;
+}
+
+function renderSvgEngineShape(
+  form: VisualComposerForm,
+  index: number,
+  inkColor: string,
+  accentColor: string,
+  backgroundColor: string,
+) {
+  const half = form.size / 2;
+  const strokeWidth = Math.max(1.3, form.stroke_width + (form.weight === "high" ? 0.9 : 0.2));
+  const strokeColor =
+    form.weight === "high" || form.type === "central_shape" || form.type === "intersection"
+      ? accentColor
+      : inkColor;
+  const fillColor =
+    form.type === "central_shape" || form.type === "circle"
+      ? hexToRgba(accentColor, 0.12)
+      : form.type === "square"
+        ? hexToRgba(backgroundColor, 0.18)
+        : form.type === "close_proximity"
+          ? hexToRgba(accentColor, 0.08)
+          : "none";
+
+  switch (form.type) {
+    case "square":
+      return (
+        <rect
+          key={`svg-engine-form-${form.concept}-${index}`}
+          className={styles.svgEngineForm}
+          x={form.x - half}
+          y={form.y - half}
+          width={form.size}
+          height={form.size}
+          rx={form.size * 0.06}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          fill={fillColor}
+          opacity={form.opacity}
+          vectorEffect="non-scaling-stroke"
+        />
+      );
+    case "straight_line":
+      return (
+        <line
+          key={`svg-engine-form-${form.concept}-${index}`}
+          className={styles.svgEngineForm}
+          x1={form.x - half}
+          y1={form.y}
+          x2={form.x + half}
+          y2={form.y}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          opacity={form.opacity}
+          vectorEffect="non-scaling-stroke"
+        />
+      );
+    case "vector_line":
+      return (
+        <g key={`svg-engine-form-${form.concept}-${index}`} className={styles.svgEngineForm} opacity={form.opacity}>
+          <line
+            x1={form.x - half}
+            y1={form.y}
+            x2={form.x + half * 0.78}
+            y2={form.y}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            vectorEffect="non-scaling-stroke"
+          />
+          <path
+            d={`M ${form.x + half * 0.78} ${form.y} L ${form.x + half * 0.52} ${form.y - form.size * 0.12} M ${form.x + half * 0.78} ${form.y} L ${form.x + half * 0.52} ${form.y + form.size * 0.12}`}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            fill="none"
+            vectorEffect="non-scaling-stroke"
+          />
+        </g>
+      );
+    case "offset_position":
+      return (
+        <g key={`svg-engine-form-${form.concept}-${index}`} className={styles.svgEngineForm} opacity={form.opacity}>
+          <circle
+            cx={form.x}
+            cy={form.y}
+            r={form.size * 0.18}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            fill={hexToRgba(accentColor, 0.1)}
+            vectorEffect="non-scaling-stroke"
+          />
+          <circle
+            cx={form.x + form.size * 0.22}
+            cy={form.y - form.size * 0.16}
+            r={form.size * 0.1}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            fill="none"
+            vectorEffect="non-scaling-stroke"
+          />
+        </g>
+      );
+    case "close_proximity":
+      return (
+        <g key={`svg-engine-form-${form.concept}-${index}`} className={styles.svgEngineForm} opacity={form.opacity}>
+          <circle
+            cx={form.x - form.size * 0.12}
+            cy={form.y}
+            r={form.size * 0.16}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            fill={hexToRgba(accentColor, 0.08)}
+            vectorEffect="non-scaling-stroke"
+          />
+          <circle
+            cx={form.x + form.size * 0.12}
+            cy={form.y}
+            r={form.size * 0.16}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            fill={hexToRgba(backgroundColor, 0.12)}
+            vectorEffect="non-scaling-stroke"
+          />
+        </g>
+      );
+    case "intersection":
+      return (
+        <g key={`svg-engine-form-${form.concept}-${index}`} className={styles.svgEngineForm} opacity={form.opacity}>
+          <line
+            x1={form.x - half * 0.75}
+            y1={form.y - half * 0.75}
+            x2={form.x + half * 0.75}
+            y2={form.y + half * 0.75}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            vectorEffect="non-scaling-stroke"
+          />
+          <line
+            x1={form.x + half * 0.75}
+            y1={form.y - half * 0.75}
+            x2={form.x - half * 0.75}
+            y2={form.y + half * 0.75}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            vectorEffect="non-scaling-stroke"
+          />
+        </g>
+      );
+    case "incomplete_shape": {
+      const radius = form.size * 0.24;
+      const circumference = 2 * Math.PI * radius;
+      return (
+        <circle
+          key={`svg-engine-form-${form.concept}-${index}`}
+          className={styles.svgEngineForm}
+          cx={form.x}
+          cy={form.y}
+          r={radius}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          strokeDasharray={`${circumference * 0.74} ${circumference * 0.26}`}
+          strokeLinecap="round"
+          fill="none"
+          opacity={form.opacity}
+          vectorEffect="non-scaling-stroke"
+        />
+      );
+    }
+    case "central_shape":
+    case "circle":
+    default:
+      return (
+        <circle
+          key={`svg-engine-form-${form.concept}-${index}`}
+          className={styles.svgEngineForm}
+          cx={form.x}
+          cy={form.y}
+          r={form.size * 0.24}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          fill={fillColor}
+          opacity={form.opacity}
+          vectorEffect="non-scaling-stroke"
+        />
+      );
+  }
+}
+
+function renderPatternSvgNode(node: PatternSvgNode, key: string): React.ReactNode {
+  if (node.type === "g") {
+    return (
+      <g key={key} id={node.id} clipPath={node.clip_path}>
+        {node.children.map((child, index) => renderPatternSvgNode(child, `${key}-${index}`))}
+      </g>
+    );
+  }
+
+  if (node.type === "circle") {
+    return (
+      <circle
+        key={key}
+        cx={node.cx}
+        cy={node.cy}
+        r={node.r}
+        fill={node.fill}
+        opacity={node.opacity}
+      />
+    );
+  }
+
+  if (node.type === "line") {
+    return (
+      <line
+        key={key}
+        x1={node.x1}
+        y1={node.y1}
+        x2={node.x2}
+        y2={node.y2}
+        stroke={node.stroke}
+        strokeWidth={node.stroke_width}
+        strokeLinecap={node.stroke_linecap}
+        opacity={node.opacity}
+        vectorEffect="non-scaling-stroke"
+      />
+    );
+  }
+
+  return (
+    <polyline
+      key={key}
+      points={node.points}
+      stroke={node.stroke}
+      strokeWidth={node.stroke_width}
+      strokeLinecap={node.stroke_linecap}
+      strokeLinejoin={node.stroke_linejoin}
+      fill={node.fill}
+      opacity={node.opacity}
+      vectorEffect="non-scaling-stroke"
+    />
+  );
+}
+
+function renderPatternSvgDef(def: PatternSvgClipPathNode) {
+  return (
+    <clipPath key={def.id} id={def.id}>
+      <circle cx={def.child.cx} cy={def.child.cy} r={def.child.r} />
+    </clipPath>
+  );
+}
+
+function renderTriangulationSvgNode(node: TriangulationSvgNode, key: string): React.ReactNode {
+  if (node.type === "g") {
+    return (
+      <g key={key} id={node.id}>
+        {node.children.map((child, index) =>
+          renderTriangulationSvgNode(child, `${key}-${index}`),
+        )}
+      </g>
+    );
+  }
+
+  if (node.type === "polygon") {
+    return (
+      <polygon
+        key={key}
+        points={node.points}
+        fill={node.fill}
+        opacity={node.opacity}
+        stroke={node.stroke}
+      />
+    );
+  }
+
+  if (node.type === "line") {
+    return (
+      <line
+        key={key}
+        x1={node.x1}
+        y1={node.y1}
+        x2={node.x2}
+        y2={node.y2}
+        stroke={node.stroke}
+        strokeWidth={node.stroke_width}
+        opacity={node.opacity}
+        vectorEffect="non-scaling-stroke"
+      />
+    );
+  }
+
+  return (
+    <circle
+      key={key}
+      cx={node.cx}
+      cy={node.cy}
+      r={node.r}
+      fill={node.fill}
+      opacity={node.opacity}
+    />
+  );
+}
+
+function renderFlatAbstractSvgNode(node: FlatAbstractSvgNode, key: string): React.ReactNode {
+  if (node.type === "g") {
+    return (
+      <g key={key} id={node.id} clipPath={node.clip_path}>
+        {node.children.map((child, index) => renderFlatAbstractSvgNode(child, `${key}-${index}`))}
+      </g>
+    );
+  }
+
+  if (node.type === "rect") {
+    return (
+      <rect
+        key={key}
+        x={node.x}
+        y={node.y}
+        width={node.width}
+        height={node.height}
+        fill={node.fill}
+      />
+    );
+  }
+
+  if (node.type === "path") {
+    return (
+      <path
+        key={key}
+        d={node.d}
+        fill={node.fill}
+        stroke={node.stroke ?? undefined}
+        strokeWidth={node.stroke_width ?? undefined}
+        strokeDasharray={node.dasharray ?? undefined}
+        opacity={node.opacity}
+        vectorEffect="non-scaling-stroke"
+      />
+    );
+  }
+
+  if (node.type === "circle") {
+    return (
+      <circle
+        key={key}
+        cx={node.cx}
+        cy={node.cy}
+        r={node.r}
+        fill={node.fill}
+        opacity={node.opacity}
+      />
+    );
+  }
+
+  if (node.type === "circle_outline") {
+    return (
+      <circle
+        key={key}
+        cx={node.cx}
+        cy={node.cy}
+        r={node.r}
+        fill={node.fill}
+        stroke={node.stroke}
+        strokeWidth={node.stroke_width}
+        opacity={node.opacity}
+        vectorEffect="non-scaling-stroke"
+      />
+    );
+  }
+
+  if (node.type === "line") {
+    return (
+      <line
+        key={key}
+        x1={node.x1}
+        y1={node.y1}
+        x2={node.x2}
+        y2={node.y2}
+        stroke={node.stroke}
+        strokeWidth={node.stroke_width}
+        strokeLinecap={node.stroke_linecap}
+        strokeDasharray={node.dasharray ?? undefined}
+        opacity={node.opacity}
+        vectorEffect="non-scaling-stroke"
+      />
+    );
+  }
+
+  if (node.type === "polyline") {
+    return (
+      <polyline
+        key={key}
+        points={node.points}
+        stroke={node.stroke}
+        strokeWidth={node.stroke_width}
+        strokeLinecap={node.stroke_linecap}
+        strokeLinejoin={node.stroke_linejoin}
+        fill={node.fill}
+        opacity={node.opacity}
+        vectorEffect="non-scaling-stroke"
+      />
+    );
+  }
+
+  return (
+    <polygon
+      key={key}
+      points={node.points}
+      fill={node.fill}
+      stroke={node.stroke}
+      opacity={node.opacity}
+      vectorEffect="non-scaling-stroke"
+    />
+  );
+}
+
+function renderFlatAbstractSvgDef(def: FlatAbstractSvgClipPathNode) {
+  return (
+    <clipPath key={def.id} id={def.id}>
+      <circle cx={def.child.cx} cy={def.child.cy} r={def.child.r} />
+    </clipPath>
+  );
+}
+
+function renderIsometricSvgNode(node: IsometricSvgNode, key: string): React.ReactNode {
+  if (node.type === "g") {
+    return (
+      <g key={key} id={node.id}>
+        {node.children.map((child, index) => renderIsometricSvgNode(child, `${key}-${index}`))}
+      </g>
+    );
+  }
+
+  if (node.type === "rect") {
+    return (
+      <rect
+        key={key}
+        x={node.x}
+        y={node.y}
+        width={node.width}
+        height={node.height}
+        fill={node.fill}
+      />
+    );
+  }
+
+  return (
+    <polygon
+      key={key}
+      points={node.points}
+      fill={node.fill}
+      stroke={node.stroke}
+      vectorEffect="non-scaling-stroke"
+    />
+  );
+}
+
+function renderZigZagSvgNode(node: ZigZagSvgNode, key: string): React.ReactNode {
+  if (node.type === "g") {
+    return (
+      <g key={key} id={node.id} transform={node.transform}>
+        {node.children.map((child, index) => renderZigZagSvgNode(child, `${key}-${index}`))}
+      </g>
+    );
+  }
+
+  if (node.type === "rect") {
+    return (
+      <rect
+        key={key}
+        x={node.x}
+        y={node.y}
+        width={node.width}
+        height={node.height}
+        fill={node.fill}
+      />
+    );
+  }
+
+  return (
+    <line
+      key={key}
+      x1={node.x1}
+      y1={node.y1}
+      x2={node.x2}
+      y2={node.y2}
+      stroke={node.stroke}
+      strokeWidth={node.stroke_width}
+      strokeLinecap={node.stroke_linecap}
+      vectorEffect="non-scaling-stroke"
+    />
+  );
+}
+
+function renderRetroGridSvgNode(node: RetroGridSvgNode, key: string): React.ReactNode {
+  if (node.type === "g") {
+    return (
+      <g key={key} id={node.id} transform={node.transform}>
+        {node.children.map((child, index) => renderRetroGridSvgNode(child, `${key}-${index}`))}
+      </g>
+    );
+  }
+
+  if (node.type === "rect") {
+    return (
+      <rect
+        key={key}
+        x={node.x}
+        y={node.y}
+        width={node.width}
+        height={node.height}
+        fill={node.fill}
+      />
+    );
+  }
+
+  if (node.type === "polygon") {
+    return <polygon key={key} points={node.points} fill={node.fill} />;
+  }
+
+  return <path key={key} d={node.d} fill={node.fill} />;
+}
 
 type LiveSceneViewProps = {
   isActive: boolean;
@@ -118,6 +727,23 @@ type LiveSceneViewProps = {
   canPromoteToCanonical: boolean;
   promotionNotes: string[];
 };
+
+type VisualDebugMode =
+  | "full"
+  | "deviation"
+  | "structure_only"
+  | "scenario_only"
+  | "color_only"
+  | "composition_only";
+
+type VisualPresetMode =
+  | "CONTROL_CALM"
+  | "DEVIATION_OF_THOUGHT"
+  | "FRAGMENTED_MEANING"
+  | "CONSTELLATION_MEMORY"
+  | "ATTENTION_FOCUS";
+
+type VisualBackgroundMode = "auto" | BackgroundLayerKind;
 
 export function LiveSceneView(props: LiveSceneViewProps) {
   const {
@@ -223,6 +849,196 @@ export function LiveSceneView(props: LiveSceneViewProps) {
   const [activeTraceLevel, setActiveTraceLevel] = useState<"all" | "info" | "warning" | "success">(
     "all",
   );
+  const [activeVisualDebugMode, setActiveVisualDebugMode] = useState<VisualDebugMode>("full");
+  const [activeVisualPreset, setActiveVisualPreset] = useState<VisualPresetMode>("CONTROL_CALM");
+  const [activeBackgroundMode, setActiveBackgroundMode] = useState<VisualBackgroundMode>("auto");
+  const runtimeBootResult = useMemo(() => {
+    return runRuntimeBootControllerV1(
+      {},
+      {
+        validation_settings: {
+          require_active_runtime: true,
+          smoke_test_runtime: false,
+        },
+      },
+    );
+  }, []);
+  const runtimeBootStatus = runtimeBootResult.runtime_status;
+  const svgRawSlice = useMemo(() => {
+    const parsedSlice = buildSvgFallbackParsedSlice(current);
+    return `<<<MINDSLICE_SLICE_START>>>
+[IDENTITY]
+TYPE: ${parsedSlice.identity.type ?? "author"}
+INDEX_NAME: ${parsedSlice.identity.index_name ?? ""}
+PSEUDONYM: ${parsedSlice.identity.pseudonym ?? ""}
+PRIORITY: ${parsedSlice.identity.priority ?? "primary"}
+[/IDENTITY]
+[CONTENT]
+TYPE: ${parsedSlice.content.type ?? "idea_seed"}
+TEXT:
+${parsedSlice.content.text}
+[/CONTENT]
+[PROCESS]
+PIPELINE: ${parsedSlice.process.pipeline.join(", ")}
+[/PROCESS]
+[METADATA]
+LANGUAGE: ${parsedSlice.metadata.language ?? "ro"}
+INTENSITY: ${parsedSlice.metadata.intensity}
+TAGS: ${parsedSlice.metadata.tags.join(", ")}
+[/METADATA]
+[CONTROL]
+ALLOW_CONTAMINATION: ${parsedSlice.control.allow_contamination ? "true" : "false"}
+ALLOW_TRANSFORMATION: ${parsedSlice.control.allow_transformation ? "true" : "false"}
+VISIBILITY: ${parsedSlice.control.visibility ?? "system"}
+[/CONTROL]
+<<<MINDSLICE_SLICE_END>>>`;
+  }, [current]);
+  const svgVNextControllerResult = useMemo(() => {
+    try {
+      return runVisualPipelineControllerVNext(
+        svgRawSlice,
+        {
+          width: 1080,
+          height: 1080,
+          margin: 120,
+        },
+        {
+          preset_name: activeVisualPreset,
+          ...(activeBackgroundMode === "auto" ? {} : { background_kind: activeBackgroundMode }),
+          visual_debug_mode: activeVisualDebugMode,
+          state_palette: {
+            background: current.visual.background,
+            ink: current.visual.ink,
+            accent: current.visual.accent,
+          },
+          allow_repair: true,
+        },
+        {
+          show_center_text: true,
+          show_peripheral_text: true,
+          show_text_constellation: activeVisualDebugMode === "full" || activeVisualDebugMode === "deviation",
+          show_temporal_particles: activeVisualDebugMode === "full",
+          show_grammar_particles: true,
+          show_stray_letters: activeVisualDebugMode === "full",
+          source_bridge: {
+            thought_state: current,
+            thought_scene: thoughtScene,
+            shape_grammar: engineDebuggerReport.shapeGrammar,
+            clock_display: clockDisplay,
+          },
+          source_parity_settings: {
+            use_template_sources: true,
+            preserve_vnext_sources: true,
+            template_source_priority: "high",
+          },
+        },
+      );
+    } catch (error) {
+      return {
+        status: "fail" as const,
+        message: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }, [
+    activeBackgroundMode,
+    activeVisualDebugMode,
+    activeVisualPreset,
+    clockDisplay,
+    current,
+    engineDebuggerReport.shapeGrammar,
+    svgRawSlice,
+    thoughtScene,
+  ]);
+  const svgControllerResult = useMemo(() => {
+    return runVisualPipelineControllerV2(
+      svgRawSlice,
+      {
+        width: 1080,
+        height: 1080,
+        margin: 120,
+        background: "warm_white",
+        ...(activeBackgroundMode === "auto" ? {} : { background_layer_kind: activeBackgroundMode }),
+      },
+      {
+        mode:
+          activeVisualDebugMode === "full"
+            ? "final"
+            : activeVisualDebugMode === "deviation"
+              ? "deviation"
+              : "debug",
+        preset_name: activeVisualPreset,
+      },
+    );
+  }, [activeBackgroundMode, activeVisualDebugMode, activeVisualPreset, svgRawSlice]);
+  const svgVNextSuccess =
+    "status" in svgVNextControllerResult ? null : svgVNextControllerResult;
+  const svgVNextFailure =
+    "status" in svgVNextControllerResult ? svgVNextControllerResult.message : null;
+  const svgVNextPipeline = svgVNextSuccess?.pipeline_result ?? null;
+  const safeSvgMountResult = useMemo(() => {
+    if (!svgVNextSuccess) {
+      return null;
+    }
+
+    return runSafeSvgMountV1(svgVNextSuccess.final_svg_string, "string");
+  }, [svgVNextSuccess]);
+  const visualErrorBoundaryResult = useMemo(() => {
+    if (safeSvgMountResult?.status === "fail") {
+      return runVisualErrorBoundaryContractV1(
+        {
+          message: `SVG mount failed: ${safeSvgMountResult.message}`,
+          type: "SVG_MOUNT_FAILED",
+        },
+        runtimeBootResult.active_runtime?.runtime_context ?? runtimeBootResult.runtime_status,
+        { width: 1080, height: 1080, background: current.visual.background, ink: current.visual.ink },
+      );
+    }
+
+    if (svgVNextFailure) {
+      return runVisualErrorBoundaryContractV1(
+        {
+          message: svgVNextFailure,
+          type: "VISUAL_PIPELINE_FAILED",
+        },
+        runtimeBootResult.active_runtime?.runtime_context ?? runtimeBootResult.runtime_status,
+        { width: 1080, height: 1080, background: current.visual.background, ink: current.visual.ink },
+      );
+    }
+
+    return null;
+  }, [
+    current.visual.background,
+    current.visual.ink,
+    runtimeBootResult.active_runtime?.runtime_context,
+    runtimeBootResult.runtime_status,
+    safeSvgMountResult,
+    svgVNextFailure,
+  ]);
+  const safeSvgString =
+    safeSvgMountResult?.status === "ok" && safeSvgMountResult.render_mode === "string"
+      ? safeSvgMountResult.sanitized_svg_string
+      : visualErrorBoundaryResult
+        ? visualErrorBoundaryResult.fallback_svg_string
+      : null;
+  const visualDiagnosticMessage =
+    visualErrorBoundaryResult?.developer_diagnostics.error_message ??
+    (safeSvgMountResult?.status === "fail" ? safeSvgMountResult.message : svgVNextFailure ?? "unknown");
+  const svgControllerSuccess =
+    "status" in svgControllerResult ? null : svgControllerResult;
+  const svgConceptualPreset = svgControllerSuccess?.conceptual_preset ?? null;
+  const svgStructureOutput = svgControllerSuccess?.visual_model.structure.structure_output ?? null;
+  const svgScenarioOutput = svgControllerSuccess?.visual_model.scenario.scenario_output ?? null;
+  const svgColorOutput = svgControllerSuccess?.visual_model.color.color_output ?? null;
+  const svgCompositionOutput = svgControllerSuccess?.visual_model.composition.composition_output ?? null;
+  const svgScene =
+    svgControllerSuccess?.render.mode === "final" ? svgControllerSuccess.render.svg : null;
+  const activeVisualDebugView =
+    svgControllerSuccess?.render.mode === "debug" &&
+    activeVisualDebugMode !== "deviation" &&
+    activeVisualDebugMode !== "full"
+      ? svgControllerSuccess.render.views[activeVisualDebugMode]
+      : null;
+  const svgCanvas = svgControllerSuccess?.visual_model.structure.canvas ?? null;
   const [isCompositionRulesOpen, setIsCompositionRulesOpen] = useState(false);
   const [isAiResponseOpen, setIsAiResponseOpen] = useState(false);
   const [isThoughtOverlayClosing, setIsThoughtOverlayClosing] = useState(false);
@@ -1500,6 +2316,90 @@ export function LiveSceneView(props: LiveSceneViewProps) {
     engineDebuggerReport.structure,
     liveInfluenceMode,
   ]);
+  const svgTextLayout = useMemo(() => {
+    if (!svgCanvas) {
+      return null;
+    }
+
+    return runTextLayoutEngineV1({
+      thought_scene: thoughtScene,
+      canvas: svgCanvas,
+      title: current.direction,
+      fragments: current.fragments,
+      keywords: current.keywords,
+      stray_letters: strayLetters,
+      grammar_rules: structureSceneConfig.shapeGrammar.rulesApplied,
+      temporal_tokens: clockDisplay
+        ? [
+            clockDisplay.hours,
+            clockDisplay.minutes,
+            clockDisplay.seconds,
+            clockDisplay.transition.replaceAll("_", " "),
+          ]
+        : [],
+      influence_mode: liveInfluenceMode,
+    });
+  }, [
+    clockDisplay,
+    current.direction,
+    current.fragments,
+    current.keywords,
+    liveInfluenceMode,
+    strayLetters,
+    structureSceneConfig.shapeGrammar.rulesApplied,
+    svgCanvas,
+    thoughtScene,
+  ]);
+  const svgPatternLayer = useMemo(() => {
+    if (!svgScene) {
+      return null;
+    }
+
+    return runPatternSvgRendererV1(svgScene.patterns, svgScene.canvas, svgScene.palette);
+  }, [svgScene]);
+  const svgTriangulationLayer = useMemo(() => {
+    if (!svgScene) {
+      return null;
+    }
+
+    return runTriangulationSvgRendererV1(
+      svgScene.triangulation,
+      svgScene.canvas,
+      svgScene.palette,
+    );
+  }, [svgScene]);
+  const svgFlatAbstractPatternLayer = useMemo(() => {
+    if (!svgScene?.flat_abstract_pattern) {
+      return null;
+    }
+
+    return runFlatAbstractPatternSvgRendererV1(svgScene.flat_abstract_pattern);
+  }, [svgScene]);
+  const svgIsometricPatternLayer = useMemo(() => {
+    if (!svgScene?.isometric_pattern) {
+      return null;
+    }
+
+    return runIsometricPatternSvgRendererV1(svgScene.isometric_pattern);
+  }, [svgScene]);
+  const svgZigZagPatternLayer = useMemo(() => {
+    if (!svgScene?.zigzag_pattern) {
+      return null;
+    }
+
+    return runZigZagPatternSvgRendererV1(svgScene.zigzag_pattern);
+  }, [svgScene]);
+  const svgRetroGridPatternLayer = useMemo(() => {
+    if (!svgScene?.retro_grid_pattern) {
+      return null;
+    }
+
+    return runRetroGridPatternSvgRendererV1(svgScene.retro_grid_pattern);
+  }, [svgScene]);
+  const svgBasePatternGroups =
+    svgPatternLayer?.children.filter((child) => child.type === "g" && child.id !== "micro_glyphs") ?? [];
+  const svgMicroGlyphGroup =
+    svgPatternLayer?.children.find((child) => child.type === "g" && child.id === "micro_glyphs") ?? null;
 
   const sliceCanvasSection = (
     <div
@@ -1688,7 +2588,7 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             <span className={styles.layerMarker}>LAYER · Memory Field</span>
             {current.fragments.slice(0, 4).map((fragment, index) => (
               <span
-                key={`${current.direction}-memory-fragment-${fragment}`}
+                key={`${current.direction}-memory-fragment-${index}-${fragment}`}
                 className={styles.memoryFragment}
                 style={structureSceneConfig.memoryFragmentLayouts[index]}
               >
@@ -1697,7 +2597,7 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             ))}
             {current.keywords.slice(0, 3).map((keyword, index) => (
               <span
-                key={`${current.direction}-memory-keyword-${keyword}`}
+                key={`${current.direction}-memory-keyword-${index}-${keyword}`}
                 className={styles.memoryTrace}
                 style={structureSceneConfig.memoryTraceLayouts[index]}
               >
@@ -1713,7 +2613,7 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             <span className={styles.layerMarker}>LAYER · Text Constellation</span>
             {current.fragments.map((fragment, index) => (
               <span
-                key={`${current.direction}-fragment-${fragment}`}
+                key={`${current.direction}-fragment-${index}-${fragment}`}
                 className={`${styles.floatingFragment} ${
                   liveInfluenceMode ? styles[`floatingFragment${liveInfluenceMode}`] : ""
                 }`}
@@ -1724,7 +2624,7 @@ export function LiveSceneView(props: LiveSceneViewProps) {
             ))}
             {current.keywords.slice(0, 6).map((keyword, index) => (
               <span
-                key={`${current.direction}-keyword-${keyword}`}
+                key={`${current.direction}-keyword-${index}-${keyword}`}
                 className={`${styles.keywordParticle} ${
                   liveInfluenceMode ? styles[`keywordParticle${liveInfluenceMode}`] : ""
                 }`}
@@ -1945,6 +2845,696 @@ export function LiveSceneView(props: LiveSceneViewProps) {
     </div>
   );
 
+  const svgEngineControls = (
+    <>
+      <div className={styles.buttonRow}>
+        <button
+          type="button"
+          className={activeVisualDebugMode === "full" ? styles.secondary : styles.ghost}
+          onClick={() => setActiveVisualDebugMode("full")}
+        >
+          full
+        </button>
+        <button
+          type="button"
+          className={activeVisualDebugMode === "deviation" ? styles.secondary : styles.ghost}
+          onClick={() => setActiveVisualDebugMode("deviation")}
+        >
+          deviation
+        </button>
+        <button
+          type="button"
+          className={activeVisualDebugMode === "structure_only" ? styles.secondary : styles.ghost}
+          onClick={() => setActiveVisualDebugMode("structure_only")}
+        >
+          structure
+        </button>
+        <button
+          type="button"
+          className={activeVisualDebugMode === "scenario_only" ? styles.secondary : styles.ghost}
+          onClick={() => setActiveVisualDebugMode("scenario_only")}
+        >
+          scenario
+        </button>
+        <button
+          type="button"
+          className={activeVisualDebugMode === "color_only" ? styles.secondary : styles.ghost}
+          onClick={() => setActiveVisualDebugMode("color_only")}
+        >
+          color
+        </button>
+        <button
+          type="button"
+          className={activeVisualDebugMode === "composition_only" ? styles.secondary : styles.ghost}
+          onClick={() => setActiveVisualDebugMode("composition_only")}
+        >
+          composition
+        </button>
+      </div>
+      <div className={styles.buttonRow}>
+        <button
+          type="button"
+          className={activeVisualPreset === "CONTROL_CALM" ? styles.secondary : styles.ghost}
+          onClick={() => setActiveVisualPreset("CONTROL_CALM")}
+        >
+          control calm
+        </button>
+        <button
+          type="button"
+          className={activeVisualPreset === "DEVIATION_OF_THOUGHT" ? styles.secondary : styles.ghost}
+          onClick={() => setActiveVisualPreset("DEVIATION_OF_THOUGHT")}
+        >
+          deviation thought
+        </button>
+        <button
+          type="button"
+          className={activeVisualPreset === "FRAGMENTED_MEANING" ? styles.secondary : styles.ghost}
+          onClick={() => setActiveVisualPreset("FRAGMENTED_MEANING")}
+        >
+          fragmented meaning
+        </button>
+        <button
+          type="button"
+          className={activeVisualPreset === "CONSTELLATION_MEMORY" ? styles.secondary : styles.ghost}
+          onClick={() => setActiveVisualPreset("CONSTELLATION_MEMORY")}
+        >
+          constellation memory
+        </button>
+        <button
+          type="button"
+          className={activeVisualPreset === "ATTENTION_FOCUS" ? styles.secondary : styles.ghost}
+          onClick={() => setActiveVisualPreset("ATTENTION_FOCUS")}
+        >
+          attention focus
+        </button>
+      </div>
+      <div className={styles.buttonRow}>
+        <button
+          type="button"
+          className={activeBackgroundMode === "auto" ? styles.secondary : styles.ghost}
+          onClick={() => setActiveBackgroundMode("auto")}
+        >
+          auto bg
+        </button>
+        <button
+          type="button"
+          className={activeBackgroundMode === "triangulation" ? styles.secondary : styles.ghost}
+          onClick={() => setActiveBackgroundMode("triangulation")}
+        >
+          triangulation
+        </button>
+        <button
+          type="button"
+          className={activeBackgroundMode === "pattern" ? styles.secondary : styles.ghost}
+          onClick={() => setActiveBackgroundMode("pattern")}
+        >
+          pattern
+        </button>
+        <button
+          type="button"
+          className={activeBackgroundMode === "flat_abstract_pattern" ? styles.secondary : styles.ghost}
+          onClick={() => setActiveBackgroundMode("flat_abstract_pattern")}
+        >
+          flat abstract
+        </button>
+        <button
+          type="button"
+          className={activeBackgroundMode === "isometric_pattern" ? styles.secondary : styles.ghost}
+          onClick={() => setActiveBackgroundMode("isometric_pattern")}
+        >
+          isometric
+        </button>
+        <button
+          type="button"
+          className={activeBackgroundMode === "zigzag_pattern" ? styles.secondary : styles.ghost}
+          onClick={() => setActiveBackgroundMode("zigzag_pattern")}
+        >
+          zigzag
+        </button>
+        <button
+          type="button"
+          className={activeBackgroundMode === "retro_grid_pattern" ? styles.secondary : styles.ghost}
+          onClick={() => setActiveBackgroundMode("retro_grid_pattern")}
+        >
+          retro grid
+        </button>
+      </div>
+    </>
+  );
+
+  const svgEngineSection = (
+    <section className={styles.canvasCard}>
+      <span className={styles.panelMarker}>PANEL · Visual Engine SVG</span>
+      {safeSvgString ? (
+        <>
+          {svgEngineControls}
+          <div
+            className={styles.svgEngineStage}
+            dangerouslySetInnerHTML={{ __html: safeSvgString }}
+          />
+          {svgVNextSuccess && svgVNextPipeline ? (
+            <div className={styles.svgEngineLegend}>
+              <span>mode: {activeVisualDebugMode}</span>
+              <span>preset: {activeVisualPreset}</span>
+              <span>background: {svgVNextPipeline.background_layer_selection.active_kind}</span>
+              <span>grammar: {svgVNextPipeline.background_layer_selection.grammar_profile ?? "none"}</span>
+              <span>bg reason: {svgVNextPipeline.background_selection_telemetry.reason ?? "none"}</span>
+              <span>bg score: {svgVNextPipeline.background_selection_telemetry.score ?? "n/a"}</span>
+              <span>bg fallback: {svgVNextPipeline.background_selection_telemetry.fallback_used ? "yes" : "no"}</span>
+              <span>audit: {svgVNextPipeline.audit_result.status}</span>
+              <span>warnings: {svgVNextPipeline.audit_result.warnings.length}</span>
+              <span>runtime: {runtimeBootStatus.runtime_ready ? "ready" : "fallback"}</span>
+              <span>modules: {runtimeBootStatus.active_modules_count}</span>
+              <span>architecture: {runtimeBootStatus.audit_score ?? "n/a"}</span>
+              <span>mount: safe svg string</span>
+              <span>source: visual pipeline controller vNext</span>
+              <span>modes: {svgVNextPipeline.conceptual_preset.conceptual_modes.join(" / ") || "none"}</span>
+              <span>
+                scenario:{" "}
+                {svgVNextPipeline.scenario_output.scenario_output.spatial_sequence
+                  .map((sequence) => sequence.id)
+                  .join(" / ") ||
+                  "none"}
+              </span>
+              <span>
+                color: {svgVNextPipeline.color_output.color_output.palette.map((entry) => entry.role).join(" / ")}
+              </span>
+              <span>
+                composition: focus {Math.round(svgVNextPipeline.composition_output.focus_field.intensity * 100)}%
+              </span>
+            </div>
+          ) : (
+            <div className={styles.svgEngineLegend}>
+              <span>mode: diagnostic</span>
+              <span>runtime: {runtimeBootStatus.runtime_ready ? "ready" : "fallback"}</span>
+              <span>source: visual error boundary</span>
+              <span>recovery: {visualErrorBoundaryResult?.recovery_action ?? "show_diagnostic_panel"}</span>
+              <span>error: {visualDiagnosticMessage}</span>
+            </div>
+          )}
+        </>
+      ) : svgControllerSuccess && svgStructureOutput && svgScenarioOutput && svgColorOutput && svgCompositionOutput && svgCanvas ? (
+        <>
+          <div className={styles.buttonRow}>
+            <button
+              type="button"
+              className={activeVisualDebugMode === "full" ? styles.secondary : styles.ghost}
+              onClick={() => setActiveVisualDebugMode("full")}
+            >
+              full
+            </button>
+            <button
+              type="button"
+              className={activeVisualDebugMode === "deviation" ? styles.secondary : styles.ghost}
+              onClick={() => setActiveVisualDebugMode("deviation")}
+            >
+              deviation
+            </button>
+            <button
+              type="button"
+              className={activeVisualDebugMode === "structure_only" ? styles.secondary : styles.ghost}
+              onClick={() => setActiveVisualDebugMode("structure_only")}
+            >
+              structure
+            </button>
+            <button
+              type="button"
+              className={activeVisualDebugMode === "scenario_only" ? styles.secondary : styles.ghost}
+              onClick={() => setActiveVisualDebugMode("scenario_only")}
+            >
+              scenario
+            </button>
+            <button
+              type="button"
+              className={activeVisualDebugMode === "color_only" ? styles.secondary : styles.ghost}
+              onClick={() => setActiveVisualDebugMode("color_only")}
+            >
+              color
+            </button>
+            <button
+              type="button"
+              className={activeVisualDebugMode === "composition_only" ? styles.secondary : styles.ghost}
+              onClick={() => setActiveVisualDebugMode("composition_only")}
+            >
+              composition
+            </button>
+          </div>
+          <div className={styles.buttonRow}>
+            <button
+              type="button"
+              className={activeVisualPreset === "CONTROL_CALM" ? styles.secondary : styles.ghost}
+              onClick={() => setActiveVisualPreset("CONTROL_CALM")}
+            >
+              control calm
+            </button>
+            <button
+              type="button"
+              className={activeVisualPreset === "DEVIATION_OF_THOUGHT" ? styles.secondary : styles.ghost}
+              onClick={() => setActiveVisualPreset("DEVIATION_OF_THOUGHT")}
+            >
+              deviation thought
+            </button>
+            <button
+              type="button"
+              className={activeVisualPreset === "FRAGMENTED_MEANING" ? styles.secondary : styles.ghost}
+              onClick={() => setActiveVisualPreset("FRAGMENTED_MEANING")}
+            >
+              fragmented meaning
+            </button>
+            <button
+              type="button"
+              className={activeVisualPreset === "CONSTELLATION_MEMORY" ? styles.secondary : styles.ghost}
+              onClick={() => setActiveVisualPreset("CONSTELLATION_MEMORY")}
+            >
+              constellation memory
+            </button>
+            <button
+              type="button"
+              className={activeVisualPreset === "ATTENTION_FOCUS" ? styles.secondary : styles.ghost}
+              onClick={() => setActiveVisualPreset("ATTENTION_FOCUS")}
+            >
+              attention focus
+            </button>
+          </div>
+          <div className={styles.buttonRow}>
+            <button
+              type="button"
+              className={activeBackgroundMode === "auto" ? styles.secondary : styles.ghost}
+              onClick={() => setActiveBackgroundMode("auto")}
+            >
+              auto bg
+            </button>
+            <button
+              type="button"
+              className={activeBackgroundMode === "triangulation" ? styles.secondary : styles.ghost}
+              onClick={() => setActiveBackgroundMode("triangulation")}
+            >
+              triangulation
+            </button>
+            <button
+              type="button"
+              className={activeBackgroundMode === "pattern" ? styles.secondary : styles.ghost}
+              onClick={() => setActiveBackgroundMode("pattern")}
+            >
+              pattern
+            </button>
+            <button
+              type="button"
+              className={activeBackgroundMode === "flat_abstract_pattern" ? styles.secondary : styles.ghost}
+              onClick={() => setActiveBackgroundMode("flat_abstract_pattern")}
+            >
+              flat abstract
+            </button>
+            <button
+              type="button"
+              className={activeBackgroundMode === "isometric_pattern" ? styles.secondary : styles.ghost}
+              onClick={() => setActiveBackgroundMode("isometric_pattern")}
+            >
+              isometric
+            </button>
+            <button
+              type="button"
+              className={activeBackgroundMode === "zigzag_pattern" ? styles.secondary : styles.ghost}
+              onClick={() => setActiveBackgroundMode("zigzag_pattern")}
+            >
+              zigzag
+            </button>
+            <button
+              type="button"
+              className={activeBackgroundMode === "retro_grid_pattern" ? styles.secondary : styles.ghost}
+              onClick={() => setActiveBackgroundMode("retro_grid_pattern")}
+            >
+              retro grid
+            </button>
+          </div>
+          <div className={styles.svgEngineStage}>
+            <svg
+              viewBox={`0 0 ${svgCanvas.width} ${svgCanvas.height}`}
+              className={styles.svgEngineSvg}
+              preserveAspectRatio="xMidYMid meet"
+              role="img"
+              aria-label="MindSlice visual engines SVG"
+            >
+              <rect
+                x={0}
+                y={0}
+                width={svgCanvas.width}
+                height={svgCanvas.height}
+                fill={svgColorOutput.palette.find((entry) => entry.role === "background")?.color ?? current.visual.background}
+              />
+              {svgPatternLayer && svgPatternLayer.defs.length > 0 ? (
+                <defs>{svgPatternLayer.defs.map((def) => renderPatternSvgDef(def))}</defs>
+              ) : null}
+              {svgFlatAbstractPatternLayer && svgFlatAbstractPatternLayer.defs.length > 0 ? (
+                <defs>{svgFlatAbstractPatternLayer.defs.map((def) => renderFlatAbstractSvgDef(def))}</defs>
+              ) : null}
+              {svgTriangulationLayer
+                ? renderTriangulationSvgNode(svgTriangulationLayer, "svg-triangulation-layer")
+                : null}
+              {svgFlatAbstractPatternLayer ? (
+                <g id="mind_slice_flat_abstract_pattern">
+                  {svgFlatAbstractPatternLayer.children.map((node, index) =>
+                    renderFlatAbstractSvgNode(node, `svg-flat-abstract-pattern-layer-${index}`),
+                  )}
+                </g>
+              ) : null}
+              {svgIsometricPatternLayer ? (
+                <g id="mind_slice_isometric_pattern">
+                  {svgIsometricPatternLayer.children.map((node, index) =>
+                    renderIsometricSvgNode(node, `svg-isometric-pattern-layer-${index}`),
+                  )}
+                </g>
+              ) : null}
+              {svgZigZagPatternLayer ? (
+                <g id="mind_slice_zigzag_pattern">
+                  {svgZigZagPatternLayer.children.map((node, index) =>
+                    renderZigZagSvgNode(node, `svg-zigzag-pattern-layer-${index}`),
+                  )}
+                </g>
+              ) : null}
+              {svgRetroGridPatternLayer ? (
+                <g id="mind_slice_retro_grid_pattern">
+                  {svgRetroGridPatternLayer.children.map((node, index) =>
+                    renderRetroGridSvgNode(node, `svg-retro-grid-pattern-layer-${index}`),
+                  )}
+                </g>
+              ) : null}
+              {(activeVisualDebugView?.guides ?? []).map((guide) => {
+                if ("start" in guide && "end" in guide) {
+                  return (
+                    <line
+                      key={guide.id}
+                      x1={guide.start.x}
+                      y1={guide.start.y}
+                      x2={guide.end.x}
+                      y2={guide.end.y}
+                      stroke={guide.stroke}
+                      strokeWidth={guide.stroke_width}
+                      opacity={guide.opacity}
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  );
+                }
+
+                if ("point" in guide) {
+                  return (
+                    <g key={guide.id} opacity={guide.opacity}>
+                      <circle
+                        cx={guide.point.x}
+                        cy={guide.point.y}
+                        r={guide.size}
+                        fill={guide.fill}
+                        stroke={guide.stroke}
+                        strokeWidth={guide.stroke_width}
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    </g>
+                  );
+                }
+
+                return (
+                  <rect
+                    key={guide.id}
+                    x={guide.center.x - guide.width / 2}
+                    y={guide.center.y - guide.height / 2}
+                    width={guide.width}
+                    height={guide.height}
+                    rx={guide.radius ?? 0}
+                    fill={guide.fill}
+                    stroke={guide.stroke}
+                    strokeWidth={guide.stroke_width}
+                    opacity={guide.opacity}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                );
+              })}
+              {svgBasePatternGroups.length > 0 ? (
+                <g id={svgPatternLayer?.id ?? "mind_slice_patterns"}>
+                  {svgBasePatternGroups.map((group, index) =>
+                    renderPatternSvgNode(group, `svg-pattern-group-${index}`),
+                  )}
+                </g>
+              ) : null}
+              {(activeVisualDebugMode === "full" || activeVisualDebugMode === "deviation") && svgScene
+                ? svgScene.relations.map((element, index) => {
+                    if (element.type === "thin_line") {
+                      return (
+                        <line
+                          key={`svg-engine-line-${element.from}-${element.to}-${index}`}
+                          x1={element.x1}
+                          y1={element.y1}
+                          x2={element.x2}
+                          y2={element.y2}
+                          stroke={element.stroke}
+                          strokeWidth={Math.max(1, element.stroke_width)}
+                          opacity={element.opacity}
+                          vectorEffect="non-scaling-stroke"
+                        />
+                      );
+                    }
+
+                    return (
+                      <g key={`svg-engine-marker-${index}`} opacity={element.opacity}>
+                        <circle
+                          cx={element.at.x}
+                          cy={element.at.y}
+                          r={8}
+                          fill={hexToRgba(current.visual.accent, 0.1)}
+                          stroke={current.visual.accent}
+                          strokeWidth={1.2}
+                          vectorEffect="non-scaling-stroke"
+                        />
+                      </g>
+                    );
+                  })
+                : null}
+              {(activeVisualDebugMode === "full" || activeVisualDebugMode === "deviation") && svgScene
+                ? svgScene.forms.map((form, index) => {
+                    return renderSvgEngineShape(
+                      form,
+                      index,
+                      current.visual.ink,
+                      current.visual.accent,
+                      current.visual.background,
+                    );
+                })
+                : null}
+              {svgMicroGlyphGroup ? renderPatternSvgNode(svgMicroGlyphGroup, "svg-pattern-micro-glyphs") : null}
+              {svgTextLayout ? (
+                <g aria-label="MindSlice text layout">
+                  {svgTextLayout.peripheral_text.map((item) => (
+                    <text
+                      key={item.id}
+                      x={item.x}
+                      y={item.y}
+                      textAnchor={item.anchor}
+                      dominantBaseline="middle"
+                      fill={
+                        item.role === "fragment"
+                          ? hexToRgba(current.visual.ink, item.opacity)
+                          : item.role === "stray_letter"
+                            ? hexToRgba(current.visual.ink, item.opacity)
+                            : item.role === "grammar_particle"
+                              ? hexToRgba(current.visual.accent, item.opacity)
+                              : item.role === "temporal_particle"
+                                ? hexToRgba(current.visual.ink, item.opacity)
+                          : hexToRgba(current.visual.accent, item.opacity)
+                      }
+                      fontSize={item.font_size}
+                      fontFamily={
+                        item.role === "fragment"
+                          ? "Georgia, 'Times New Roman', serif"
+                          : item.role === "stray_letter"
+                            ? "Georgia, 'Times New Roman', serif"
+                          : "ui-monospace, SFMono-Regular, Menlo, monospace"
+                      }
+                      letterSpacing={
+                        item.role === "fragment"
+                          ? "0.03em"
+                          : item.role === "stray_letter"
+                            ? "0.02em"
+                            : item.role === "temporal_particle"
+                              ? "0.12em"
+                              : "0.16em"
+                      }
+                      transform={`rotate(${item.rotation} ${item.x} ${item.y})`}
+                    >
+                      {compactSvgText(
+                        item.role === "keyword" || item.role === "grammar_particle"
+                          ? item.text.toUpperCase()
+                          : item.text,
+                        item.role === "fragment"
+                          ? 38
+                          : item.role === "temporal_particle"
+                            ? 24
+                            : item.role === "grammar_particle"
+                              ? 16
+                              : 18,
+                      )}
+                    </text>
+                  ))}
+                  <g
+                    transform={`translate(${svgTextLayout.center.x} ${svgTextLayout.center.y}) rotate(${svgTextLayout.center.rotation})`}
+                  >
+                    <ellipse
+                      cx={0}
+                      cy={0}
+                      rx={svgTextLayout.center.width / 2}
+                      ry={svgTextLayout.center.height / 2}
+                      fill={hexToRgba(current.visual.background, 0.78)}
+                      stroke={hexToRgba(current.visual.ink, 0.12)}
+                      strokeWidth={1.4}
+                      vectorEffect="non-scaling-stroke"
+                    />
+                    <ellipse
+                      cx={26}
+                      cy={22}
+                      rx={48}
+                      ry={42}
+                      fill={hexToRgba(current.visual.accent, 0.12)}
+                    />
+                    <ellipse
+                      cx={0}
+                      cy={0}
+                      rx={svgTextLayout.center.width / 2 - 22}
+                      ry={svgTextLayout.center.height / 2 - 22}
+                      fill="none"
+                      stroke={hexToRgba(current.visual.accent, 0.2)}
+                      strokeWidth={1}
+                      strokeDasharray="5 8"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                    <text
+                      x={0}
+                      y={-58}
+                      textAnchor="middle"
+                      fill={hexToRgba(current.visual.accent, 0.62)}
+                      fontSize={12}
+                      fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
+                      letterSpacing="0.18em"
+                    >
+                      DIN FISIERUL SLICES
+                    </text>
+                    <text
+                      x={0}
+                      y={-28}
+                      textAnchor="middle"
+                      fill={current.visual.ink}
+                      fontSize={22}
+                      fontFamily="Georgia, 'Times New Roman', serif"
+                      fontWeight={700}
+                    >
+                      {compactSvgText(svgTextLayout.center.title, 18)}
+                    </text>
+                    <text
+                      x={0}
+                      y={4}
+                      textAnchor="middle"
+                      fill={hexToRgba(current.visual.ink, 0.58)}
+                      fontSize={13}
+                      fontFamily="ui-sans-serif, system-ui, sans-serif"
+                    >
+                      {compactSvgText(svgTextLayout.center.fragment, 24)}
+                    </text>
+                    <text
+                      x={0}
+                      y={44}
+                      textAnchor="middle"
+                      fill={hexToRgba(current.visual.ink, 0.44)}
+                      fontSize={12}
+                      fontFamily="ui-sans-serif, system-ui, sans-serif"
+                    >
+                      {svgTextLayout.center.lines.slice(0, 2).map((line, index) => (
+                        <tspan key={`${line}-${index}`} x={0} dy={index === 0 ? 0 : 18}>
+                          {compactSvgText(line, 34)}
+                        </tspan>
+                      ))}
+                    </text>
+                  </g>
+                </g>
+              ) : null}
+              <text
+                x={48}
+                y={56}
+                fill={hexToRgba(current.visual.ink, 0.72)}
+                fontSize={18}
+                letterSpacing="0.12em"
+              >
+                {svgStructureOutput.grid}
+              </text>
+              <text
+                x={48}
+                y={82}
+                fill={hexToRgba(current.visual.accent, 0.64)}
+                fontSize={13}
+                letterSpacing="0.18em"
+              >
+                {svgScenarioOutput.progression_flow[0]?.id ?? "progression"}
+              </text>
+              <text
+                x={svgCanvas.width - 48}
+                y={56}
+                fill={hexToRgba(current.visual.ink, 0.62)}
+                fontSize={14}
+                letterSpacing="0.14em"
+                textAnchor="end"
+              >
+                {svgScenarioOutput.spatial_sequence[0]?.id ?? "scenario"}
+              </text>
+              <text
+                x={svgCanvas.width - 48}
+                y={80}
+                fill={hexToRgba(current.visual.accent, 0.58)}
+                fontSize={12}
+                letterSpacing="0.16em"
+                textAnchor="end"
+              >
+                {`focus ${Math.round(svgCompositionOutput.focus_field.radius)}`}
+              </text>
+            </svg>
+          </div>
+          <div className={styles.svgEngineLegend}>
+            <span>mode: {activeVisualDebugMode}</span>
+            <span>preset: {activeVisualPreset}</span>
+            <span>literary: {svgConceptualPreset?.literary_movement ?? "none"}</span>
+            <span>art: {svgConceptualPreset?.art_movement ?? "none"}</span>
+            <span>guides: {activeVisualDebugView?.summary.guide_count ?? 0}</span>
+            <span>structure: {svgStructureOutput.grid}</span>
+            <span>forms: {svgScene?.forms.length ?? 0}</span>
+            <span>relations: {svgScene?.relations.length ?? 0}</span>
+            <span>source: visual pipeline controller</span>
+            <span>runtime: {runtimeBootStatus.runtime_ready ? "ready" : "fallback"}</span>
+            <span>modes: {svgConceptualPreset?.conceptual_modes.join(" / ") ?? "none"}</span>
+            <span>scenario: {svgScenarioOutput.spatial_sequence.map((sequence) => sequence.id).join(" / ") || "none"}</span>
+            <span>color: {svgColorOutput.palette.map((entry) => entry.role).join(" / ")}</span>
+            <span>composition: focus {Math.round(svgCompositionOutput.focus_field.strength * 100)}%</span>
+            <span>
+              note: {activeVisualDebugMode === "deviation"
+                ? "Deviation mode applied before SVG render."
+                : activeVisualDebugView?.summary.note ?? "Final SVG render."}
+            </span>
+          </div>
+        </>
+      ) : (
+        <div className={styles.svgEngineEmpty}>
+          {!runtimeBootStatus.runtime_ready ? (
+            <div className={styles.svgEngineLegend}>
+              <span>runtime: fallback</span>
+              <span>{runtimeBootResult.status === "fallback" ? runtimeBootResult.runtime_status.user_safe_message : ""}</span>
+            </div>
+          ) : null}
+          <p>
+            {safeSvgMountResult?.status === "fail"
+              ? `SVG-ul vNext a fost blocat de SafeSVGMount: ${safeSvgMountResult.message}`
+              : svgVNextFailure
+              ? `Pipeline-ul vNext nu a putut construi scena: ${svgVNextFailure}`
+              : "SVG-ul motoarelor vizuale apare când controllerul vizual poate construi scena din slice-ul curent."}
+          </p>
+        </div>
+      )}
+    </section>
+  );
+
   return (
     <>
       <section className={styles.liveCuratorNote}>
@@ -1960,6 +3550,7 @@ export function LiveSceneView(props: LiveSceneViewProps) {
       </section>
 
       {sliceCanvasSection}
+      {svgEngineSection}
 
       <div className={styles.statusBar}>
         <span className={styles.panelMarker}>PANEL · Live Status Bar</span>
@@ -2170,19 +3761,19 @@ export function LiveSceneView(props: LiveSceneViewProps) {
           <article className={styles.alphaDebugCard}>
             <span>Palette & Materials</span>
             <ul>
-              {current.palette.map((tone: string) => (
-                <li key={`palette-${tone}`}>{tone}</li>
+              {current.palette.map((tone: string, index) => (
+                <li key={`palette-${index}-${tone}`}>{tone}</li>
               ))}
-              {current.materials.map((material: string) => (
-                <li key={`material-${material}`}>{material}</li>
+              {current.materials.map((material: string, index) => (
+                <li key={`material-${index}-${material}`}>{material}</li>
               ))}
             </ul>
           </article>
           <article className={styles.alphaDebugCard}>
             <span>Keywords</span>
             <ul>
-              {current.keywords.map((keyword: string) => (
-                <li key={keyword}>{keyword}</li>
+              {current.keywords.map((keyword: string, index) => (
+                <li key={`debug-keyword-${index}-${keyword}`}>{keyword}</li>
               ))}
             </ul>
           </article>
