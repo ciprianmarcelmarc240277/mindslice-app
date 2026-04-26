@@ -7,16 +7,16 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Confirmed meta system for building framework, labyrinth, conductor state,
+    design output, memory, canon influence, global validation scores, and
+    orchestration runtime across shape, grammar, structure, art, scenario,
+    color, and optional clock modules.
 
 INPUT:
     - input: { current: ThoughtState; history: HistoryEntry[]; thoughtMemory: ThoughtMemoryEntry[]; canonInfluence: CanonInfluenceContext; clockDisplay: ClockDisplayState | null; scenario: NarrativeScenarioState; artComposition: ArtCompositionState; compositionStructure: CompositionStructureState; shape: ShapeTheoryState; shapeGrammar: ShapeGrammarState; palette: ColorPaletteState; }
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - MetaSystemState-like output with outputText, outputVisual, and MetaSystemRuntime
 
 STATE:
     - implemented
@@ -28,9 +28,10 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before: []
+    after:
+        - MindSlice_MindsliceTypes
     depends_on:
         - MindSlice_MindsliceTypes
 
@@ -41,7 +42,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runMetaSystem
@@ -49,7 +50,7 @@ FUNCTION RUN:
 
 HELPERS:
     exported_types:
-        - UNKNOWN_NEEDS_REVIEW
+        - none_confirmed
 
     exported_helper_functions:
         - extractFrameworkIntent
@@ -79,15 +80,42 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - ThoughtState
+        - HistoryEntry[]
+        - ThoughtMemoryEntry[]
+        - CanonInfluenceContext
+        - ClockDisplayState
+        - NarrativeScenarioState
+        - ArtCompositionState
+        - CompositionStructureState
+        - ShapeTheoryState
+        - ShapeGrammarState
+        - ColorPaletteState
+    emits:
+        - outputText
+        - outputVisual
+        - framework
+        - labyrinth
+        - designOutput
+        - conductor
+        - activePipeline
+        - designState
+        - memory
+        - validationPassed
+        - canon
+        - thresholds
+        - scores
+        - failed and failureReason
+        - lawPassed and lawNote
+    mutates: none_detected
+    side_effects: none_detected
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - No thrown failure confirmed.
+    - Runtime marks failed with failureReason design_failure, validation_thresholds, or law_rejection.
+    - Individual module failures are stored in designState failure fields.
 
 CONSTRAINTS:
     - Pseudocode backfill only.

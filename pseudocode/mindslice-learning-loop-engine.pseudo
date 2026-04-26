@@ -7,17 +7,22 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Run the legacy learning loop cycle over execution input, thresholding, repetition, scoring, canon checks, and author value profiling.
+    confirmed_by:
+        - exported_main_function:runLearningLoopEngineV2
+        - output_type:LearningLoopResult
+        - helper_functions:processPresent, processLearning, processRecap, processThreshold, decisionGate, processLegacy, processScoring, processCanon, reinject
 
 INPUT:
     - input: LearningLoopInput
     - depth = 0
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    status: confirmed
+    confirmed_by:
+        - main_return_type: LearningLoopResult
+        - success_return_fields: updated_state, learning_cycle_output, canonical_state
+        - failure_return_fields: status, message
 
 STATE:
     - implemented
@@ -29,15 +34,23 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependencies_partial_order
+    before:
+        - MindSlice_CanonEngine
+        - MindSlice_AuthorValue
+    after:
+        - MindSlice_AnalyticEngine
+        - MindSlice_ThresholdModel
+        - MindSlice_SliceRepetitionEngine
     depends_on:
         - MindSlice_AnalyticEngine
         - MindSlice_AuthorValue
         - MindSlice_CanonEngine
         - MindSlice_ThresholdModel
         - MindSlice_SliceRepetitionEngine
+    confirmed_by:
+        - imports runAuthorValueSystemV1, runCanonEngineV1, runThresholdModelV2, runSliceRepetitionEngineV1
+        - runLearningLoopEngineV2 coordinates threshold, repetition, scoring, canon, and author value profile outputs
 
 MODULE_CLASSIFICATION:
     category: System Behavior
@@ -46,7 +59,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runLearningLoopEngineV2
@@ -81,15 +94,39 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        status: confirmed
+        evidence:
+            - input: LearningLoopInput
+            - depth = 0
+            - execution_input
+            - optional author_id, historical_author_data, system_memory, historical_memory, historical_slices, analytic_profile, max_depth
+    emits:
+        status: confirmed
+        evidence:
+            - LearningLoopResult
+            - LearningCycleOutput
+            - LearningLoopUpdatedState
+            - LearningLoopFailure
+    mutates:
+        status: local_system_memory_array_mutation
+        evidence:
+            - processLegacy unshifts legacy into systemMemory array
+            - mutation is limited to caller-provided in-memory system_memory
+    side_effects:
+        status: local_timestamp_only
+        evidence:
+            - processPresent creates timestamp with new Date().toISOString()
+            - no file writes, network calls, DOM mutation, logging, or rendering calls detected
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    confirmed_failure_and_recursion_behavior_present
+    confirmed_by:
+        - decision RESTART returns fail("NOISE")
+        - LOOP_BACK and REFINE recurse only while depth < max_depth
+        - max_depth defaults to 2
+        - processThreshold falls back to internally derived analytic profile when input.analytic_profile is missing
 
 CONSTRAINTS:
     - Pseudocode backfill only.

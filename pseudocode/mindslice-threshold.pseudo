@@ -7,16 +7,30 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Derive dynamic concept thresholds from candidate stage, contamination pressure,
+    memory relief, and confidence relief.
+    Check whether concept evaluation axes satisfy those thresholds.
 
 INPUT:
-    - UNKNOWN_NEEDS_REVIEW
+    - deriveDynamicConceptThresholds:
+        candidate: ConceptCandidate
+    - validConcept:
+        axes: ConceptEvaluationAxes
+        thresholds: ConceptDynamicThresholds
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - ConceptDynamicThresholds:
+        structure: number
+        sense: number
+        attention: number
+        coherence: number
+        drivers:
+            contaminationPressure: number
+            memoryRelief: number
+            stagePressure: number
+            confidenceRelief: number
+    - validConcept output:
+        boolean
 
 STATE:
     - implemented
@@ -28,9 +42,11 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before:
+        - MindSlice_Validation
+    after:
+        - MindSlice_ConceptCandidate construction
     depends_on:
         - MindSlice_MindsliceTypes
 
@@ -41,14 +57,16 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
-    UNKNOWN_NEEDS_REVIEW
+    implementation_function: deriveDynamicConceptThresholds
+    parameters:
+        candidate: ConceptCandidate
 
 HELPERS:
     exported_types:
-        - UNKNOWN_NEEDS_REVIEW
+        - none_confirmed
 
     exported_helper_functions:
         - deriveDynamicConceptThresholds
@@ -58,15 +76,22 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - ConceptCandidate
+        - ConceptEvaluationAxes
+        - ConceptDynamicThresholds
+    emits:
+        - ConceptDynamicThresholds
+        - boolean concept validity
+    mutates:
+        - none_detected
+    side_effects:
+        - none_detected
+    contract_status: confirmed_from_typescript
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - no_throw_confirmed
+    - validConcept returns false when any axis is below its corresponding dynamic threshold
 
 CONSTRAINTS:
     - Pseudocode backfill only.

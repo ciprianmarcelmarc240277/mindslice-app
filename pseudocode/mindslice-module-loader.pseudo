@@ -42,9 +42,13 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: declared_dependencies
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: runtime_orchestrator_declared
+    before:
+        - MindSlice_VisualPipelineController_vNext
+        - MindSlice_VisualRuntimeSmokeTest
+        - active_runtime_consumers
+    after:
+        - module_manifest_definition
     depends_on:
         - MindSlice_BackgroundModuleRegistry
         - MindSlice_GrammarPipelineContract
@@ -66,6 +70,8 @@ PIPELINE_POSITION:
         - MindSlice_VisualPipelineController_vNext
     confirmed_by:
         - existing pseudocode depends_on entries
+        - CORE_MODULES manifest entries in matching TypeScript file
+        - runModuleLoaderV1 loads manifest, validates modules, builds dependency graph, activates modules, initializes background registry, and runs smoke tests
 
 MODULE_CLASSIFICATION:
     category: Unclassified / Needs Review
@@ -74,7 +80,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runModuleLoaderV1
@@ -153,28 +159,23 @@ DATA_CONTRACT:
         evidence:
             - no external mutation patterns detected in matching TypeScript file
     side_effects:
-        status: confirmed
-        value: confirmed_side_effect_or_render_artifact_evidence_present
+        status: local_runtime_activation_and_optional_export_snapshot
+        value: no_dom_or_file_side_effects_detected
         confirmed_by:
-            - rendering_call_or_svg_output line 434: "svg_tree",
-            - rendering_call_or_svg_output line 454: input_contract: ["svg_tree"],
-            - rendering_call_or_svg_output line 497: input_contract: ["svg_tree OR svg_string", "render_mode"],
+            - activateModules creates active module records in memory
+            - initializeBackgroundRegistry calls active registry RUN with register_defaults/register actions
+            - buildSingleFileExport returns a serializable snapshot only when exportSettings.enabled is true
+            - no file writes, network calls, DOM mutation, logging, or direct renderer execution detected in runModuleLoaderV1
     contract_status: v3_contract_fields_confirmed
 
 FAIL:
     confirmed_failure_or_fallback_behavior_present
     confirmed_by:
-        - line 62: allow_fallbacks?: boolean;
-        - line 140: allow_fallbacks: boolean;
-        - line 253: "FALLBACK_PATTERN_OUTPUT",
-        - line 643: "fallback_unplaceable_item",
-        - line 685: input_contract: ["error", "runtime_context", "fallback_settings"],
-        - line 689: "fallback_svg",
-        - line 695: "build_fallback_svg",
-        - line 760: status: "fail",
-        - line 775: allow_fallbacks: runtimeConfig.allow_fallbacks ?? true,
-        - line 1415: status: "fail",
-        - line 899: if (!moduleRecord.version) {
+        - runModuleLoaderV1 returns fail("MODULE_VALIDATION_FAILED") when module validation fails
+        - runModuleLoaderV1 returns fail("DEPENDENCY_GRAPH_FAILED") when graph validation or cycle resolution fails
+        - runModuleLoaderV1 returns fail("RUNTIME_SMOKE_TEST_FAILED") when smoke tests fail
+        - validateSingleModule errors on missing module name, invalid module type, and missing module reference
+        - validateSingleModule warns on missing version
 
 CONSTRAINTS:
     - Pseudocode backfill only.

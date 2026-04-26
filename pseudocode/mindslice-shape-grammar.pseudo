@@ -7,16 +7,41 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Generate and evaluate shape grammar sequences from a confirmed shape theory state and composition structure.
+    Select, suppress, recover, and apply grammar rules, score the resulting sequence,
+    and emit visual/textual grammar output with runtime diagnostics.
 
 INPUT:
-    - UNKNOWN_NEEDS_REVIEW
+    - generateShapeSequence input:
+        shape: ShapeTheoryState
+        structure: CompositionStructureState
+        maxIterations?: number
+        hardFailureMode?: "soft" OR "controlled"
+    - evaluator helper inputs:
+        sequence: string[]
+        successfulTransformations: number
+        attemptedTransformations: number
+        scores: ShapeGrammarScores
+        thresholds: ShapeGrammarThresholds
+        grammar: ShapeGrammarState
+        stage: string
+        sourceIdeaCanonCount: number
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - shape grammar sequence result:
+        sequence: string[]
+        rulesApplied: string[]
+        transformationMap: string[]
+        structureEvolution: string[]
+        outputVisual: string
+        outputText: string
+        runtime: ShapeGrammarRuntime
+    - helper outputs:
+        primitive form result
+        ShapeGrammarScores
+        validity boolean
+        inevitable-forms law result
+        canonical boolean
 
 STATE:
     - implemented
@@ -28,9 +53,13 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before:
+        - MindSlice_VisualComposer
+        - MindSlice_GeometryEngine
+    after:
+        - MindSlice_ShapeTheory
+        - MindSlice_CompositionStructure
     depends_on:
         - MindSlice_MindsliceTypes
 
@@ -41,14 +70,20 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
-    UNKNOWN_NEEDS_REVIEW
+    implementation_function: generateShapeSequence
+    parameters:
+        input:
+            shape: ShapeTheoryState
+            structure: CompositionStructureState
+            maxIterations?: number
+            hardFailureMode?: "soft" OR "controlled"
 
 HELPERS:
     exported_types:
-        - UNKNOWN_NEEDS_REVIEW
+        - none_confirmed
 
     exported_helper_functions:
         - applyPrimitiveShapeRules
@@ -69,15 +104,33 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - ShapeTheoryState
+        - CompositionStructureState
+        - optional maxIterations
+        - optional hardFailureMode
+    emits:
+        - grammar sequence
+        - rulesApplied
+        - transformationMap
+        - structureEvolution
+        - outputVisual
+        - outputText
+        - ShapeGrammarRuntime
+    mutates:
+        - none_detected
+    side_effects:
+        - none_detected
+    contract_status: confirmed_from_typescript
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - no_throw_confirmed
+    - if a transformation is rejected:
+        records failureReason "transformation_rejection" and continues or terminates according to threshold result
+    - if grammar thresholds are not met:
+        records failureReason "invalid_grammar"
+    - if controlled hard failure rejects inevitable-form law:
+        records failureReason "law_rejection" and terminationReason "law_rejection"
 
 CONSTRAINTS:
     - Pseudocode backfill only.

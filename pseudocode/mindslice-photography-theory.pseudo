@@ -7,16 +7,39 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Analyze photographic subject, light, camera position, lens, framing, exposure,
+    color, texture, motion, intention, and viewer attention.
+    Return visual reading, technical diagnosis, emotional effect, composition score,
+    and advertising potential.
 
 INPUT:
     - input: PhotographyTheorySystemInput
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - PhotographyTheorySystemOutput:
+        visual_reading:
+            intention: PhotographyIntention
+            light_logic: string
+            composition_logic: string
+            perspective_logic: string
+            color_logic: string
+            meaning_logic: string
+        technical_diagnosis:
+            lens_language: string
+            exposure_logic: string
+            time_logic: string
+            texture_logic: string
+            coherence: "image_is_coherent" OR "image_needs_refinement"
+        emotional_effect:
+            mood: string
+            attention_path: string
+            narrative_hint: string
+            memory_anchor: string
+        composition_score: number
+        advertising_potential:
+            score: number
+            brand_alignment: string
+            attention_strength: string
 
 STATE:
     - implemented
@@ -28,11 +51,11 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: standalone_declared
+    before: []
+    after: []
     depends_on:
-        - UNKNOWN_NEEDS_REVIEW
+        - none_confirmed
 
 MODULE_CLASSIFICATION:
     category: Art / Narrative / Shape / Color
@@ -41,7 +64,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runPhotographyTheorySystem
@@ -60,15 +83,39 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - PhotographyTheorySystemInput
+        - optional subject
+        - optional light
+        - optional camera_position
+        - optional lens
+        - optional framing
+        - optional exposure
+        - optional color
+        - optional texture
+        - optional motion
+        - optional intention
+        - optional viewer_attention
+    emits:
+        - PhotographyTheorySystemOutput
+        - visual_reading
+        - technical_diagnosis
+        - emotional_effect
+        - composition_score
+        - advertising_potential
+    mutates:
+        - none_detected
+    side_effects:
+        - none_detected
+    contract_status: confirmed_from_typescript
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - no_throw_confirmed
+    - missing optional fields use default descriptive fallbacks
+    - if no intention token matches:
+        intention defaults to "artistic"
+    - if coherence conditions are not sufficiently satisfied:
+        technical_diagnosis.coherence returns "image_needs_refinement"
 
 CONSTRAINTS:
     - Pseudocode backfill only.

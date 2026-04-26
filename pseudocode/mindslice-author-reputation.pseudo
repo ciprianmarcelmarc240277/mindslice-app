@@ -7,9 +7,9 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Confirmed author reputation module for computing rank, promotion state,
+    unlocked identity format, permissions, and reputation scores from author
+    history, author value, canonical history, and identity data.
 
 INPUT:
     - authorId: string
@@ -19,8 +19,7 @@ INPUT:
     - identityData: UserProfile
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - AuthorReputationResult
 
 STATE:
     - implemented
@@ -32,9 +31,12 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before: []
+    after:
+        - MindSlice_AuthorValue
+        - MindSlice_IdentityFormatEngine
+        - MindSlice_MindsliceTypes
     depends_on:
         - MindSlice_AuthorValue
         - MindSlice_IdentityFormatEngine
@@ -47,7 +49,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runAuthorReputationSystemV1
@@ -87,15 +89,26 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - authorId
+        - AuthorReputationHistoryEntry[]
+        - AuthorValueProfile
+        - CanonicalHistoryEntry[]
+        - UserProfile
+    emits:
+        - AuthorReputationResult
+        - AuthorPromotionEvent when rank changes
+        - AuthorIdentityFormat
+        - AuthorPermissions
+    mutates: none_detected
+    side_effects:
+        - reads current system time only when creating promotion event timestamp
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - No thrown failure confirmed.
+    - Invalid numeric history values are treated as 0.
+    - Identity formatting failure falls back to pseudonym single-line identity format.
 
 CONSTRAINTS:
     - Pseudocode backfill only.

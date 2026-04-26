@@ -7,9 +7,8 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Convert concept candidate axes and validation status into a thinking state.
+    Build role-aware thresholds, clamp candidate axes, and classify the candidate as IDEA or CONCEPT.
 
 INPUT:
     - { candidate
@@ -19,8 +18,16 @@ INPUT:
     - }: RunThinkingEngineInput
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - ThinkingEngineResult:
+        structure: number
+        sense: number
+        attention: number
+        coherence: number
+        thresholds: thinking threshold map
+        userRole: AuthorRole
+        identityType: AuthorIdentityType
+        state: "IDEA" OR "CONCEPT"
+        notes: string[]
 
 STATE:
     - implemented
@@ -32,9 +39,14 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before:
+        - MindSlice_Process
+        - MindSlice_Output
+    after:
+        - MindSlice_Validation
+        - MindSlice_AuthorEngine
+        - MindSlice_IdentityFormatEngine
     depends_on:
         - MindSlice_MindsliceTypes
 
@@ -45,7 +57,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runThinkingEngine
@@ -53,7 +65,7 @@ FUNCTION RUN:
 
 HELPERS:
     exported_types:
-        - UNKNOWN_NEEDS_REVIEW
+        - none_confirmed
 
     exported_helper_functions:
         - buildThinkingThresholds
@@ -62,15 +74,27 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - ConceptCandidate
+        - ConceptValidationResult
+        - optional AuthorRole
+        - optional AuthorIdentityType
+    emits:
+        - ThinkingEngineResult
+        - role-adjusted thresholds
+        - thinking notes
+    mutates:
+        - none_detected
+    side_effects:
+        - none_detected
+    contract_status: confirmed_from_typescript
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - no_throw_confirmed
+    - if candidate axes do not satisfy thinking thresholds:
+        returns state "IDEA"
+    - if validation is valid but thinking state remains IDEA:
+        adds note that final validation lifted an hesitant candidate at thinking-engine level
 
 CONSTRAINTS:
     - Pseudocode backfill only.

@@ -7,16 +7,16 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Confirmed master engine for resolving author identity, creating input slice,
+    applying contamination, running core formation, executing conceptual modules,
+    validating/refining concept output, detecting canonical state, and building
+    display output.
 
 INPUT:
     - request: RunMasterEngineRequest
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - RunMasterEngineResult
 
 STATE:
     - implemented
@@ -28,9 +28,19 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before: []
+    after:
+        - MindSlice_AuthorEngine
+        - MindSlice_Contamination
+        - MindSlice_DisplayEngine
+        - MindSlice_Formation
+        - MindSlice_InputEngine
+        - MindSlice_Meta
+        - MindSlice_Interpretation
+        - MindSlice_Validation
+        - MindSlice_ThoughtSceneEngine
+        - MindSlice_MindsliceTypes
     depends_on:
         - MindSlice_AuthorEngine
         - MindSlice_Contamination
@@ -50,7 +60,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runMasterEngine
@@ -82,15 +92,33 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - RunMasterEngineRequest
+        - UserProfile
+        - ThoughtState
+        - HistoryEntry[]
+        - ThoughtMemoryEntry[]
+        - LiveInterference
+        - CanonInfluenceContext
+        - ClockDisplayState
+    emits:
+        - display output
+        - master pipeline list
+        - memory
+        - canonical flag
+        - notes
+        - fail result with reason and notes
+    mutates: none_detected
+    side_effects:
+        - reads current system time indirectly through InputEngine createSlice
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - No thrown failure confirmed.
+    - Returns fail input_failure when input slice creation fails.
+    - Returns fail pipeline_failure when pipeline execution returns null.
+    - Returns fail validation_failure when concept validation and refine cycle fail.
+    - Returns fail master_law_rejection when concept does not modify system or fails validation.
 
 CONSTRAINTS:
     - Pseudocode backfill only.

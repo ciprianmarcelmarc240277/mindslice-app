@@ -7,16 +7,29 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Legacy visual scene builder.
+    Receive computed structure, scenario, color, and composition outputs, then build canvas,
+    palette, background patterns, guides, forms, relations, and a VisualRendererScene.
+    This is retained legacy v1 behavior and is distinct from passive MindSlice_VisualRenderer_v2.
 
 INPUT:
     - input: { structure_output: StructureVisualOutput; scenario_output: ScenarioVisualOutput; color_output: ColorVisualOutput; composition_output: CompositionVisualOutput; canvas_settings?: VisualRendererCanvasSettings; }
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - VisualRendererScene:
+        canvas: VisualCanvas
+        palette: ColorPaletteStop[]
+        background_layer: BackgroundLayerSelection | null
+        triangulation: TriangulationOutput
+        patterns: PatternOutput
+        flat_abstract_pattern: FlatAbstractPatternOutput | null
+        isometric_pattern: IsometricPatternOutput | null
+        zigzag_pattern: ZigZagPatternOutput | null
+        retro_grid_pattern: RetroGridPatternOutput | null
+        guides: VisualRendererGuideElement[]
+        forms: VisualComposerForm[]
+        relations: VisualComposerRelation[]
+        visual_scene: nested VisualRendererScene data
 
 STATE:
     - implemented
@@ -28,9 +41,21 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before:
+        - MindSlice_SVGRenderer
+        - MindSlice_VisualPipeline
+        - MindSlice_VisualPipelineController
+    after:
+        - MindSlice_VisualComposer
+        - MindSlice_PatternEngine
+        - MindSlice_TriangulationEngine
+        - MindSlice_FlatAbstractPatternEngine
+        - MindSlice_IsometricPatternEngine
+        - MindSlice_ZigzagPatternEngine
+        - MindSlice_RetroGridPatternEngine
+        - MindSlice_ConceptualPreset
+        - MindSlice_BackgroundLayerOrchestrator
     depends_on:
         - MindSlice_VisualComposer
         - MindSlice_PatternEngine
@@ -48,8 +73,8 @@ MODULE_CLASSIFICATION:
     version: implicit_v1
     lifecycle: legacy_retained
     can_render: true
-    can_decide_logic: false
-    requires_manual_review: true
+    can_decide_logic: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runVisualRendererV1
@@ -84,15 +109,30 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - StructureVisualOutput
+        - ScenarioVisualOutput
+        - ColorVisualOutput
+        - CompositionVisualOutput
+        - optional VisualRendererCanvasSettings
+    emits:
+        - VisualRendererScene
+        - visual_scene
+        - guides
+        - forms
+        - relations
+        - pattern outputs
+        - triangulation output
+    mutates:
+        - none_detected outside local scene construction
+    side_effects:
+        - none_detected
+    contract_status: confirmed_from_typescript
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - no_throw_confirmed
+    - unsupported background kinds fall through to empty or null pattern outputs
+    - missing palette roles use hardcoded fallback colors
 
 CONSTRAINTS:
     - Pseudocode backfill only.

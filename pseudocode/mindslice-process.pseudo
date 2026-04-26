@@ -7,16 +7,25 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Confirmed process module for interpreting an idea, applying contamination,
+    building and validating a concept candidate, running thinking and iteration
+    logic, evaluating termination, and returning process status/action.
 
 INPUT:
-    - UNKNOWN_NEEDS_REVIEW
+    - current: ThoughtState
+    - currentIndex: number
+    - thoughtScene: ThoughtSceneEngineState
+    - history: HistoryEntry[]
+    - thoughtMemory: ThoughtMemoryEntry[]
+    - interference: LiveInterference | null
+    - influenceMode: InfluenceMode | null
+    - canonInfluence: CanonInfluenceContext
+    - clockDisplay: ClockDisplayState | null
+    - authorRole?: AuthorRole | null
+    - identityType?: AuthorIdentityType | null
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - ProcessIdeaResult
 
 STATE:
     - implemented
@@ -28,9 +37,18 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before: []
+    after:
+        - MindSlice_Contamination
+        - MindSlice_Formation
+        - MindSlice_Interpretation
+        - MindSlice_Iteration
+        - MindSlice_ThinkingEngine
+        - MindSlice_Termination
+        - MindSlice_Validation
+        - MindSlice_ThoughtSceneEngine
+        - MindSlice_MindsliceTypes
     depends_on:
         - MindSlice_Contamination
         - MindSlice_Formation
@@ -49,14 +67,15 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
-    UNKNOWN_NEEDS_REVIEW
+    implementation_function: processIdea
+    parameters: ProcessIdeaInput
 
 HELPERS:
     exported_types:
-        - UNKNOWN_NEEDS_REVIEW
+        - none_confirmed
 
     exported_helper_functions:
         - processIdea
@@ -65,15 +84,36 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - ThoughtState
+        - ThoughtSceneEngineState
+        - HistoryEntry[]
+        - ThoughtMemoryEntry[]
+        - LiveInterference
+        - InfluenceMode
+        - CanonInfluenceContext
+        - ClockDisplayState
+        - AuthorRole
+        - AuthorIdentityType
+    emits:
+        - status
+        - nextAction
+        - interpretation
+        - contamination decision
+        - thinkingEngine
+        - iteration
+        - candidate
+        - validation
+        - terminationReason
+        - notes
+    mutates: none_detected
+    side_effects: none_detected
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - No thrown failure confirmed.
+    - Returns status terminated with nextAction fail when termination condition is not none.
+    - Returns status iterating when validation is incomplete and termination condition is none.
 
 CONSTRAINTS:
     - Pseudocode backfill only.

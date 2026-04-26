@@ -7,9 +7,9 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Confirmed deviation mode adapter for receiving finalized visual pipeline
+    controller outputs and returning adjusted structure, scenario, color, and
+    composition outputs with intensified/decentered values.
 
 INPUT:
     - structure: VisualPipelineControllerOutputs["structure"]
@@ -18,8 +18,7 @@ INPUT:
     - composition: VisualPipelineControllerOutputs["composition"]
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - VisualPipelineControllerOutputs
 
 STATE:
     - implemented
@@ -31,9 +30,10 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before: []
+    after:
+        - MindSlice_VisualPipelineController
     depends_on:
         - MindSlice_VisualPipelineController
 
@@ -44,7 +44,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runDeviationModeV2
@@ -52,7 +52,7 @@ FUNCTION RUN:
 
 HELPERS:
     exported_types:
-        - UNKNOWN_NEEDS_REVIEW
+        - none_confirmed
 
     exported_helper_functions:
         - none_confirmed
@@ -61,15 +61,20 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - VisualPipelineControllerOutputs.structure
+        - VisualPipelineControllerOutputs.scenario
+        - VisualPipelineControllerOutputs.color
+        - VisualPipelineControllerOutputs.composition
+    emits:
+        - adjusted VisualPipelineControllerOutputs
+    mutates: none_detected
+    side_effects: none_detected
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - No thrown failure confirmed.
+    - Numeric adjustments are clamped where bounds are applied.
 
 CONSTRAINTS:
     - Pseudocode backfill only.

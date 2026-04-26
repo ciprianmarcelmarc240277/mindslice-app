@@ -7,16 +7,21 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Snap and offset visual element positions against a visual layout grid using conceptual preset and snap profile rules.
+    confirmed_by:
+        - exported_main_function:runSnapEngineV1
+        - helper_functions:getSnapPoints, findClosest, applySnap, applyOffset
+        - output_expression:input.elements.map(...)
 
 INPUT:
     - input: SnapEngineRunInput
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    status: confirmed
+    confirmed_by:
+        - runSnapEngineV1 returns SnapEngineElement[]
+        - output item fields preserve id, role, position
+        - position may be snapped and offset deterministically
 
 STATE:
     - implemented
@@ -28,13 +33,23 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependencies_partial_order
+    before:
+        - MindSlice_VisualPipelineController_vNext
+        - MindSlice_ArtCompositionEngine
+        - MindSlice_VisualComposer
+    after:
+        - MindSlice_ConceptualPreset
+        - MindSlice_SnapProfile
     depends_on:
         - MindSlice_VisualComposer
         - MindSlice_ConceptualPreset
         - MindSlice_SnapProfile
+    confirmed_by:
+        - imports VisualGridPoint and VisualLayoutGrid
+        - imports ConceptualPresetOutput
+        - calls runSnapProfileSystemV1
+        - VisualPipelineController_vNext calls runSnapEngineV1 during composition preparation
 
 MODULE_CLASSIFICATION:
     category: Visual Pipeline vNext
@@ -43,7 +58,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runSnapEngineV1
@@ -66,15 +81,40 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        status: confirmed
+        evidence:
+            - input: SnapEngineRunInput
+            - elements: SnapEngineElement[]
+            - grid: VisualLayoutGrid
+            - snap_strength?: number
+            - offset_range?: SnapEngineOffsetRange
+            - style_mode?: SnapProfileStyleMode
+            - conceptual_preset?: { style_mode, conceptual_modes }
+    emits:
+        status: confirmed
+        evidence:
+            - SnapEngineElement[]
+            - adjusted position values
+            - exported helper functions getSnapPoints, findClosest, applySnap, applyOffset
+    mutates:
+        status: none_detected
+        evidence:
+            - applySnap and applyOffset return copied element objects
+            - no external mutation patterns detected in matching TypeScript file
+    side_effects:
+        status: none_detected
+        evidence:
+            - no file writes, network calls, DOM mutation, logging, or rendering calls detected in matching TypeScript file
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    confirmed_default_and_fallback_behavior_present
+    confirmed_by:
+        - resolveSnapStyleMode maps CONSTELLATION to DEVIATION and defaults to CONTROL_CALM
+        - snap_strength is clamped to 0..1
+        - findClosest returns null when no snap point exists
+        - applySnap returns original element when no closest point exists or threshold is not met
 
 CONSTRAINTS:
     - Pseudocode backfill only.

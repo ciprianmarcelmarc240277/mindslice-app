@@ -7,16 +7,23 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Maintain a registry of supported background modules, validate module definitions, register defaults, retrieve modules, list modules, and match the best background module for a parsed slice.
+    confirmed_by:
+        - exported_main_function:runBackgroundModuleRegistryV1
+        - module_level_registry:modules
+        - exported_actions:REGISTER, GET, LIST, MATCH, REGISTER_DEFAULTS, RUN
 
 INPUT:
     - input: { registry_action: BackgroundRegistryAction; module_definition?: BackgroundModuleDefinition; background_kind?: BackgroundModuleKind; parsed_slice?: ParsedSliceObject; conceptual_preset?: ConceptualPresetOutput; render_settings?: BackgroundRegistryRenderSettings; }
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    status: confirmed
+    confirmed_by:
+        - action register returns status, kind, module or BackgroundRegistryFailure
+        - action register_defaults returns modules registry object
+        - action get returns BackgroundModuleDefinition or BackgroundRegistryFailure
+        - action list returns modules registry object
+        - action match returns BackgroundRegistryMatch or BackgroundRegistryFailure
 
 STATE:
     - implemented
@@ -28,9 +35,14 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependencies_partial_order
+    before:
+        - MindSlice_BackgroundLayerOrchestrator
+        - MindSlice_GrammarPipelineContract
+    after:
+        - MindSlice_ParserEngine
+        - MindSlice_ConceptualPreset
+        - background_pattern_modules
     depends_on:
         - MindSlice_ParserEngine
         - MindSlice_ConceptualPreset
@@ -48,6 +60,11 @@ PIPELINE_POSITION:
         - MindSlice_ZigzagPatternSVGRenderer
         - MindSlice_RetroGridPatternEngine
         - MindSlice_RetroGridPatternSVGRenderer
+    confirmed_by:
+        - imports ParsedSliceObject
+        - imports ConceptualPresetOutput
+        - imports pattern, triangulation, flat abstract, isometric, zigzag, and retro grid engines/renderers
+        - consumed by BackgroundLayerOrchestrator through GET and MATCH
 
 MODULE_CLASSIFICATION:
     category: Background / Pattern / Grammar
@@ -56,7 +73,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runBackgroundModuleRegistryV1
@@ -95,15 +112,46 @@ HELPERS:
         - RUN
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        status: confirmed
+        evidence:
+            - input.registry_action: BackgroundRegistryAction
+            - input.module_definition?: BackgroundModuleDefinition
+            - input.background_kind?: BackgroundModuleKind
+            - input.parsed_slice?: ParsedSliceObject
+            - input.conceptual_preset?: ConceptualPresetOutput
+            - input.render_settings?: BackgroundRegistryRenderSettings
+    emits:
+        status: confirmed
+        evidence:
+            - BackgroundRegistryFailure
+            - BackgroundRegistryMatch
+            - BackgroundModuleDefinition
+            - modules registry object
+            - exported constants PatternInferRules, TriangulationInferRules, FlatAbstractInferRules, IsometricInferRules, ZigZagInferRules, RetroGridInferRules
+            - exported constants REGISTER, GET, LIST, MATCH, REGISTER_DEFAULTS, RUN
+    mutates:
+        status: confirmed_internal_registry_mutation
+        evidence:
+            - registerBackgroundModule assigns modules[moduleDefinition.kind] = moduleDefinition
+            - registerDefaultBackgroundModules registers default background module definitions
+            - module file calls registerDefaultBackgroundModules() at module load
+    side_effects:
+        status: confirmed_module_level_registry_initialization
+        evidence:
+            - module-level modules object is initialized and populated by registerDefaultBackgroundModules()
+            - no file writes, network calls, DOM mutation, logging, or direct render calls detected in registry RUN path
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    confirmed_failure_behavior_present
+    confirmed_by:
+        - validateBackgroundModule returns MISSING_BACKGROUND_KIND
+        - validateBackgroundModule returns UNSUPPORTED_BACKGROUND_KIND
+        - validateBackgroundModule returns INVALID_BACKGROUND_MODULE_CONTRACT
+        - getBackgroundModule returns BACKGROUND_MODULE_NOT_FOUND
+        - matchBackgroundModule returns NO_BACKGROUND_MODULES_REGISTERED
+        - runBackgroundModuleRegistryV1 returns MISSING_MODULE_DEFINITION, MISSING_BACKGROUND_KIND, MISSING_MATCH_CONTEXT, or UNKNOWN_REGISTRY_ACTION
 
 CONSTRAINTS:
     - Pseudocode backfill only.

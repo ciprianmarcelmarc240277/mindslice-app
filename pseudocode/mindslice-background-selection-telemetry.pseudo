@@ -7,17 +7,21 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Extract background selection telemetry from a background layer selection and optional renderer background result.
+    confirmed_by:
+        - exported_main_function:runBackgroundSelectionTelemetryV1
+        - output_type:BackgroundSelectionTelemetryOutput
+        - imported_dependency:BackgroundLayerSelectionV2
 
 INPUT:
     - backgroundLayerSelection: BackgroundSelectionWithScore | null | undefined
     - backgroundLayerOutput?: Partial<VisualRendererV2BackgroundResult> | null
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    status: confirmed
+    confirmed_by:
+        - main_return_type: BackgroundSelectionTelemetryOutput
+        - return_object_fields: active_kind, grammar_profile, seed, density, opacity, reason, score, fallback_used, warnings
 
 STATE:
     - implemented
@@ -29,12 +33,20 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependencies_partial_order
+    before:
+        - MindSlice_ArchitectureHealthReport_v1
+        - visual_pipeline_report_consumer
+    after:
+        - MindSlice_BackgroundLayerOrchestrator
+        - MindSlice_VisualRenderer_v2
     depends_on:
         - MindSlice_BackgroundLayerOrchestrator
         - MindSlice_VisualRenderer_v2
+    confirmed_by:
+        - imports BackgroundLayerSelectionV2
+        - imports VisualRendererV2BackgroundResult
+        - consumed by VisualPipelineController_vNext pipeline_result
 
 MODULE_CLASSIFICATION:
     category: Background / Pattern / Grammar
@@ -43,7 +55,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runBackgroundSelectionTelemetryV1
@@ -60,15 +72,34 @@ HELPERS:
         - RUN
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        status: confirmed
+        evidence:
+            - backgroundLayerSelection: BackgroundSelectionWithScore | null | undefined
+            - backgroundLayerOutput?: Partial<VisualRendererV2BackgroundResult> | null
+    emits:
+        status: confirmed
+        evidence:
+            - BackgroundSelectionTelemetryOutput
+            - exported const RUN
+    mutates:
+        status: none_detected
+        evidence:
+            - matching TypeScript returns a new telemetry object only
+            - no external mutation patterns detected in matching TypeScript file
+    side_effects:
+        status: none_detected
+        evidence:
+            - no file writes, network calls, DOM mutation, logging, or rendering calls detected in matching TypeScript file
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    confirmed_fallback_or_null_normalization_behavior_present
+    confirmed_by:
+        - null or undefined backgroundLayerSelection produces null telemetry fields
+        - non-numeric opacity or score resolves to null
+        - score can be parsed from reason matching registry_match_score pattern
+        - warnings defaults to [] when backgroundLayerOutput.warnings is missing or invalid
 
 CONSTRAINTS:
     - Pseudocode backfill only.

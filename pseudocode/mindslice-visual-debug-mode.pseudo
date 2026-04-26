@@ -7,9 +7,8 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Build legacy visual debug layer views from already computed structure, scenario, color, and composition outputs.
+    Convert each visual subsystem into guide overlays and summaries without mutating the source outputs.
 
 INPUT:
     - structure_output: StructureVisualOutput
@@ -18,8 +17,12 @@ INPUT:
     - composition_output: CompositionVisualOutput
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - VisualDebugModeOutput:
+        full: VisualDebugLayerView
+        structure_only: VisualDebugLayerView
+        scenario_only: VisualDebugLayerView
+        color_only: VisualDebugLayerView
+        composition_only: VisualDebugLayerView
 
 STATE:
     - implemented
@@ -31,9 +34,11 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before:
+        - MindSlice_VisualPipelineController
+    after:
+        - MindSlice_VisualRenderer
     depends_on:
         - MindSlice_VisualRenderer
 
@@ -44,7 +49,7 @@ MODULE_CLASSIFICATION:
     lifecycle: legacy_retained
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runVisualDebugModeV1
@@ -62,15 +67,24 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - StructureVisualOutput
+        - ScenarioVisualOutput
+        - ColorVisualOutput
+        - CompositionVisualOutput
+    emits:
+        - VisualDebugModeOutput
+        - VisualRendererGuideElement arrays
+        - debug layer summaries
+    mutates:
+        - none_detected
+    side_effects:
+        - none_detected
+    contract_status: confirmed_from_typescript
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - no_throw_confirmed
+    - empty subsystem arrays produce empty guide lists for that layer
 
 CONSTRAINTS:
     - Pseudocode backfill only.

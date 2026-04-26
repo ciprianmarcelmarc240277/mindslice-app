@@ -7,9 +7,9 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Confirmed architecture audit module for validating a MindSlice module manifest,
+    dependency graph, renderer-passive rules, serializer support, background
+    registry coverage, runtime availability, and optional visual smoke test.
 
 INPUT:
     - moduleManifest: MindSliceModuleManifest = { modules: [] }
@@ -17,8 +17,7 @@ INPUT:
     - validationSettings: MindSliceArchitectureValidationSettings = {}
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - MindSliceArchitectureValidationReport
 
 STATE:
     - implemented
@@ -30,9 +29,11 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before: []
+    after:
+        - MindSlice_ModuleLoader
+        - MindSlice_VisualRuntimeSmokeTest
     depends_on:
         - MindSlice_ModuleLoader
         - MindSlice_VisualRuntimeSmokeTest
@@ -44,7 +45,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runArchitectureValidatorV1
@@ -62,15 +63,26 @@ HELPERS:
         - RUN
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - MindSliceModuleManifest
+        - MindSliceActiveRuntime
+        - MindSliceArchitectureValidationSettings
+    emits:
+        - MindSliceArchitectureValidationReport
+        - dependency_graph
+        - errors
+        - warnings
+        - repair_suggestions
+    mutates: none_detected
+    side_effects:
+        - may run VisualRuntimeSmokeTest when validationSettings.smoke_test_runtime is true
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - No thrown failure confirmed.
+    - Returns status fail when collected errors are not empty.
+    - Missing manifest modules, module references, dependency edges, renderer boundary violations,
+      serializer gaps, controller order issues, or runtime smoke-test failures are reported as errors.
 
 CONSTRAINTS:
     - Pseudocode backfill only.

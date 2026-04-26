@@ -7,9 +7,8 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Confirmed scoring engine for calculating a ScoringProfile from legacy slice
+    concept data, repetition data, threshold classification, and slice context.
 
 INPUT:
     - legacy: ScoringLegacyInput
@@ -19,8 +18,7 @@ INPUT:
     - sliceContext: SliceRepetitionContext
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - ScoringProfile
 
 STATE:
     - implemented
@@ -32,9 +30,11 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before: []
+    after:
+        - MindSlice_ThresholdModel
+        - MindSlice_SliceRepetitionEngine
     depends_on:
         - MindSlice_ThresholdModel
         - MindSlice_SliceRepetitionEngine
@@ -46,7 +46,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runScoringEngineV1
@@ -69,15 +69,22 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - ScoringLegacyInput
+        - SliceRepetitionResult.repetition_type
+        - SliceRepetitionResult.evolution
+        - ThresholdModelResult
+        - SliceRepetitionContext
+    emits:
+        - ScoringProfile
+    mutates: none_detected
+    side_effects: none_detected
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - No thrown failure confirmed.
+    - Non-finite numeric values normalize to 0.
+    - Scores are clamped to bounded numeric ranges.
 
 CONSTRAINTS:
     - Pseudocode backfill only.

@@ -7,16 +7,21 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Confirmed author identity engine for creating default author user state,
+    activating indexed or pseudonym identity, deriving author role, and building
+    an author profile snapshot from a user profile.
 
 INPUT:
-    - UNKNOWN_NEEDS_REVIEW
+    - buildAuthorProfileSnapshot input.profile: UserProfile identity fields or null
+    - activateAuthorIdentity input: displayName, pseudonym, consentFlag
+    - activateSubscription input: currentRole, subscriptionStatus
+    - deriveAuthorRole input: identityType, subscriptionStatus
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - default user role and identity from createUser
+    - author identity activation result
+    - author role result
+    - author profile snapshot with identity and role
 
 STATE:
     - implemented
@@ -28,9 +33,10 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before: []
+    after:
+        - MindSlice_MindsliceTypes
     depends_on:
         - MindSlice_MindsliceTypes
 
@@ -41,14 +47,15 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
-    UNKNOWN_NEEDS_REVIEW
+    implementation_function: buildAuthorProfileSnapshot
+    parameters: input.profile identity fields or null
 
 HELPERS:
     exported_types:
-        - UNKNOWN_NEEDS_REVIEW
+        - none_confirmed
 
     exported_helper_functions:
         - createUser
@@ -62,15 +69,24 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - UserProfile.display_name
+        - UserProfile.pseudonym
+        - UserProfile.name_declaration_accepted
+        - UserProfile.subscription_status
+        - UserProfile.identity_type
+        - UserProfile.author_role
+    emits:
+        - identity snapshot
+        - author role
+    mutates: none_detected
+    side_effects: none_detected
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - No thrown failure confirmed.
+    - Invalid or unconsented indexed display names are converted to pseudonym identity.
+    - Missing profile falls back to default pseudonym/free user state.
 
 CONSTRAINTS:
     - Pseudocode backfill only.

@@ -7,17 +7,21 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Build and validate the active MindSlice runtime manifest.
+    Register conceptual and visual architecture modules, initialize the module loader,
+    validate architecture readiness, and return either active runtime status or a safe fallback SVG.
 
 INPUT:
     - appConfig: RuntimeBootAppConfig = {}
     - bootSettings: RuntimeBootSettings = {}
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - RuntimeBootResult:
+        status: "ok" OR "fallback"
+        active_runtime: MindSliceActiveRuntime OR null
+        runtime_status: RuntimeBootStatus
+        architecture_report: MindSliceArchitectureValidationReport IF status == "ok"
+        fallback_svg: string IF status == "fallback"
 
 STATE:
     - implemented
@@ -29,9 +33,25 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before:
+        - MindSlice_Runtime_v1
+        - React display shell
+    after:
+        - MindSlice_ModuleLoader
+        - MindSlice_ArchitectureValidator
+        - MindSlice_ParserEngine
+        - MindSlice_ConceptualPreset
+        - MindSlice_StructureEngine
+        - MindSlice_ScenarioEngine
+        - MindSlice_ColorTheoryEngine
+        - MindSlice_ArtCompositionEngine
+        - MindSlice_GeometryEngine
+        - MindSlice_SnapEngine
+        - MindSlice_PaletteContractAdapter
+        - MindSlice_TextWrappingEngine
+        - MindSlice_CanvasAccessPolicy
+        - MindSlice_SlicesAPIPerformanceGuard
     depends_on:
         - MindSlice_ParserEngine
         - MindSlice_ConceptualPreset
@@ -55,7 +75,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runRuntimeBootControllerV1
@@ -75,15 +95,26 @@ HELPERS:
         - RUN
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - RuntimeBootAppConfig
+        - RuntimeBootSettings
+    emits:
+        - RuntimeBootResult
+        - MindSliceModuleManifest
+        - RuntimeBootStatus
+        - fallback_svg when boot or validation fails
+    mutates:
+        - none_detected
+    side_effects:
+        - none_detected
+    contract_status: confirmed_from_typescript
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - no_throw_confirmed
+    - if module loader result is not ok or active_runtime is missing:
+        returns status "fallback" with user_safe_message, developer_diagnostics, and fallback_svg
+    - if architecture validator returns status "fail":
+        returns status "fallback" with user_safe_message, developer_diagnostics, and fallback_svg
 
 CONSTRAINTS:
     - Pseudocode backfill only.

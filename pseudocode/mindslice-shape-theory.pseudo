@@ -7,16 +7,49 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Derive, contaminate, iterate, validate, and describe a shape concept from thought state,
+    palette, composition structure, art composition, interference, and thought memory.
+    Emit a shape concept with visual/text output and runtime validation diagnostics.
 
 INPUT:
-    - UNKNOWN_NEEDS_REVIEW
+    - processShapeIdea input:
+        current: ThoughtState
+        palette: ColorPaletteState
+        structure: CompositionStructureState
+        artComposition: ArtCompositionState
+        interference: LiveInterference | null
+        thoughtMemory: ThoughtMemoryEntry[]
+        maxIterations?: number
+        hardFailureMode?: "soft" OR "controlled"
+    - helper inputs:
+        visual: VisualState
+        triad: Triad
+        contaminationType: ContaminationType
+        validation: ShapeTheoryScores
+        stage: string
+        sourceIdeaCanonCount: number
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - shape concept:
+        type: string
+        structure: string[]
+        edges: string[]
+        mass: string
+        voidRelation: string[]
+        behavior: string
+        positionTendency: string
+        tensionVectors: string[]
+        attentionProfile: string[]
+        outputVisual: string
+        outputText: string
+        runtime: ShapeTheoryRuntime
+    - helper outputs:
+        shape idea set
+        primitive shape structure
+        contamination decision
+        ShapeTheoryScores
+        system state update
+        canonical boolean
 
 STATE:
     - implemented
@@ -28,9 +61,15 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before:
+        - MindSlice_ShapeGrammar
+        - MindSlice_VisualComposer
+    after:
+        - MindSlice_ArtComposition
+        - MindSlice_CompositionStructure
+        - MindSlice_ColorTheory
+        - MindSlice_Contamination
     depends_on:
         - MindSlice_MindsliceTypes
 
@@ -41,14 +80,24 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
-    UNKNOWN_NEEDS_REVIEW
+    implementation_function: processShapeIdea
+    parameters:
+        input:
+            current: ThoughtState
+            palette: ColorPaletteState
+            structure: CompositionStructureState
+            artComposition: ArtCompositionState
+            interference: LiveInterference | null
+            thoughtMemory: ThoughtMemoryEntry[]
+            maxIterations?: number
+            hardFailureMode?: "soft" OR "controlled"
 
 HELPERS:
     exported_types:
-        - UNKNOWN_NEEDS_REVIEW
+        - none_confirmed
 
     exported_helper_functions:
         - buildShapeIdeaSet
@@ -79,15 +128,33 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - ThoughtState
+        - ColorPaletteState
+        - CompositionStructureState
+        - ArtCompositionState
+        - LiveInterference | null
+        - ThoughtMemoryEntry[]
+        - optional maxIterations
+        - optional hardFailureMode
+    emits:
+        - shape concept
+        - outputVisual
+        - outputText
+        - ShapeTheoryRuntime
+        - ShapeTheoryScores
+    mutates:
+        - none_detected
+    side_effects:
+        - none_detected
+    contract_status: confirmed_from_typescript
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - no_throw_confirmed
+    - if contamination type is noise, collapse, or fragment:
+        returns runtime failed true, terminationReason "rejected_contamination", failureReason "negative_contamination"
+    - if validation thresholds are not met after iteration:
+        returns runtime failed true and failureReason "validation_thresholds"
 
 CONSTRAINTS:
     - Pseudocode backfill only.

@@ -7,16 +7,16 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Confirmed execution engine for parsing a raw slice, deriving analytic state,
+    building and adapting a concept pipeline, executing downstream MindSlice
+    modules, scoring the execution, running learning loops, thresholding,
+    visual mapping/composition, and author value/reputation outputs.
 
 INPUT:
     - input: RunExecutionEngineInput | string
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - ExecutionEngineResult
 
 STATE:
     - implemented
@@ -28,9 +28,22 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before: []
+    after:
+        - MindSlice_AnalyticEngine
+        - MindSlice_AuthorReputation
+        - MindSlice_AuthorValue
+        - MindSlice_MasterEngine
+        - MindSlice_LearningLoopEngine
+        - MindSlice_LearningLoopEngineSlices
+        - MindSlice_ParserEngine
+        - MindSlice_ScoringEngine
+        - MindSlice_VisualMappingRules
+        - MindSlice_VisualComposer
+        - MindSlice_ThresholdModel
+        - MindSlice_SliceRepetitionEngine
+        - MindSlice_MindsliceTypes
     depends_on:
         - MindSlice_AnalyticEngine
         - MindSlice_AuthorReputation
@@ -53,7 +66,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runExecutionEngineV3
@@ -87,15 +100,42 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - rawSliceText
+        - optional UserProfile
+        - HistoryEntry[]
+        - ThoughtMemoryEntry[]
+        - AuthorHistoricalDataPoint[]
+        - SliceRepetitionInput[]
+        - LiveInterference
+        - CanonInfluenceContext
+        - ClockDisplayState
+    emits:
+        - parsed_slice
+        - analytic_profile
+        - outputs
+        - score
+        - execution_log
+        - learning_state
+        - threshold_model
+        - learning_loop
+        - slice_learning_loop
+        - scoring_engine_result
+        - visual_blueprint
+        - render_composition
+        - slice_repetition_result
+        - author_value_profile
+        - author_reputation_result
+    mutates:
+        - local ExecutionContext object during pipeline execution
+    side_effects: none_detected_outside_local_scope
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - No thrown failure confirmed.
+    - Returns fail INVALID_SLICE when parser returns null.
+    - Returns fail INVALID_ANALYTIC_PROFILE when analytic profile is unavailable.
+    - Returns fail PIPELINE_ABORTED or RECOVERY_FAILED when step execution and recovery cannot produce valid output.
 
 CONSTRAINTS:
     - Pseudocode backfill only.

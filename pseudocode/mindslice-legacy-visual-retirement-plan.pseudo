@@ -7,17 +7,21 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Scan legacy visual references and produce a non-mutating retirement plan for migration toward vNext visual architecture.
+    confirmed_by:
+        - exported_main_function:runLegacyVisualRetirementPlanV1
+        - output_type:LegacyVisualRetirementPlanOutput
+        - helper_functions:findLegacyReferences, buildRetirementSteps, computeMigrationStatus
 
 INPUT:
     - codebaseScan: unknown
     - migrationSettings: LegacyVisualMigrationSettings = {}
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    status: confirmed
+    confirmed_by:
+        - main_return_type: LegacyVisualRetirementPlanOutput
+        - return_object_fields: retirement_steps, migration_status, remaining_legacy_references
 
 STATE:
     - implemented
@@ -29,11 +33,16 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
-    depends_on:
-        - UNKNOWN_NEEDS_REVIEW
+    status: standalone_audit_declared
+    before:
+        - MindSlice_ModuleLoader
+        - MindSlice_ArchitectureHealthReport
+    after:
+        - codebase_scan
+    depends_on: []
+    confirmed_by:
+        - ModuleLoader manifest registers LegacyVisualRetirementPlan_v1 as utility
+        - matching TypeScript has no imports and only scans provided codebaseScan input
 
 MODULE_CLASSIFICATION:
     category: Runtime / Safety / Audit
@@ -42,7 +51,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runLegacyVisualRetirementPlanV1
@@ -64,15 +73,37 @@ HELPERS:
         - RUN
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        status: confirmed
+        evidence:
+            - codebaseScan: unknown
+            - migrationSettings: LegacyVisualMigrationSettings = {}
+    emits:
+        status: confirmed
+        evidence:
+            - LegacyVisualRetirementPlanOutput
+            - LegacyVisualReference[]
+            - retirement_steps
+            - migration_status
+            - exported const RUN
+    mutates:
+        status: none_detected
+        evidence:
+            - matching TypeScript normalizes and scans input into local arrays only
+            - no external mutation patterns detected
+    side_effects:
+        status: none_detected
+        evidence:
+            - no file writes, network calls, DOM mutation, logging, or rendering calls detected
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    confirmed_empty_scan_and_status_fallback_behavior_present
+    confirmed_by:
+        - normalizeScan returns [] for unsupported codebaseScan shapes
+        - computeMigrationStatus returns complete when no legacy references exist
+        - near_complete_threshold defaults to 3
+        - buildRetirementSteps always includes ArchitectureValidator and VisualRuntimeSmokeTest steps
 
 CONSTRAINTS:
     - Pseudocode backfill only.

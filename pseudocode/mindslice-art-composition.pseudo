@@ -7,16 +7,22 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Confirmed art composition module for deriving, evaluating, iterating,
+    refining, and canon-checking visual composition state from thought state,
+    palette, interference, and memory.
 
 INPUT:
-    - UNKNOWN_NEEDS_REVIEW
+    - current: ThoughtState
+    - palette: ColorPaletteState
+    - interference: LiveInterference | null
+    - thoughtMemory: ThoughtMemoryEntry[]
+    - maxIterations?: number
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - art composition concept from processCompositionIdea
+    - ArtCompositionRuntime
+    - ArtCompositionScores
+    - merged visual output from helper when supplied generated form, composition layout, and color palette
 
 STATE:
     - implemented
@@ -28,9 +34,10 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before: []
+    after:
+        - MindSlice_MindsliceTypes
     depends_on:
         - MindSlice_MindsliceTypes
 
@@ -41,14 +48,15 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
-    UNKNOWN_NEEDS_REVIEW
+    implementation_function: processCompositionIdea
+    parameters: current: ThoughtState, palette: ColorPaletteState, interference: LiveInterference | null, thoughtMemory: ThoughtMemoryEntry[], maxIterations?: number
 
 HELPERS:
     exported_types:
-        - UNKNOWN_NEEDS_REVIEW
+        - none_confirmed
 
     exported_helper_functions:
         - interpretCompositionIdea
@@ -80,15 +88,28 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - ThoughtState
+        - ColorPaletteState
+        - LiveInterference
+        - ThoughtMemoryEntry[]
+        - generated form through helper applyMergedVisualOutputToArtComposition
+        - composition layout through helper applyMergedVisualOutputToArtComposition
+        - color palette through helper applyMergedVisualOutputToArtComposition
+    emits:
+        - art composition concept
+        - ArtCompositionRuntime
+        - ArtCompositionScores
+        - system state update from updateArtSystemState helper
+        - visual output merge/refinement metadata
+    mutates: none_detected
+    side_effects: none_detected
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - No thrown failure confirmed.
+    - noise, overload, collapse, and fragment contamination are rejected into controlled runtime state.
+    - Composition iteration stops when thresholds pass or maxIterations is reached.
 
 CONSTRAINTS:
     - Pseudocode backfill only.

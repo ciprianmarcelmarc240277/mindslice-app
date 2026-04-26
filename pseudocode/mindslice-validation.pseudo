@@ -7,16 +7,22 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Validate a concept candidate against dynamic concept thresholds and subsystem evidence.
+    Evaluate semantic, visual, cross-modal, cross-canon, temporal, contamination, author,
+    scenario, art, structure, shape, grammar, meta, and color scores.
+    Return concept validity, resolution status, axes, thresholds, scores, and notes.
 
 INPUT:
-    - UNKNOWN_NEEDS_REVIEW
+    - candidate: ConceptCandidate
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - ConceptValidationResult:
+        isValidConcept: boolean
+        resolutionStatus: ConceptResolutionStatus
+        axes: ConceptEvaluationAxes
+        thresholds: ConceptDynamicThresholds
+        scores: validation score map
+        notes: string[]
 
 STATE:
     - implemented
@@ -28,9 +34,20 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before:
+        - MindSlice_Iteration
+        - MindSlice_Termination
+        - MindSlice_ThinkingEngine
+    after:
+        - MindSlice_ArtComposition
+        - MindSlice_CompositionStructure
+        - MindSlice_ShapeGrammar
+        - MindSlice_ShapeTheory
+        - MindSlice_Scenario
+        - MindSlice_Threshold
+        - MindSlice_Meta
+        - MindSlice_ColorTheory
     depends_on:
         - MindSlice_ArtComposition
         - MindSlice_CompositionStructure
@@ -49,14 +66,16 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
-    UNKNOWN_NEEDS_REVIEW
+    implementation_function: validateConceptCandidate
+    parameters:
+        candidate: ConceptCandidate
 
 HELPERS:
     exported_types:
-        - UNKNOWN_NEEDS_REVIEW
+        - none_confirmed
 
     exported_helper_functions:
         - validateConceptCandidate
@@ -65,15 +84,31 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - ConceptCandidate
+        - candidate.conceptStateDraft
+        - candidate.evaluationAxes
+        - subsystem runtime scores and thresholds embedded in candidate
+    emits:
+        - ConceptValidationResult
+        - ConceptResolutionStatus
+        - validation score map
+        - validation notes
+    mutates:
+        - none_detected
+    side_effects:
+        - none_detected
+    contract_status: confirmed_from_typescript
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - no_throw_confirmed
+    - if shape hard failure is triggered:
+        resolutionStatus becomes "contested" or "unresolved" based on contaminationResolution
+    - if concept is not valid and contaminationResolution is low:
+        resolutionStatus becomes "contested"
+    - if concept is not valid but semantic or author resolution is sufficient:
+        resolutionStatus becomes "partially_resolved"
+    - otherwise unresolved candidates return resolutionStatus "unresolved"
 
 CONSTRAINTS:
     - Pseudocode backfill only.

@@ -7,9 +7,11 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Classify execution state against adaptive structure, meaning, attention, and coherence thresholds.
+    confirmed_by:
+        - exported_main_function:runThresholdModelV2
+        - output_type:ThresholdModelResult
+        - helper_functions:measureCurrentState, buildThresholds, classifyState, generateFlags, suggestNextAction, evolveThresholds
 
 INPUT:
     - analyticProfile: AnalyticProfile
@@ -17,8 +19,11 @@ INPUT:
     - historicalMemory: HistoricalMemorySignal[] = []
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    status: confirmed
+    confirmed_by:
+        - main_return_type: ThresholdModelResult
+        - return_object_fields: threshold_state, flags, updated_thresholds
+        - threshold_state_fields: classification, state, thresholds, learning, next_action
 
 STATE:
     - implemented
@@ -30,11 +35,19 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependencies_partial_order
+    before:
+        - MindSlice_LearningLoopEngine
+        - MindSlice_LearningLoopEngineSlices
+        - MindSlice_ScoringEngine
+        - MindSlice_CanonEngine
+    after:
+        - MindSlice_AnalyticEngine
     depends_on:
         - MindSlice_AnalyticEngine
+    confirmed_by:
+        - imports AnalyticProfile
+        - consumed by LearningLoopEngine, LearningLoopEngineSlices, ScoringEngine, and CanonEngine
 
 MODULE_CLASSIFICATION:
     category: Core Concept Engines
@@ -43,7 +56,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runThresholdModelV2
@@ -82,15 +95,38 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        status: confirmed
+        evidence:
+            - analyticProfile: AnalyticProfile
+            - executionContext: ThresholdExecutionContext
+            - historicalMemory: HistoricalMemorySignal[] = []
+    emits:
+        status: confirmed
+        evidence:
+            - ThresholdModelResult
+            - ThresholdState
+            - ThresholdDecisionFlags
+            - ThresholdValues
+            - ThresholdLearningSignals
+    mutates:
+        status: none_detected
+        evidence:
+            - matching TypeScript derives local threshold objects only
+            - no external mutation patterns detected
+    side_effects:
+        status: none_detected
+        evidence:
+            - no file writes, network calls, DOM mutation, logging, or rendering calls detected
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    confirmed_default_and_clamp_behavior_present
+    confirmed_by:
+        - average returns fallback 0.5 when no finite values exist
+        - extractLearningSignals returns default learning values when historicalMemory is empty
+        - thresholds are clamped between 0.4 and 0.95
+        - suggestNextAction returns deterministic fallback action STORE_AND_SCORE for CONCEPT
 
 CONSTRAINTS:
     - Pseudocode backfill only.

@@ -7,16 +7,16 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Confirmed clock concept module for deriving a ClockDisplayState from a
+    supplied Date and user thought state, then evaluating readability,
+    attention, stability, perception, contamination acceptance, and display law.
 
 INPUT:
-    - UNKNOWN_NEEDS_REVIEW
+    - processTime input.now: Date
+    - processTime input.userState: ClockUserState
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - ClockDisplayState
 
 STATE:
     - implemented
@@ -28,9 +28,10 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before: []
+    after:
+        - MindSlice_MindsliceTypes
     depends_on:
         - MindSlice_MindsliceTypes
 
@@ -41,14 +42,15 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
-    UNKNOWN_NEEDS_REVIEW
+    implementation_function: processTime
+    parameters: input.now: Date, input.userState: ClockUserState
 
 HELPERS:
     exported_types:
-        - UNKNOWN_NEEDS_REVIEW
+        - none_confirmed
 
     exported_helper_functions:
         - readSystemTime
@@ -72,15 +74,24 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - Date
+        - ClockUserState
+        - ThoughtState visual and triad fields
+        - InfluenceMode
+    emits:
+        - ClockDisplayState
+        - ClockRuntime
+        - clock update payload from updateClockSystem helper
+    mutates: none_detected
+    side_effects:
+        - readSystemTime helper reads current system time only when called without Date argument
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - No thrown failure confirmed.
+    - Invalid contamination modes are rejected into fallback clock display behavior.
+    - Iteration stops when thresholds pass or iteration limit is reached.
 
 CONSTRAINTS:
     - Pseudocode backfill only.

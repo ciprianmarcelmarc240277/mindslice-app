@@ -7,17 +7,21 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Resolve and adapt conceptual preset biases from a preset name and parsed slice context.
+    confirmed_by:
+        - exported_main_function:runConceptualPresetSystemV1
+        - output_type:ConceptualPresetOutput
+        - helper_functions:resolvePreset, adaptToSlice, buildConceptualPreset
 
 INPUT:
     - preset_name: ConceptualPresetName | null | undefined
     - slice_context: ParsedSliceObject
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    status: confirmed
+    confirmed_by:
+        - main_return_type: ConceptualPresetOutput
+        - return_object_fields: conceptual_modes, style_mode, structure_bias, scenario_bias, color_bias, composition_bias, literary_movement, art_movement
 
 STATE:
     - implemented
@@ -29,13 +33,22 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependencies_partial_order
+    before:
+        - MindSlice_StructureEngine
+        - MindSlice_ScenarioEngine
+        - MindSlice_ColorTheoryEngine
+        - MindSlice_CompositionEngine
+    after:
+        - MindSlice_ParserEngine
     depends_on:
         - MindSlice_ParserEngine
         - MindSlice_ArtMovements
         - MindSlice_LiteraryMovements
+    confirmed_by:
+        - imports ParsedSliceObject
+        - calls runArtMovementsSystem and runLiteraryMovementsSystem
+        - emits bias fields consumed by downstream visual engines
 
 MODULE_CLASSIFICATION:
     category: Visual Pipeline vNext
@@ -44,7 +57,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runConceptualPresetSystemV1
@@ -64,15 +77,45 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        status: confirmed
+        evidence:
+            - preset_name: ConceptualPresetName | null | undefined
+            - slice_context: ParsedSliceObject
+            - slice_context.metadata.tags
+            - slice_context.content.text
+            - slice_context.process.pipeline
+    emits:
+        status: confirmed
+        evidence:
+            - ConceptualPresetOutput
+            - conceptual_modes
+            - style_mode
+            - structure_bias
+            - scenario_bias
+            - color_bias
+            - composition_bias
+            - literary_movement
+            - art_movement
+    mutates:
+        status: none_detected
+        evidence:
+            - clonePreset returns copied preset arrays
+            - adapted preset is local to runConceptualPresetSystemV1
+            - no external mutation patterns detected in matching TypeScript file
+    side_effects:
+        status: no_direct_external_side_effects_detected
+        evidence:
+            - no direct file writes, network calls, DOM mutation, logging, or rendering calls detected in matching TypeScript file
+            - calls ArtMovements and LiteraryMovements systems as pure contract dependencies
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    confirmed_default_fallback_behavior_present
+    confirmed_by:
+        - resolvePreset falls back to CONTROL_CALM when preset_name is null, undefined, or not present in PRESETS
+        - clonePreset prevents mutation of preset definitions
+        - no explicit throw, try/catch, or error return detected in matching TypeScript file
 
 CONSTRAINTS:
     - Pseudocode backfill only.

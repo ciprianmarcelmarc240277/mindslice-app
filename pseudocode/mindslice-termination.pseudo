@@ -7,16 +7,24 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Evaluate whether a concept iteration should terminate.
+    Compare iteration count, validation gaps, contamination status, and persistence across cycles
+    to return a specific ConceptTerminationReason.
 
 INPUT:
-    - UNKNOWN_NEEDS_REVIEW
+    - input:
+        iterationCount: number
+        validation: ConceptValidationResult
+        contaminationAccepted: boolean
+        persistenceAcrossCycles: number
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - ConceptTerminationReason:
+        "contamination_collapse"
+        "insufficient_structure"
+        "attention_dissipation"
+        "stagnation"
+        "none"
 
 STATE:
     - implemented
@@ -28,9 +36,13 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before:
+        - MindSlice_Process
+        - MindSlice_MainLoop
+    after:
+        - MindSlice_Validation
+        - MindSlice_Iteration
     depends_on:
         - MindSlice_MindsliceTypes
 
@@ -41,14 +53,16 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
-    UNKNOWN_NEEDS_REVIEW
+    implementation_function: evaluateTerminationCondition
+    parameters:
+        input: EvaluateTerminationInput
 
 HELPERS:
     exported_types:
-        - UNKNOWN_NEEDS_REVIEW
+        - none_confirmed
 
     exported_helper_functions:
         - evaluateTerminationCondition
@@ -57,15 +71,26 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - iterationCount
+        - ConceptValidationResult
+        - contaminationAccepted
+        - persistenceAcrossCycles
+    emits:
+        - ConceptTerminationReason
+    mutates:
+        - none_detected
+    side_effects:
+        - none_detected
+    contract_status: confirmed_from_typescript
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - no_throw_confirmed
+    - returns "contamination_collapse" when late accepted contamination has low contaminationResolution
+    - returns "insufficient_structure" when late structure and coherence gaps remain high
+    - returns "attention_dissipation" when later attention and sense gaps remain high
+    - returns "stagnation" when persistence is low after repeated iterations
+    - returns "none" when no termination condition is met
 
 CONSTRAINTS:
     - Pseudocode backfill only.

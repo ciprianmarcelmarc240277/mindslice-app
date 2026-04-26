@@ -7,16 +7,26 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Promote a validated concept candidate into resolved or canonical concept state when system law,
+    validation, sub-canon support, stability, persistence, and related memory evidence are sufficient.
+    Return promotion decisions, promoted concept state, system effect, and notes.
 
 INPUT:
-    - UNKNOWN_NEEDS_REVIEW
+    - conceptCandidate: ConceptCandidate
+    - conceptValidation: ConceptValidationResult
+    - conceptMemory: ConceptMemoryEntry[]
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - ConceptPromotionResult:
+        passesSystemLaw: boolean
+        canPromoteToResolved: boolean
+        canPromoteToCanonical: boolean
+        subCanonSupportScore: number
+        activeSubcanonCount: number
+        supportedBySubcanons: string[]
+        systemEffect: concept system effect result
+        promotedConcept: ConceptState
+        notes: string[]
 
 STATE:
     - implemented
@@ -28,9 +38,13 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before:
+        - MindSlice_LearningLoopEngine
+        - MindSlice_Output
+    after:
+        - MindSlice_Validation
+        - MindSlice_SystemEffect
     depends_on:
         - MindSlice_SystemEffect
         - MindSlice_MindsliceTypes
@@ -42,14 +56,18 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
-    UNKNOWN_NEEDS_REVIEW
+    implementation_function: promoteConceptCandidate
+    parameters:
+        conceptCandidate: ConceptCandidate
+        conceptValidation: ConceptValidationResult
+        conceptMemory: ConceptMemoryEntry[]
 
 HELPERS:
     exported_types:
-        - UNKNOWN_NEEDS_REVIEW
+        - none_confirmed
 
     exported_helper_functions:
         - promoteConceptCandidate
@@ -58,15 +76,30 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - ConceptCandidate
+        - ConceptValidationResult
+        - ConceptMemoryEntry[]
+    emits:
+        - ConceptPromotionResult
+        - promoted ConceptState
+        - sub-canon support score
+        - supported sub-canon list
+        - promotion notes
+    mutates:
+        - none_detected
+    side_effects:
+        - creates timestamp strings with new Date().toISOString()
+    contract_status: confirmed_from_typescript
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - no_throw_confirmed
+    - if concept is not valid or system law does not pass:
+        canPromoteToResolved returns false and stage remains the draft stage
+    - if canonical thresholds, sub-canon support, persistence, and memory evidence are insufficient:
+        canPromoteToCanonical returns false
+    - if system law does not pass:
+        promotedConcept.systemEffect is null
 
 CONSTRAINTS:
     - Pseudocode backfill only.

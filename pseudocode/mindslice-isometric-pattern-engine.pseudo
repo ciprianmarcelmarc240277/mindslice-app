@@ -7,9 +7,11 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Build isometric pattern output from resolved canvas/settings/palette and optional isometric grammar plan.
+    confirmed_by:
+        - exported_main_function:runIsometricPatternEngineV1
+        - exported_builder:buildIsometricPatternFromGrammarV1
+        - output_type:IsometricPatternOutput
 
 INPUT:
     - canvas: Partial<IsometricPatternCanvas> = {}
@@ -17,8 +19,11 @@ INPUT:
     - palette: Partial<IsometricPatternPalette> = {}
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    status: confirmed
+    confirmed_by:
+        - main_return_type: IsometricPatternOutput
+        - return_object_fields: canvas, grid, tiles, palette
+        - tile_fields: cell, outer, cube, colors
 
 STATE:
     - implemented
@@ -30,12 +35,19 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependencies_partial_order
+    before:
+        - MindSlice_IsometricPatternSVGRenderer
+        - MindSlice_GrammarPipelineContract
+    after:
+        - MindSlice_VisualComposer
+        - MindSlice_IsometricGrammarEngine
     depends_on:
         - MindSlice_VisualComposer
         - MindSlice_IsometricGrammarEngine
+    confirmed_by:
+        - imports runIsometricGrammarEngineV1
+        - registered by BackgroundModuleRegistry as isometric_pattern pattern_engine and build_from_grammar_optional
 
 MODULE_CLASSIFICATION:
     category: Background / Pattern / Grammar
@@ -44,7 +56,7 @@ MODULE_CLASSIFICATION:
     lifecycle: active
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runIsometricPatternEngineV1
@@ -70,15 +82,39 @@ HELPERS:
         - BUILD_FROM_GRAMMAR
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        status: confirmed
+        evidence:
+            - canvas: Partial<IsometricPatternCanvas> = {}
+            - settings: IsometricPatternSettings = {}
+            - palette: Partial<IsometricPatternPalette> = {}
+            - buildIsometricPatternFromGrammarV1 receives grammarPlan?: IsometricGrammarPlan | null
+    emits:
+        status: confirmed
+        evidence:
+            - IsometricPatternOutput
+            - IsometricGrid
+            - IsometricTile[]
+            - exported const RUN
+            - exported const BUILD_FROM_GRAMMAR
+    mutates:
+        status: none_detected
+        evidence:
+            - matching TypeScript returns new isometric pattern output objects and arrays
+            - no external mutation patterns detected in matching TypeScript file
+    side_effects:
+        status: none_detected
+        evidence:
+            - no file writes, network calls, DOM mutation, logging, or rendering calls detected in matching TypeScript file
+    contract_status: confirmed_from_typescript_structure
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    confirmed_default_generation_behavior_present
+    confirmed_by:
+        - DEFAULT_CANVAS, DEFAULT_SETTINGS, and DEFAULT_PALETTE are merged when inputs are partial
+        - missing grammar plan falls back to generated grid and visible tile plans
+        - invisible grammar tile plans are filtered out before output
+        - buildIsometricPatternFromGrammarV1 accepts null or missing grammarPlan
 
 CONSTRAINTS:
     - Pseudocode backfill only.

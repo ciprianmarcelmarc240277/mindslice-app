@@ -7,17 +7,21 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Run the legacy visual pipeline from an already parsed slice.
+    Execute structure, scenario, color, art composition, and SVG renderer stages,
+    then return the computed visual outputs and rendered scene.
 
 INPUT:
     - parsed_slice: ParsedSliceObject
     - canvas_settings: VisualRendererCanvasSettings = {}
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    - VisualPipelineV1Output:
+        structure_output: StructureVisualOutput
+        scenario_output: ScenarioVisualOutput
+        color_output: ColorVisualOutput
+        composition_output: CompositionVisualOutput
+        svg: VisualRendererScene
 
 STATE:
     - implemented
@@ -29,9 +33,17 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependency
+    before:
+        - legacy visual display shell
+    after:
+        - MindSlice_ParserEngine
+        - MindSlice_StructureEngine
+        - MindSlice_ScenarioEngine
+        - MindSlice_ColorTheoryEngine
+        - MindSlice_ArtCompositionEngine
+        - MindSlice_SVGRenderer
+        - MindSlice_VisualRenderer
     depends_on:
         - MindSlice_ParserEngine
         - MindSlice_ArtCompositionEngine
@@ -48,7 +60,7 @@ MODULE_CLASSIFICATION:
     lifecycle: legacy_retained
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runVisualPipelineV1
@@ -65,15 +77,24 @@ HELPERS:
         - none_confirmed
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        - ParsedSliceObject
+        - VisualRendererCanvasSettings
+    emits:
+        - StructureVisualOutput
+        - ScenarioVisualOutput
+        - ColorVisualOutput
+        - CompositionVisualOutput
+        - VisualRendererScene
+    mutates:
+        - none_detected
+    side_effects:
+        - none_detected
+    contract_status: confirmed_from_typescript
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    - no_throw_confirmed
+    - failure behavior from downstream engine calls is not explicitly handled in this module
 
 CONSTRAINTS:
     - Pseudocode backfill only.
