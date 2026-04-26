@@ -1,0 +1,420 @@
+MODULE MindSlice_ArchitecturePatchValidator_v1
+
+PURPOSE:
+Validate planned architecture patches before they are accepted for application.
+Check patch safety, ordering, contract impact, registry impact, dependency impact, version coexistence, and renderer / engine boundary integrity.
+
+INPUT:
+- architecture_patch_sequence
+- patch_batches
+- patch_dependency_graph
+- module_registry_index
+- normalized_contracts
+- pipeline_dependency_graph
+- validation_rules
+- version_policy
+
+OUTPUT:
+- architecture_patch_validation_report
+- valid_patches
+- invalid_patches
+- patches_requiring_revision
+- blocked_patch_batches
+- safe_patch_batches
+- final_patch_readiness_status
+
+STATE:
+- validator
+- read-only
+- non-rendering
+- non-executing
+- patch-aware
+- registry-aware
+- contract-aware
+- dependency-aware
+- strict
+
+FUNCTION RUN:
+
+    VALIDATE input
+
+    validation_report = CREATE_EMPTY_PATCH_VALIDATION_REPORT()
+
+    FOR each patch IN architecture_patch_sequence:
+
+        safety_result = VALIDATE_PATCH_SAFETY(
+            patch,
+            validation_rules,
+            version_policy
+        )
+
+        registry_result = VALIDATE_REGISTRY_IMPACT(
+            patch,
+            module_registry_index
+        )
+
+        contract_result = VALIDATE_CONTRACT_IMPACT(
+            patch,
+            normalized_contracts
+        )
+
+        dependency_result = VALIDATE_DEPENDENCY_IMPACT(
+            patch,
+            pipeline_dependency_graph
+        )
+
+        boundary_result = VALIDATE_RENDERER_ENGINE_BOUNDARY_IMPACT(
+            patch
+        )
+
+        order_result = VALIDATE_PATCH_ORDER(
+            patch,
+            patch_dependency_graph
+        )
+
+        patch_result = COMBINE_PATCH_VALIDATION_RESULTS(
+            patch,
+            safety_result,
+            registry_result,
+            contract_result,
+            dependency_result,
+            boundary_result,
+            order_result
+        )
+
+        ADD patch_result TO validation_report.patch_results
+
+    batch_results = VALIDATE_PATCH_BATCHES(
+        patch_batches,
+        validation_report.patch_results
+    )
+
+    final_status = DETERMINE_FINAL_PATCH_READINESS(
+        validation_report.patch_results,
+        batch_results
+    )
+
+    RETURN {
+        architecture_patch_validation_report: validation_report,
+        valid_patches: FILTER_PATCHES(validation_report, "valid"),
+        invalid_patches: FILTER_PATCHES(validation_report, "invalid"),
+        patches_requiring_revision: FILTER_PATCHES(validation_report, "revision_required"),
+        blocked_patch_batches: FILTER_BATCHES(batch_results, "blocked"),
+        safe_patch_batches: FILTER_BATCHES(batch_results, "safe"),
+        final_patch_readiness_status: final_status
+    }
+
+HELPERS:
+
+FUNCTION CREATE_EMPTY_PATCH_VALIDATION_REPORT():
+    RETURN {
+        validator_name: "MindSlice_ArchitecturePatchValidator_v1",
+        total_patches_checked: 0,
+        valid_count: 0,
+        invalid_count: 0,
+        revision_required_count: 0,
+        patch_results: [],
+        batch_results: [],
+        blocking_issues: [],
+        warnings: []
+    }
+
+FUNCTION VALIDATE_PATCH_SAFETY(patch, rules, version_policy):
+    IF patch modifies implementation_code:
+        RETURN {
+            status: "fail",
+            reason: "Patch attempts implementation modification"
+        }
+
+    IF patch deletes existing module:
+        RETURN {
+            status: "fail",
+            reason: "Patch attempts destructive module removal"
+        }
+
+    IF patch replaces existing version:
+        RETURN {
+            status: "fail",
+            reason: "Patch violates version coexistence"
+        }
+
+    IF version_policy != "coexistence":
+        RETURN {
+            status: "fail",
+            reason: "Invalid version policy"
+        }
+
+    RETURN {
+        status: "pass",
+        reason: "Patch safety valid"
+    }
+
+FUNCTION VALIDATE_REGISTRY_IMPACT(patch, registry):
+    IF patch.patch_target does not include registry:
+        RETURN {
+            status: "pass",
+            reason: "No registry impact"
+        }
+
+    IF patch creates duplicate canonical_name:
+        RETURN {
+            status: "fail",
+            reason: "Patch creates duplicate registry identity"
+        }
+
+    IF patch changes lifecycle from active to deprecated without explicit rule:
+        RETURN {
+            status: "warning",
+            reason: "Lifecycle downgrade requires explicit approval"
+        }
+
+    IF patch changes module category without evidence:
+        RETURN {
+            status: "warning",
+            reason: "Registry category change requires evidence"
+        }
+
+    RETURN {
+        status: "pass",
+        reason: "Registry impact valid"
+    }
+
+FUNCTION VALIDATE_CONTRACT_IMPACT(patch, contracts):
+    IF patch.patch_target does not include contract:
+        RETURN {
+            status: "pass",
+            reason: "No contract impact"
+        }
+
+    affected_contract = FIND contracts BY patch.module_name
+
+    IF affected_contract missing:
+        RETURN {
+            status: "fail",
+            reason: "Patch targets missing contract"
+        }
+
+    IF patch fills UNKNOWN field without reviewer evidence:
+        RETURN {
+            status: "fail",
+            reason: "UNKNOWN field cannot be resolved without explicit evidence"
+        }
+
+    IF patch changes confirmed field:
+        RETURN {
+            status: "warning",
+            reason: "Confirmed field change requires revalidation"
+        }
+
+    RETURN {
+        status: "pass",
+        reason: "Contract impact valid"
+    }
+
+FUNCTION VALIDATE_DEPENDENCY_IMPACT(patch, dependency_graph):
+    IF patch.patch_target does not include dependency_map
+       AND patch.patch_target does not include pipeline_map:
+        RETURN {
+            status: "pass",
+            reason: "No dependency impact"
+        }
+
+    IF patch adds dependency edge to unknown module:
+        RETURN {
+            status: "fail",
+            reason: "Patch adds dependency to unknown module"
+        }
+
+    IF patch creates dependency cycle:
+        RETURN {
+            status: "fail",
+            reason: "Patch creates dependency cycle"
+        }
+
+    IF patch removes only incoming edge for active module:
+        RETURN {
+            status: "warning",
+            reason: "Patch may isolate active module"
+        }
+
+    RETURN {
+        status: "pass",
+        reason: "Dependency impact valid"
+    }
+
+FUNCTION VALIDATE_RENDERER_ENGINE_BOUNDARY_IMPACT(patch):
+    IF patch grants renderer semantic authority:
+        RETURN {
+            status: "fail",
+            reason: "Renderer decision authority forbidden"
+        }
+
+    IF patch grants renderer layout authority:
+        RETURN {
+            status: "fail",
+            reason: "Renderer layout authority forbidden"
+        }
+
+    IF patch grants engine direct SVG rendering authority:
+        RETURN {
+            status: "fail",
+            reason: "Engine rendering authority forbidden"
+        }
+
+    RETURN {
+        status: "pass",
+        reason: "Renderer / engine boundary preserved"
+    }
+
+FUNCTION VALIDATE_PATCH_ORDER(patch, patch_dependency_graph):
+    dependencies = FIND_REQUIRED_PREVIOUS_PATCHES(
+        patch,
+        patch_dependency_graph
+    )
+
+    FOR each dependency IN dependencies:
+        IF dependency appears after patch:
+            RETURN {
+                status: "fail",
+                reason: "Patch order violates dependency graph"
+            }
+
+    RETURN {
+        status: "pass",
+        reason: "Patch order valid"
+    }
+
+FUNCTION COMBINE_PATCH_VALIDATION_RESULTS(
+    patch,
+    safety_result,
+    registry_result,
+    contract_result,
+    dependency_result,
+    boundary_result,
+    order_result
+):
+    results = [
+        safety_result,
+        registry_result,
+        contract_result,
+        dependency_result,
+        boundary_result,
+        order_result
+    ]
+
+    IF any result.status == "fail":
+        final_status = "invalid"
+
+    ELSE IF any result.status == "warning":
+        final_status = "revision_required"
+
+    ELSE:
+        final_status = "valid"
+
+    RETURN {
+        patch_id: patch.patch_id OR patch.module_name,
+        module_name: patch.module_name,
+        patch_target: patch.patch_target,
+        final_status: final_status,
+        safety_result: safety_result,
+        registry_result: registry_result,
+        contract_result: contract_result,
+        dependency_result: dependency_result,
+        boundary_result: boundary_result,
+        order_result: order_result
+    }
+
+FUNCTION VALIDATE_PATCH_BATCHES(batches, patch_results):
+    batch_results = []
+
+    FOR each batch IN batches:
+        invalid_in_batch = FIND patch_results WHERE patch IN batch AND final_status == "invalid"
+        revision_in_batch = FIND patch_results WHERE patch IN batch AND final_status == "revision_required"
+
+        IF invalid_in_batch not empty:
+            ADD {
+                batch_id: batch.batch_id,
+                status: "blocked",
+                reason: "Batch contains invalid patches",
+                invalid_patches: invalid_in_batch
+            } TO batch_results
+
+        ELSE IF revision_in_batch not empty:
+            ADD {
+                batch_id: batch.batch_id,
+                status: "revision_required",
+                reason: "Batch contains patches requiring revision",
+                revision_patches: revision_in_batch
+            } TO batch_results
+
+        ELSE:
+            ADD {
+                batch_id: batch.batch_id,
+                status: "safe"
+            } TO batch_results
+
+    RETURN batch_results
+
+FUNCTION DETERMINE_FINAL_PATCH_READINESS(patch_results, batch_results):
+    IF any patch_result.final_status == "invalid":
+        RETURN "blocked"
+
+    IF any batch_result.status == "blocked":
+        RETURN "blocked"
+
+    IF any patch_result.final_status == "revision_required":
+        RETURN "partial_ready_with_revision"
+
+    RETURN "ready_for_architecture_patch_application"
+
+FUNCTION FILTER_PATCHES(report, status):
+    RETURN all report.patch_results WHERE final_status == status
+
+FUNCTION FILTER_BATCHES(batch_results, status):
+    RETURN all batch_results WHERE status == status
+
+FAIL:
+IF architecture_patch_sequence is missing:
+    RETURN FAIL "Missing required input: architecture_patch_sequence"
+
+IF patch_batches is missing:
+    RETURN FAIL "Missing required input: patch_batches"
+
+IF module_registry_index is missing:
+    RETURN FAIL "Missing required input: module_registry_index"
+
+IF normalized_contracts is missing:
+    RETURN FAIL "Missing required input: normalized_contracts"
+
+IF validation_rules are missing:
+    RETURN FAIL "Missing required input: validation_rules"
+
+IF version_policy != "coexistence":
+    RETURN FAIL "Invalid version policy"
+
+IF validator attempts to execute patches:
+    RETURN FAIL "ArchitecturePatchValidator cannot execute patches"
+
+IF validator attempts to render:
+    RETURN FAIL "ArchitecturePatchValidator cannot render"
+
+IF validator attempts to modify implementation files:
+    RETURN FAIL "ArchitecturePatchValidator cannot modify implementation files"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No implementation code
+- Validator is read-only
+- Validator does not execute patches
+- Validator does not render
+- Validator does not modify files
+- Validator validates patch plans only
+- UNKNOWN fields require explicit evidence
+- Confirmed fields require revalidation if changed
+- Patch batches with invalid patches are blocked
+- Existing modules are preserved
+- v1, v2 and vNext coexist
+- Renderer does not think
+- Renderer only draws

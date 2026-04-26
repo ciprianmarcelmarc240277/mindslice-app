@@ -1,0 +1,1151 @@
+MODULE MindSlice_PseudocodeBackfillManualReviewQueue_v1
+
+PURPOSE:
+    Queue modules whose generated pseudocode requires manual architecture review.
+
+SUMMARY:
+    queued_modules: 97
+    review_policy: Do not invent missing contracts. Mark UNKNOWN until confirmed.
+
+INPUT:
+- generated_backfill_pseudocode_files
+- missing_contract_report
+- uncertain_inference_report
+- module_registry_index
+- review_policy
+
+OUTPUT:
+- manual_review_queue
+- queued_modules
+- required_review_fields
+- review_priority_map
+
+STATE:
+- report
+- read-only
+- non-rendering
+- non-executing
+- manual-review
+- backfill-safe
+
+FUNCTION RUN:
+
+    VALIDATE input
+
+    manual_review_queue = BUILD_MANUAL_REVIEW_QUEUE(
+        generated_backfill_pseudocode_files,
+        missing_contract_report,
+        uncertain_inference_report,
+        review_policy
+    )
+
+    RETURN {
+        manual_review_queue: manual_review_queue,
+        queued_modules: COUNT manual_review_queue,
+        required_review_fields: EXTRACT_REQUIRED_REVIEW_FIELDS(manual_review_queue),
+        review_priority_map: BUILD_REVIEW_PRIORITY_MAP(manual_review_queue)
+    }
+
+HELPERS:
+
+FUNCTION BUILD_MANUAL_REVIEW_QUEUE(files, missing_report, uncertain_report, policy):
+    RETURN recorded MANUAL_REVIEW_QUEUE entries
+
+FUNCTION EXTRACT_REQUIRED_REVIEW_FIELDS(queue):
+    RETURN all required_review fields grouped by module
+
+FUNCTION BUILD_REVIEW_PRIORITY_MAP(queue):
+    RETURN map module_name TO priority
+
+FAIL:
+IF generated_backfill_pseudocode_files is missing:
+    RETURN FAIL "Missing required input: generated_backfill_pseudocode_files"
+
+IF report attempts to invent missing contracts:
+    RETURN FAIL "Manual review queue cannot invent contracts"
+
+IF report attempts to generate implementation code:
+    RETURN FAIL "Manual review queue cannot generate implementation code"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No implementation code
+- Report is read-only
+- Report does not execute modules
+- Report does not render
+- Unknown contracts remain UNKNOWN
+- Manual review is required before implementation translation
+- Existing modules are preserved
+- Renderer does not think
+- Renderer only draws
+
+MANUAL_REVIEW_QUEUE:
+
+- MindSlice_AnalyticEngine
+  file: mindslice-analytic-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ArchitectureValidator
+  file: mindslice-architecture-validator.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ArtCompositionEngine
+  file: mindslice-art-composition-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ArtComposition
+  file: mindslice-art-composition.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ArtMovements
+  file: mindslice-art-movements.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_AuthorEngine
+  file: mindslice-author-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_AuthorReputation
+  file: mindslice-author-reputation.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_AuthorValue
+  file: mindslice-author-value.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_BackgroundLayerOrchestrator
+  file: mindslice-background-layer-orchestrator.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_BackgroundModuleRegistry
+  file: mindslice-background-module-registry.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_BackgroundSelectionTelemetry
+  file: mindslice-background-selection-telemetry.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_CanonEngine
+  file: mindslice-canon-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_CanvasAccessPolicy
+  file: mindslice-canvas-access-policy.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_Clock
+  file: mindslice-clock.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ColorTheoryEngine
+  file: mindslice-color-theory-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ColorTheory
+  file: mindslice-color-theory.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_CompositionStructure
+  file: mindslice-composition-structure.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ConceptualPreset
+  file: mindslice-conceptual-preset.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_Contamination
+  file: mindslice-contamination.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_DeviationMode
+  file: mindslice-deviation-mode.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_DisplayEngine
+  file: mindslice-display-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ExecutionEngine
+  file: mindslice-execution-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_FlatAbstractGrammarEngine
+  file: mindslice-flat-abstract-grammar-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_FlatAbstractPatternEngine
+  file: mindslice-flat-abstract-pattern-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_FlatAbstractPatternSVGRenderer
+  file: mindslice-flat-abstract-pattern-svg-renderer.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_Formation
+  file: mindslice-formation.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_GeometryEngine
+  file: mindslice-geometry-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_GrammarPipelineContract
+  file: mindslice-grammar-pipeline-contract.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_IdentityFormatEngine
+  file: mindslice-identity-format-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_InputEngine
+  file: mindslice-input-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_Interpretation
+  file: mindslice-interpretation.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_IsometricGrammarEngine
+  file: mindslice-isometric-grammar-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_IsometricPatternEngine
+  file: mindslice-isometric-pattern-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_IsometricPatternSVGRenderer
+  file: mindslice-isometric-pattern-svg-renderer.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_Iteration
+  file: mindslice-iteration.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_LearningLoopEngineSlices
+  file: mindslice-learning-loop-engine-slices.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_LearningLoopEngine
+  file: mindslice-learning-loop-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_LegacyVisualRetirementPlan
+  file: mindslice-legacy-visual-retirement-plan.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_LiteraryMovements
+  file: mindslice-literary-movements.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_MainLoop
+  file: mindslice-main-loop.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_MasterEngine
+  file: mindslice-master-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_Meta
+  file: mindslice-meta.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ModularGrammarEngine
+  file: mindslice-modular-grammar-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ModuleLoader
+  file: mindslice-module-loader.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_Output
+  file: mindslice-output.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_PaletteContractAdapter
+  file: mindslice-palette-contract-adapter.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ParserEngine
+  file: mindslice-parser-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_PatternEngine
+  file: mindslice-pattern-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_PatternSVGRenderer
+  file: mindslice-pattern-svg-renderer.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_PhotographyTheory
+  file: mindslice-photography-theory.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_Process
+  file: mindslice-process.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_Promotion
+  file: mindslice-promotion.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_RetroGridPatternEngine
+  file: mindslice-retro-grid-pattern-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_RetroGridPatternSVGRenderer
+  file: mindslice-retro-grid-pattern-svg-renderer.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_RuntimeBootController
+  file: mindslice-runtime-boot-controller.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_SafeSVGMount
+  file: mindslice-safe-svg-mount.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ScenarioEngine
+  file: mindslice-scenario-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_Scenario
+  file: mindslice-scenario.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ScoringEngine
+  file: mindslice-scoring-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ShapeGrammar
+  file: mindslice-shape-grammar.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ShapeTheory
+  file: mindslice-shape-theory.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_SliceRepetitionEngine
+  file: mindslice-slice-repetition-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_SlicesAPIPerformanceGuard
+  file: mindslice-slices-api-performance-guard.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_SnapEngine
+  file: mindslice-snap-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_SnapProfile
+  file: mindslice-snap-profile.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_StructureEngine
+  file: mindslice-structure-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_SVGObjectSerializer
+  file: mindslice-svg-object-serializer.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_SVGRenderer
+  file: mindslice-svg-renderer.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_TemplateLikeTextPlacementEngine
+  file: mindslice-template-like-text-placement-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_Termination
+  file: mindslice-termination.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_TextEchoConstellationEngine
+  file: mindslice-text-echo-constellation-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_TextLayoutCollisionResolver
+  file: mindslice-text-layout-collision-resolver.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_TextLayoutCollisionResolver_v2
+  file: mindslice-text-layout-collision-resolver-v2.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_TextLayoutEngine
+  file: mindslice-text-layout-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_TextLayoutEngine_v2
+  file: mindslice-text-layout-engine-v2.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_TextSourceParityBridge
+  file: mindslice-text-source-parity-bridge.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_TextWrappingEngine
+  file: mindslice-text-wrapping-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ThinkingEngine
+  file: mindslice-thinking-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ThresholdModel
+  file: mindslice-threshold-model.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_Threshold
+  file: mindslice-threshold.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_TriangulationEngine
+  file: mindslice-triangulation-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_TriangulationSVGRenderer
+  file: mindslice-triangulation-svg-renderer.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_Validation
+  file: mindslice-validation.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_VisualAuditEngine
+  file: mindslice-visual-audit-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_VisualComposer
+  file: mindslice-visual-composer.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_VisualDebugMode
+  file: mindslice-visual-debug-mode.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_VisualErrorBoundaryContract
+  file: mindslice-visual-error-boundary-contract.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_VisualMappingRules
+  file: mindslice-visual-mapping-rules.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_VisualPipelineController
+  file: mindslice-visual-pipeline-controller.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_VisualPipelineController_vNext
+  file: mindslice-visual-pipeline-controller-vnext.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_VisualPipeline
+  file: mindslice-visual-pipeline.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_VisualRenderer
+  file: mindslice-visual-renderer.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_VisualRenderer_v2
+  file: mindslice-visual-renderer-v2.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_VisualRuntimeSmokeTest
+  file: mindslice-visual-runtime-smoke-test.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ZigzagGrammarEngine
+  file: mindslice-zigzag-grammar-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ZigzagPatternEngine
+  file: mindslice-zigzag-pattern-engine.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects
+
+- MindSlice_ZigzagPatternSVGRenderer
+  file: mindslice-zigzag-pattern-svg-renderer.pseudo
+  priority: normal
+  required_review:
+    - PURPOSE
+    - INPUT contract
+    - OUTPUT contract
+    - PIPELINE_POSITION
+    - FAIL behavior
+    - side effects

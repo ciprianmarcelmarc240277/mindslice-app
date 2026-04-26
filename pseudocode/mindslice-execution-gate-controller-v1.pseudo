@@ -1,0 +1,259 @@
+MODULE MindSlice_ExecutionGateController_v1
+
+PURPOSE:
+Decide whether MindSlice architecture is allowed to move from validation and patch planning toward implementation translation.
+Protect the system from executing while contracts, patches, dependencies, or renderer / engine boundaries are unsafe.
+
+INPUT:
+- architecture_health_report
+- architecture_patch_validation_report
+- contract_validation_results
+- pipeline_dependency_results
+- module_registry_index
+- execution_rules
+- version_policy
+
+OUTPUT:
+- execution_gate_status
+- execution_allowed_modules
+- execution_blocked_modules
+- partial_execution_candidates
+- execution_blockers
+- gate_decision_report
+
+STATE:
+- gatekeeper
+- read-only
+- non-rendering
+- non-executing
+- validation-aware
+- patch-aware
+- contract-aware
+- dependency-aware
+- strict
+
+FUNCTION RUN:
+
+    VALIDATE input
+
+    blockers = DETECT_EXECUTION_BLOCKERS(
+        architecture_health_report,
+        architecture_patch_validation_report,
+        contract_validation_results,
+        pipeline_dependency_results
+    )
+
+    allowed_modules = DETECT_EXECUTION_ALLOWED_MODULES(
+        module_registry_index,
+        contract_validation_results,
+        architecture_patch_validation_report
+    )
+
+    partial_candidates = DETECT_PARTIAL_EXECUTION_CANDIDATES(
+        module_registry_index,
+        contract_validation_results,
+        pipeline_dependency_results
+    )
+
+    gate_status = DETERMINE_GATE_STATUS(
+        blockers,
+        allowed_modules,
+        partial_candidates,
+        execution_rules
+    )
+
+    RETURN {
+        execution_gate_status: gate_status,
+        execution_allowed_modules: allowed_modules,
+        execution_blocked_modules: blockers.blocked_modules,
+        partial_execution_candidates: partial_candidates,
+        execution_blockers: blockers,
+        gate_decision_report: BUILD_GATE_DECISION_REPORT(
+            gate_status,
+            blockers,
+            allowed_modules,
+            partial_candidates
+        )
+    }
+
+HELPERS:
+
+FUNCTION DETECT_EXECUTION_BLOCKERS(
+    health_report,
+    patch_validation_report,
+    contract_results,
+    dependency_results
+):
+    blockers = {
+        blocked_modules: [],
+        critical_reasons: [],
+        boundary_violations: [],
+        invalid_contracts: [],
+        invalid_patches: [],
+        critical_cycles: [],
+        unknown_critical_contracts: []
+    }
+
+    IF health_report.system_health_status == "blocked":
+        ADD health_report.blocked_modules TO blockers.blocked_modules
+        ADD "Architecture health is blocked" TO blockers.critical_reasons
+
+    IF patch_validation_report.final_patch_readiness_status == "blocked":
+        ADD patch_validation_report.invalid_patches TO blockers.invalid_patches
+        ADD "Patch validation is blocked" TO blockers.critical_reasons
+
+    IF contract_results.invalid_contracts not empty:
+        ADD contract_results.invalid_contracts TO blockers.invalid_contracts
+        ADD "Invalid contracts detected" TO blockers.critical_reasons
+
+    IF dependency_results.dependency_cycle_report.critical_cycles not empty:
+        ADD dependency_results.dependency_cycle_report.critical_cycles TO blockers.critical_cycles
+        ADD "Critical dependency cycles detected" TO blockers.critical_reasons
+
+    FOR each contract IN contract_results.partial_contracts:
+        IF contract unknown fields contain critical fields:
+            ADD contract TO blockers.unknown_critical_contracts
+            ADD contract.module_name TO blockers.blocked_modules
+
+    FOR each result IN contract_results.contract_validation_report.contract_results:
+        IF result.boundary_result.status == "fail":
+            ADD result TO blockers.boundary_violations
+            ADD result.module_name TO blockers.blocked_modules
+
+    REMOVE_DUPLICATES(blockers.blocked_modules)
+
+    RETURN blockers
+
+FUNCTION DETECT_EXECUTION_ALLOWED_MODULES(
+    registry,
+    contract_results,
+    patch_validation_report
+):
+    allowed = []
+
+    FOR each module IN registry.modules:
+
+        IF module in contract_results.valid_contracts
+           AND module not in patch_validation_report.invalid_patches
+           AND module.lifecycle != "deprecated_retained"
+           AND module.status == "implemented" OR module.status == "planned":
+            ADD module TO allowed
+
+    RETURN allowed
+
+FUNCTION DETECT_PARTIAL_EXECUTION_CANDIDATES(
+    registry,
+    contract_results,
+    dependency_results
+):
+    candidates = []
+
+    FOR each module IN registry.modules:
+
+        IF module in contract_results.partial_contracts
+           AND module not in contract_results.invalid_contracts
+           AND module not in dependency_results.dependency_cycle_report.critical_cycles:
+            ADD {
+                module_name: module.module_name,
+                allowed_scope: "translation_preparation_only",
+                restrictions: [
+                    "no implementation generation",
+                    "no runtime execution",
+                    "manual review required before final translation"
+                ]
+            } TO candidates
+
+    RETURN candidates
+
+FUNCTION DETERMINE_GATE_STATUS(
+    blockers,
+    allowed_modules,
+    partial_candidates,
+    rules
+):
+    IF blockers.critical_reasons not empty:
+        RETURN "EXECUTION_BLOCKED"
+
+    IF allowed_modules empty AND partial_candidates not empty:
+        RETURN "EXECUTION_PARTIAL_ALLOWED"
+
+    IF allowed_modules not empty AND partial_candidates not empty:
+        RETURN "EXECUTION_PARTIAL_ALLOWED"
+
+    IF allowed_modules not empty:
+        RETURN "EXECUTION_ALLOWED"
+
+    RETURN "EXECUTION_BLOCKED"
+
+FUNCTION BUILD_GATE_DECISION_REPORT(
+    gate_status,
+    blockers,
+    allowed_modules,
+    partial_candidates
+):
+    RETURN {
+        status: gate_status,
+        allowed_count: COUNT allowed_modules,
+        partial_count: COUNT partial_candidates,
+        blocked_count: COUNT blockers.blocked_modules,
+        critical_reasons: blockers.critical_reasons,
+        next_required_action:
+            IF gate_status == "EXECUTION_BLOCKED":
+                "Resolve blockers before implementation translation"
+            ELSE IF gate_status == "EXECUTION_PARTIAL_ALLOWED":
+                "Prepare translation only for allowed modules; keep partial modules under review"
+            ELSE:
+                "Proceed to implementation translation queue"
+    }
+
+FAIL:
+IF architecture_health_report is missing:
+    RETURN FAIL "Missing required input: architecture_health_report"
+
+IF architecture_patch_validation_report is missing:
+    RETURN FAIL "Missing required input: architecture_patch_validation_report"
+
+IF contract_validation_results is missing:
+    RETURN FAIL "Missing required input: contract_validation_results"
+
+IF pipeline_dependency_results is missing:
+    RETURN FAIL "Missing required input: pipeline_dependency_results"
+
+IF module_registry_index is missing:
+    RETURN FAIL "Missing required input: module_registry_index"
+
+IF execution_rules are missing:
+    RETURN FAIL "Missing required input: execution_rules"
+
+IF version_policy != "coexistence":
+    RETURN FAIL "Invalid version policy"
+
+IF gate attempts to execute modules:
+    RETURN FAIL "ExecutionGateController cannot execute modules"
+
+IF gate attempts to render:
+    RETURN FAIL "ExecutionGateController cannot render"
+
+IF gate attempts to generate implementation code:
+    RETURN FAIL "ExecutionGateController cannot generate implementation code"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No implementation code
+- Gate does not execute modules
+- Gate does not render
+- Gate does not write files
+- Gate only decides execution permission
+- EXECUTION_ALLOWED does not mean automatic implementation
+- EXECUTION_PARTIAL_ALLOWED means translation preparation only
+- EXECUTION_BLOCKED stops implementation translation
+- Invalid contracts block execution
+- Invalid patches block execution
+- Renderer boundary violations block execution
+- Critical dependency cycles block execution
+- Existing modules are preserved
+- v1, v2 and vNext coexist
+- Renderer does not think
+- Renderer only draws

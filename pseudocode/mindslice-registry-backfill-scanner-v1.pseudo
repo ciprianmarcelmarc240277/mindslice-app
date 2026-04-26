@@ -1,0 +1,456 @@
+MODULE MindSlice_RegistryBackfillScanner_v1
+
+PURPOSE:
+Scan existing implemented MindSlice modules and backfill them into MindSlice_ModuleRegistryIndex_v1.
+Classify legacy modules, active modules, renderer modules, engine modules, audit modules, safety modules, adapters, and future-extension candidates without modifying implementation files.
+
+INPUT:
+- existing_module_file_list
+- module_registry_index
+- architecture_validator
+- known_pipeline_map
+- known_category_rules
+- version_policy
+- backfill_rules
+
+OUTPUT:
+- backfilled_registry_index
+- module_classification_report
+- missing_contract_report
+- duplicate_module_warning_report
+- legacy_module_report
+- adapter_needed_report
+- future_extension_candidates
+
+STATE:
+- scanner
+- registry-aware
+- non-rendering
+- non-executing
+- read-only
+- implementation-aware
+- backfill-only
+
+FUNCTION RUN:
+
+    VALIDATE input
+
+    scan_report = CREATE_EMPTY_SCAN_REPORT()
+
+    FOR each module_file IN input.existing_module_file_list:
+
+        module_identity = EXTRACT_MODULE_IDENTITY_FROM_FILE_NAME(
+            module_file
+        )
+
+        module_category = CLASSIFY_MODULE_CATEGORY(
+            module_identity,
+            input.known_category_rules
+        )
+
+        module_version = DETECT_MODULE_VERSION(
+            module_identity
+        )
+
+        module_role = DETECT_MODULE_ROLE(
+            module_identity
+        )
+
+        lifecycle_status = DETECT_LIFECYCLE_STATUS(
+            module_identity,
+            module_category,
+            module_version
+        )
+
+        pipeline_position = RESOLVE_KNOWN_PIPELINE_POSITION(
+            module_identity,
+            input.known_pipeline_map
+        )
+
+        registry_entry = BUILD_BACKFILL_REGISTRY_ENTRY(
+            module_identity,
+            module_category,
+            module_version,
+            module_role,
+            lifecycle_status,
+            pipeline_position
+        )
+
+        contract_status = CHECK_CONTRACT_COMPLETENESS(
+            registry_entry
+        )
+
+        duplication_status = CHECK_DUPLICATE_OR_OVERLAP(
+            registry_entry,
+            input.module_registry_index
+        )
+
+        adapter_status = DETECT_ADAPTER_NEED(
+            registry_entry,
+            input.module_registry_index
+        )
+
+        ADD registry_entry TO scan_report.backfill_candidates
+        ADD contract_status TO scan_report.contract_findings
+        ADD duplication_status TO scan_report.duplication_findings
+        ADD adapter_status TO scan_report.adapter_findings
+
+    validated_backfill = VALIDATE_BACKFILL_BATCH(
+        scan_report.backfill_candidates,
+        input.version_policy,
+        input.backfill_rules
+    )
+
+    IF validated_backfill.has_critical_failure:
+        RETURN FAIL validated_backfill
+
+    updated_registry = APPLY_BACKFILL_TO_REGISTRY(
+        input.module_registry_index,
+        validated_backfill.accepted_entries
+    )
+
+    RETURN {
+        backfilled_registry_index: updated_registry,
+        module_classification_report: BUILD_CLASSIFICATION_REPORT(scan_report),
+        missing_contract_report: EXTRACT_MISSING_CONTRACTS(scan_report),
+        duplicate_module_warning_report: EXTRACT_DUPLICATE_WARNINGS(scan_report),
+        legacy_module_report: EXTRACT_LEGACY_MODULES(scan_report),
+        adapter_needed_report: EXTRACT_ADAPTER_NEEDED(scan_report),
+        future_extension_candidates: EXTRACT_FUTURE_EXTENSION_CANDIDATES(scan_report)
+    }
+
+HELPERS:
+
+FUNCTION CREATE_EMPTY_SCAN_REPORT():
+    RETURN {
+        scanner_name: "MindSlice_RegistryBackfillScanner_v1",
+        scanned_files: [],
+        backfill_candidates: [],
+        contract_findings: [],
+        duplication_findings: [],
+        adapter_findings: [],
+        warnings: [],
+        critical_failures: []
+    }
+
+FUNCTION EXTRACT_MODULE_IDENTITY_FROM_FILE_NAME(module_file):
+    normalized_name = REMOVE_PREFIX_AND_SUFFIX(
+        module_file,
+        prefix: "concept-",
+        suffix: "-system.ts"
+    )
+
+    module_name = CONVERT_KEBAB_TO_MIND_SLICE_NAME(
+        normalized_name
+    )
+
+    RETURN {
+        file_name: module_file,
+        canonical_name: module_name,
+        normalized_key: normalized_name
+    }
+
+FUNCTION CONVERT_KEBAB_TO_MIND_SLICE_NAME(normalized_name):
+    SPLIT normalized_name BY "-"
+    CAPITALIZE semantic parts
+    PRESERVE known tokens:
+        - SVG
+        - API
+        - v1
+        - v2
+        - vNext
+
+    RETURN "MindSlice_" + joined_parts
+
+FUNCTION CLASSIFY_MODULE_CATEGORY(module_identity, rules):
+    key = module_identity.normalized_key
+
+    IF key contains "parser" OR "preset" OR "structure" OR "scenario" OR "color-theory" OR "art-composition" OR "geometry" OR "snap":
+        RETURN "Visual Pipeline vNext"
+
+    IF key contains "text":
+        RETURN "Text / SVG Text"
+
+    IF key contains "background" OR "pattern" OR "grammar" OR "triangulation" OR "zigzag" OR "isometric" OR "retro-grid" OR "flat-abstract":
+        RETURN "Background / Pattern / Grammar"
+
+    IF key contains "runtime" OR "boot" OR "validator" OR "audit" OR "safe" OR "boundary" OR "telemetry" OR "guard" OR "policy" OR "retirement" OR "adapter":
+        RETURN "Runtime / Safety / Audit"
+
+    IF key contains "visual-renderer" OR "visual-pipeline" OR "visual-composer" OR "visual-mapping" OR "visual-debug" OR "svg-renderer":
+        RETURN "Visual v1 / Legacy / Composer"
+
+    IF key contains "analytic" OR "canon" OR "execution" OR "input" OR "output" OR "process" OR "thinking" OR "interpretation" OR "formation" OR "iteration" OR "main-loop" OR "master" OR "validation" OR "termination" OR "threshold" OR "scoring":
+        RETURN "Core Concept Engines"
+
+    IF key contains "author" OR "identity" OR "display" OR "meta":
+        RETURN "Author / Identity / Memory Logic"
+
+    IF key contains "art" OR "literary" OR "photography" OR "shape" OR "composition" OR "scenario" OR "color":
+        RETURN "Art / Narrative / Shape / Color"
+
+    IF key contains "contamination" OR "deviation" OR "learning-loop" OR "promotion" OR "slice-repetition" OR "snap-profile":
+        RETURN "System Behavior"
+
+    RETURN "Unclassified / Needs Review"
+
+FUNCTION DETECT_MODULE_VERSION(module_identity):
+    key = module_identity.normalized_key
+
+    IF key contains "vnext":
+        RETURN "vNext"
+    IF key contains "v2":
+        RETURN "v2"
+    IF key contains "v1":
+        RETURN "v1"
+    RETURN "implicit_v1"
+
+FUNCTION DETECT_MODULE_ROLE(module_identity):
+    key = module_identity.normalized_key
+
+    IF key contains "renderer":
+        RETURN "renderer"
+    IF key contains "serializer":
+        RETURN "serializer"
+    IF key contains "audit" OR "validator" OR "smoke-test":
+        RETURN "audit"
+    IF key contains "adapter":
+        RETURN "adapter"
+    IF key contains "registry":
+        RETURN "registry"
+    IF key contains "guard" OR "policy" OR "safe" OR "boundary":
+        RETURN "safety"
+    IF key contains "controller" OR "orchestrator" OR "loader" OR "boot":
+        RETURN "orchestration"
+    IF key contains "engine":
+        RETURN "engine"
+    RETURN "concept_module"
+
+FUNCTION DETECT_LIFECYCLE_STATUS(module_identity, category, version):
+    key = module_identity.normalized_key
+
+    IF category == "Visual v1 / Legacy / Composer":
+        RETURN "legacy_retained"
+    IF key contains "vnext":
+        RETURN "active_vnext"
+    IF key contains "v2":
+        RETURN "active_parallel_version"
+    IF key contains "deprecated":
+        RETURN "deprecated_retained"
+    RETURN "active"
+
+FUNCTION RESOLVE_KNOWN_PIPELINE_POSITION(module_identity, pipeline_map):
+    IF module_identity.canonical_name exists in pipeline_map:
+        RETURN pipeline_map[module_identity.canonical_name]
+
+    RETURN {
+        status: "unmapped",
+        before: [],
+        after: [],
+        depends_on: [],
+        note: "Pipeline position requires explicit registry mapping"
+    }
+
+FUNCTION BUILD_BACKFILL_REGISTRY_ENTRY(
+    module_identity,
+    category,
+    version,
+    role,
+    lifecycle_status,
+    pipeline_position
+):
+    RETURN {
+        module_name: module_identity.canonical_name,
+        file_name: module_identity.file_name,
+        normalized_key: module_identity.normalized_key,
+        category: category,
+        role: role,
+        version: version,
+        lifecycle: lifecycle_status,
+        status: "implemented",
+        registry_origin: "backfill_scan",
+        pipeline_position: pipeline_position,
+        dependencies: [],
+        receives: [],
+        emits: [],
+        contract_status: "unknown_until_extracted",
+        renderer_access: role == "renderer",
+        engine_access: role == "engine",
+        can_render: role == "renderer",
+        can_decide_logic: role != "renderer",
+        requires_manual_review: category == "Unclassified / Needs Review"
+    }
+
+FUNCTION CHECK_CONTRACT_COMPLETENESS(registry_entry):
+    missing = []
+
+    IF registry_entry.pipeline_position.status == "unmapped":
+        ADD "pipeline_position" TO missing
+    IF registry_entry.dependencies empty:
+        ADD "dependencies" TO missing
+    IF registry_entry.receives empty:
+        ADD "receives" TO missing
+    IF registry_entry.emits empty:
+        ADD "emits" TO missing
+
+    RETURN {
+        module_name: registry_entry.module_name,
+        status: "incomplete" IF missing not empty ELSE "complete",
+        missing_contract_fields: missing
+    }
+
+FUNCTION CHECK_DUPLICATE_OR_OVERLAP(registry_entry, registry_index):
+    IF registry_entry.module_name exists in registry_index:
+        RETURN {
+            module_name: registry_entry.module_name,
+            status: "duplicate",
+            action: "merge_metadata_only_do_not_overwrite"
+        }
+
+    IF registry_entry.normalized_key semantically overlaps existing registry entry:
+        RETURN {
+            module_name: registry_entry.module_name,
+            status: "possible_overlap",
+            action: "manual_review_required"
+        }
+
+    RETURN {
+        module_name: registry_entry.module_name,
+        status: "unique"
+    }
+
+FUNCTION DETECT_ADAPTER_NEED(registry_entry, registry_index):
+    IF registry_entry.role == "renderer" AND registry_entry.can_decide_logic == true:
+        RETURN {
+            module_name: registry_entry.module_name,
+            adapter_needed: true,
+            reason: "Renderer boundary requires adapter or contract correction"
+        }
+
+    IF registry_entry.lifecycle == "legacy_retained":
+        RETURN {
+            module_name: registry_entry.module_name,
+            adapter_needed: true,
+            reason: "Legacy module may require compatibility adapter"
+        }
+
+    IF registry_entry.contract_status == "unknown_until_extracted":
+        RETURN {
+            module_name: registry_entry.module_name,
+            adapter_needed: "unknown",
+            reason: "Contract extraction required"
+        }
+
+    RETURN {
+        module_name: registry_entry.module_name,
+        adapter_needed: false
+    }
+
+FUNCTION VALIDATE_BACKFILL_BATCH(entries, version_policy, backfill_rules):
+    report = {
+        accepted_entries: [],
+        rejected_entries: [],
+        warnings: [],
+        has_critical_failure: false
+    }
+
+    FOR each entry IN entries:
+        IF version_policy != "coexistence":
+            ADD failure "Version policy must be coexistence"
+            SET has_critical_failure true
+
+        IF entry.role == "renderer" AND entry.can_decide_logic == true:
+            ADD failure "Renderer logic leakage risk"
+            SET has_critical_failure true
+
+        IF entry.category == "Unclassified / Needs Review":
+            ADD warning "Manual classification required"
+        ELSE:
+            ADD entry TO accepted_entries
+
+    RETURN report
+
+FUNCTION APPLY_BACKFILL_TO_REGISTRY(registry_index, accepted_entries):
+    updated_registry = COPY registry_index
+
+    FOR each entry IN accepted_entries:
+        IF entry.module_name not in updated_registry:
+            ADD entry TO updated_registry
+        ELSE:
+            UPDATE metadata fields only:
+                - file_name
+                - category
+                - role
+                - version
+                - lifecycle
+                - status
+                - registry_origin
+
+            DO NOT overwrite:
+                - custom contract
+                - manual notes
+                - pipeline decisions
+                - validation history
+
+    RETURN updated_registry
+
+FUNCTION BUILD_CLASSIFICATION_REPORT(scan_report):
+    GROUP backfill_candidates BY:
+        - category
+        - role
+        - version
+        - lifecycle
+    RETURN grouped_report
+
+FUNCTION EXTRACT_MISSING_CONTRACTS(scan_report):
+    RETURN all contract_findings WHERE status == "incomplete"
+
+FUNCTION EXTRACT_DUPLICATE_WARNINGS(scan_report):
+    RETURN all duplication_findings WHERE status != "unique"
+
+FUNCTION EXTRACT_LEGACY_MODULES(scan_report):
+    RETURN all backfill_candidates WHERE lifecycle == "legacy_retained"
+
+FUNCTION EXTRACT_ADAPTER_NEEDED(scan_report):
+    RETURN all adapter_findings WHERE adapter_needed == true OR adapter_needed == "unknown"
+
+FUNCTION EXTRACT_FUTURE_EXTENSION_CANDIDATES(scan_report):
+    RETURN all backfill_candidates WHERE:
+        - category == "Unclassified / Needs Review"
+        OR contract_status == "unknown_until_extracted"
+        OR pipeline_position.status == "unmapped"
+
+FAIL:
+IF existing_module_file_list is missing:
+    RETURN FAIL "Missing required input: existing_module_file_list"
+
+IF module_registry_index is missing:
+    RETURN FAIL "Missing required input: module_registry_index"
+
+IF version_policy is not "coexistence":
+    RETURN FAIL "Invalid version policy. MindSlice requires v1, v2 and vNext coexistence."
+
+IF scanner attempts to modify implementation files:
+    RETURN FAIL "BackfillScanner is read-only and cannot modify implementation files"
+
+IF scanner attempts to execute module logic:
+    RETURN FAIL "BackfillScanner cannot execute modules"
+
+IF scanner attempts to render SVG:
+    RETURN FAIL "BackfillScanner cannot render"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No implementation code
+- Scanner is read-only
+- Scanner does not execute modules
+- Scanner does not render
+- Scanner does not rewrite modules
+- Scanner only classifies and backfills registry metadata
+- Existing modules are preserved
+- Manual contracts are never overwritten
+- v1, v2 and vNext coexist
+- Renderer does not think
+- Renderer only draws

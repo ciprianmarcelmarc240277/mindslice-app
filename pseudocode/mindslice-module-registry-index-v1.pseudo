@@ -1,0 +1,290 @@
+MODULE MindSlice_ModuleRegistryIndex_v1
+
+PURPOSE:
+Create a declarative registry index for all existing and future MindSlice modules.
+Organize implemented modules, planned modules, deprecated modules, experimental modules, and extension candidates without executing system logic.
+
+INPUT:
+- implemented_module_list
+- planned_module_list
+- experimental_module_list
+- deprecated_module_list
+- module_metadata
+- pipeline_map
+- dependency_map
+- version_policy
+
+OUTPUT:
+- module_registry_index
+- module_status_map
+- module_category_map
+- module_dependency_overview
+- future_module_slots
+- registry_validation_report
+
+STATE:
+- declarative
+- non-executing
+- registry-based
+- version-aware
+- future-extensible
+- renderer-independent
+
+FUNCTION RUN:
+
+    VALIDATE input
+
+    registry_index = CREATE_EMPTY_REGISTRY_INDEX()
+
+    registered_existing = REGISTER_IMPLEMENTED_MODULES(
+        input.implemented_module_list,
+        input.module_metadata,
+        input.pipeline_map,
+        input.dependency_map
+    )
+
+    registered_planned = REGISTER_PLANNED_MODULES(
+        input.planned_module_list,
+        input.module_metadata
+    )
+
+    registered_experimental = REGISTER_EXPERIMENTAL_MODULES(
+        input.experimental_module_list,
+        input.module_metadata
+    )
+
+    registered_deprecated = REGISTER_DEPRECATED_MODULES(
+        input.deprecated_module_list,
+        input.module_metadata
+    )
+
+    future_slots = GENERATE_FUTURE_MODULE_SLOTS(
+        registry_index,
+        input.pipeline_map,
+        input.version_policy
+    )
+
+    registry_index = MERGE_REGISTRY_SECTIONS(
+        registered_existing,
+        registered_planned,
+        registered_experimental,
+        registered_deprecated,
+        future_slots
+    )
+
+    validation_report = VALIDATE_REGISTRY_INDEX(
+        registry_index,
+        input.version_policy
+    )
+
+    IF validation_report.has_critical_conflict:
+        RETURN FAIL validation_report
+
+    RETURN {
+        module_registry_index: registry_index,
+        module_status_map: EXTRACT_STATUS_MAP(registry_index),
+        module_category_map: EXTRACT_CATEGORY_MAP(registry_index),
+        module_dependency_overview: EXTRACT_DEPENDENCY_OVERVIEW(registry_index),
+        future_module_slots: future_slots,
+        registry_validation_report: validation_report
+    }
+
+HELPERS:
+
+FUNCTION CREATE_EMPTY_REGISTRY_INDEX():
+    RETURN {
+        registry_name: "MindSlice_ModuleRegistryIndex_v1",
+        registry_type: "declarative_module_index",
+        version_policy: "coexistence",
+        categories: [],
+        modules: [],
+        future_slots: [],
+        validation_rules: []
+    }
+
+FUNCTION REGISTER_IMPLEMENTED_MODULES(module_list, metadata, pipeline_map, dependency_map):
+    FOR each module IN module_list:
+        entry = CREATE_MODULE_ENTRY(module)
+        entry.status = "implemented"
+        entry.lifecycle = "active"
+        entry.file_state = "exists_as_typescript_file"
+        entry.pipeline_position = RESOLVE_PIPELINE_POSITION(module, pipeline_map)
+        entry.dependencies = RESOLVE_DEPENDENCIES(module, dependency_map)
+        entry.version = DETECT_VERSION(module)
+        entry.category = DETECT_CATEGORY(module)
+        entry.contract_required = true
+        ADD entry TO implemented_registry
+    RETURN implemented_registry
+
+FUNCTION REGISTER_PLANNED_MODULES(module_list, metadata):
+    FOR each module IN module_list:
+        entry = CREATE_MODULE_ENTRY(module)
+        entry.status = "planned"
+        entry.lifecycle = "not_implemented"
+        entry.file_state = "missing_file"
+        entry.pipeline_position = metadata.pipeline_position OR "unassigned"
+        entry.dependencies = metadata.dependencies OR []
+        entry.version = DETECT_VERSION(module)
+        entry.category = metadata.category OR "future_extension"
+        entry.contract_required = true
+        ADD entry TO planned_registry
+    RETURN planned_registry
+
+FUNCTION REGISTER_EXPERIMENTAL_MODULES(module_list, metadata):
+    FOR each module IN module_list:
+        entry = CREATE_MODULE_ENTRY(module)
+        entry.status = "experimental"
+        entry.lifecycle = "sandbox"
+        entry.file_state = metadata.file_state OR "unknown"
+        entry.pipeline_position = metadata.pipeline_position OR "isolated"
+        entry.dependencies = metadata.dependencies OR []
+        entry.version = DETECT_VERSION(module)
+        entry.category = metadata.category OR "experimental"
+        entry.contract_required = true
+        entry.can_enter_pipeline = false UNTIL validated
+        ADD entry TO experimental_registry
+    RETURN experimental_registry
+
+FUNCTION REGISTER_DEPRECATED_MODULES(module_list, metadata):
+    FOR each module IN module_list:
+        entry = CREATE_MODULE_ENTRY(module)
+        entry.status = "deprecated"
+        entry.lifecycle = "legacy_retained"
+        entry.file_state = metadata.file_state OR "exists_or_archived"
+        entry.pipeline_position = "legacy"
+        entry.dependencies = metadata.dependencies OR []
+        entry.version = DETECT_VERSION(module)
+        entry.category = metadata.category OR "legacy"
+        entry.contract_required = false
+        entry.replacement_allowed = false
+        entry.coexistence_required = true
+        ADD entry TO deprecated_registry
+    RETURN deprecated_registry
+
+FUNCTION CREATE_MODULE_ENTRY(module_name):
+    RETURN {
+        module_name: module_name,
+        canonical_name: NORMALIZE_MODULE_NAME(module_name),
+        file_name: RESOLVE_FILE_NAME(module_name),
+        category: null,
+        status: null,
+        lifecycle: null,
+        version: null,
+        pipeline_position: null,
+        dependencies: [],
+        emits: [],
+        receives: [],
+        conflicts_with: [],
+        extends: [],
+        extended_by: [],
+        renderer_access: false,
+        engine_access: false,
+        can_render: false,
+        can_decide_logic: false,
+        contract_required: true,
+        notes: []
+    }
+
+FUNCTION GENERATE_FUTURE_MODULE_SLOTS(registry_index, pipeline_map, version_policy):
+    slots = []
+
+    FOR each pipeline_stage IN pipeline_map:
+        slot = {
+            slot_name: "future_" + pipeline_stage + "_extension_slot",
+            status: "available",
+            allowed_operation: ["EXTEND", "ADD_PARALLEL_VERSION", "ADD_ADAPTER", "ADD_AUDIT"],
+            forbidden_operation: ["OVERWRITE_EXISTING_VERSION", "IMPLICIT_MERGE"],
+            required_contract: true,
+            required_validation: true
+        }
+        ADD slot TO slots
+
+    ADD global_future_slots:
+        - future_source_layer_extension_slot
+        - future_grammar_layer_extension_slot
+        - future_layout_layer_extension_slot
+        - future_rendering_layer_extension_slot
+        - future_audit_layer_extension_slot
+        - future_runtime_safety_extension_slot
+        - future_serialization_extension_slot
+        - future_telemetry_extension_slot
+        - future_adapter_extension_slot
+
+    RETURN slots
+
+FUNCTION DETECT_CATEGORY(module):
+    IF module contains "text":
+        RETURN "Text / SVG Text"
+    IF module contains "background" OR "pattern" OR "grammar":
+        RETURN "Background / Pattern / Grammar"
+    IF module contains "runtime" OR "audit" OR "validator" OR "safe" OR "guard" OR "policy":
+        RETURN "Runtime / Safety / Audit"
+    IF module contains "visual-renderer" OR "visual-pipeline" OR "composer" OR "svg-renderer":
+        RETURN "Visual / Renderer / Composer"
+    IF module contains "author" OR "identity" OR "memory":
+        RETURN "Author / Identity / Memory Logic"
+    IF module contains "art" OR "color" OR "composition" OR "scenario" OR "shape" OR "literary" OR "photography":
+        RETURN "Art / Narrative / Shape / Color"
+    IF module contains "learning" OR "deviation" OR "contamination" OR "promotion" OR "repetition":
+        RETURN "System Behavior"
+    RETURN "Core Concept Engines"
+
+FUNCTION DETECT_VERSION(module):
+    IF module contains "vnext":
+        RETURN "vNext"
+    IF module contains "v2":
+        RETURN "v2"
+    IF module contains "v1":
+        RETURN "v1"
+    RETURN "implicit_v1"
+
+FUNCTION VALIDATE_REGISTRY_INDEX(registry_index, version_policy):
+    report = CREATE_VALIDATION_REPORT()
+    CHECK duplicate canonical names
+    CHECK missing status
+    CHECK missing category
+    CHECK missing lifecycle
+    CHECK missing contract for active modules
+    CHECK deprecated modules are not deleted
+    CHECK planned modules do not overwrite implemented modules
+    CHECK experimental modules do not enter active pipeline without validation
+    CHECK renderer modules do not receive semantic decision authority
+    CHECK engine modules do not render
+    CHECK v1, v2, vNext coexistence rules
+    IF violation:
+        ADD violation TO report
+    RETURN report
+
+FAIL:
+IF implemented_module_list is missing:
+    RETURN FAIL "Missing required input: implemented_module_list"
+
+IF module appears in multiple lifecycle states without explicit override:
+    RETURN FAIL "Module lifecycle conflict detected"
+
+IF planned module overwrites existing canonical module:
+    RETURN FAIL "Planned module cannot overwrite existing implemented module"
+
+IF future slot attempts to replace existing version:
+    RETURN FAIL "Future slot must extend, not replace"
+
+IF renderer module receives decision authority:
+    RETURN FAIL "Renderer logic leakage detected"
+
+IF engine module receives render authority:
+    RETURN FAIL "Engine rendering leakage detected"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No UI explanation
+- No storytelling
+- No simplifications
+- Registry does not execute modules
+- Registry does not render
+- Registry does not decide layout
+- Registry does not mutate modules
+- Registry indexes existing modules and future modules
+- Future modules must enter as planned, experimental, adapter, extension, audit, or parallel version
+- v1, v2 and vNext coexist

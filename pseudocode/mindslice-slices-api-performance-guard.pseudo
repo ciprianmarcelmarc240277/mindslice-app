@@ -1,0 +1,121 @@
+MODULE MindSlice_SlicesAPIPerformanceGuard
+
+BACKFILL_SOURCE:
+    file_name: concept-slices-api-performance-guard-system.ts
+    source_path: mindslice-app/src/lib/mindslice/concept-slices-api-performance-guard-system.ts
+    registry_origin: pseudocode_backfill_scan
+    backfill_status: generated_from_typescript_structure
+
+PURPOSE:
+    Define the Slices API Performance Guard contract and behavior as evidenced by main function RUN within Runtime / Safety / Audit.
+    confirmed_by:
+        - exported_main_function:RUN
+        - file_name:mindslice-slices-api-performance-guard.pseudo
+        - registry_category:Runtime / Safety / Audit
+
+INPUT:
+    - UNKNOWN_NEEDS_REVIEW
+
+OUTPUT:
+    status: confirmed
+    confirmed_by:
+        - return_object_fields: active_slices, engine_mode, engine_profile, hydration_status, warnings
+        - return_object_fields: status, warning
+        - return_object_fields: status, engine_mode, engine_profile, slices
+        - return_object_fields: hydration_status, warnings
+
+STATE:
+    - implemented
+    - active
+    - Runtime / Safety / Audit
+    - role:safety
+    - version:implicit_v1
+    - non-rendering_if_not_renderer
+    - renderer_passive_if_renderer
+
+PIPELINE_POSITION:
+    status: standalone_declared
+    before: []
+    after: []
+    depends_on: []
+    confirmed_by:
+        - no confirmed depends_on entries in pseudocode
+        - imports/exports do not establish required pipeline edge by themselves
+
+MODULE_CLASSIFICATION:
+    category: Runtime / Safety / Audit
+    role: safety
+    version: implicit_v1
+    lifecycle: active
+    can_render: false
+    can_decide_logic: true
+    requires_manual_review: true
+
+FUNCTION RUN:
+    implementation_function: RUN
+    parameters: UNKNOWN_NEEDS_REVIEW
+
+HELPERS:
+    exported_types:
+        - SlicesApiHydrationStatus
+        - SlicesApiRequestConfig
+        - SlicesFallbackLibrary
+        - SlicesStaleCache
+        - SlicesRuntimeState
+        - RemoteSlicesResult
+
+    exported_helper_functions:
+        - none_confirmed
+
+    exported_constants:
+        - RUN
+
+DATA_CONTRACT:
+    receives:
+        status: confirmed
+        evidence:
+            - none_detected
+    emits:
+        status: confirmed
+        evidence:
+            - export type/interface SlicesApiHydrationStatus
+            - export type/interface SlicesApiRequestConfig
+            - export type/interface SlicesFallbackLibrary
+            - export type/interface SlicesStaleCache
+            - export type/interface SlicesRuntimeState
+            - export type/interface RemoteSlicesResult
+            - export const RUN
+    mutates:
+        status: confirmed
+        evidence:
+            - timer_side_effect line 107: const timeout = window.setTimeout(() => {
+    side_effects:
+        status: confirmed
+        value: confirmed_side_effect_or_render_artifact_evidence_present
+        confirmed_by:
+            - network_API_call line 104: const url = requestConfig.url ?? "/api/slices";
+    contract_status: v3_contract_fields_confirmed
+
+FAIL:
+    confirmed_failure_or_fallback_behavior_present
+    confirmed_by:
+        - line 2: | "fallback_active"
+        - line 4: | "timeout_using_fallback"
+        - line 5: | "error_using_fallback";
+        - line 14: export type SlicesFallbackLibrary<TSlice> = {
+        - line 57: fallbackLibrary: SlicesFallbackLibrary<TSlice>,
+        - line 63: engine_mode: staleCache.engine_mode ?? fallbackLibrary.engine_mode,
+        - line 65: hydration_status: "fallback_active",
+        - line 71: active_slices: fallbackLibrary.default_slices,
+        - line 72: engine_mode: fallbackLibrary.engine_mode,
+        - line 74: hydration_status: "fallback_active",
+        - line 123: warning: "REMOTE_SLICES_ERROR_KEEPING_FALLBACK",
+
+CONSTRAINTS:
+    - Pseudocode backfill only.
+    - Do not implement from this file without manual contract review.
+    - Do not invent missing contracts.
+    - Preserve implemented module identity.
+    - Preserve version coexistence.
+    - Renderer does not think.
+    - Renderer only draws.

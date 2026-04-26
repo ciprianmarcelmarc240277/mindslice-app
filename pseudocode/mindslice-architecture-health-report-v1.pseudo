@@ -1,0 +1,317 @@
+MODULE MindSlice_ArchitectureHealthReport_v1
+
+PURPOSE:
+Generate a final architecture health report from MindSlice validation outputs.
+Summarize readiness, blocked areas, partial contracts, missing dependencies, isolated modules, renderer-boundary risks, and next required actions.
+
+INPUT:
+- architecture_validation_report
+- contract_validation_results
+- pipeline_dependency_results
+- module_registry_index
+- manual_review_queue
+- health_rules
+
+OUTPUT:
+- architecture_health_report
+- system_health_status
+- ready_modules
+- partial_modules
+- blocked_modules
+- unknown_modules
+- missing_contracts_summary
+- dependency_risk_summary
+- next_action_plan
+
+STATE:
+- reporting
+- read-only
+- non-rendering
+- non-executing
+- validation-aware
+- contract-aware
+- dependency-aware
+- decision-support
+
+FUNCTION RUN:
+
+    VALIDATE input
+
+    health_snapshot = BUILD_HEALTH_SNAPSHOT(
+        input.architecture_validation_report,
+        input.contract_validation_results,
+        input.pipeline_dependency_results,
+        input.module_registry_index,
+        input.manual_review_queue
+    )
+
+    module_groups = CLASSIFY_MODULE_HEALTH(
+        health_snapshot
+    )
+
+    contract_summary = SUMMARIZE_CONTRACT_HEALTH(
+        input.contract_validation_results
+    )
+
+    dependency_summary = SUMMARIZE_DEPENDENCY_HEALTH(
+        input.pipeline_dependency_results
+    )
+
+    boundary_summary = SUMMARIZE_RENDERER_ENGINE_BOUNDARIES(
+        input.contract_validation_results,
+        input.pipeline_dependency_results
+    )
+
+    next_actions = GENERATE_NEXT_ACTION_PLAN(
+        module_groups,
+        contract_summary,
+        dependency_summary,
+        boundary_summary,
+        input.health_rules
+    )
+
+    system_status = DETERMINE_SYSTEM_HEALTH_STATUS(
+        module_groups,
+        contract_summary,
+        dependency_summary,
+        boundary_summary
+    )
+
+    RETURN {
+        architecture_health_report: {
+            status: system_status,
+            health_snapshot: health_snapshot,
+            module_groups: module_groups,
+            contract_summary: contract_summary,
+            dependency_summary: dependency_summary,
+            boundary_summary: boundary_summary,
+            next_action_plan: next_actions
+        },
+        system_health_status: system_status,
+        ready_modules: module_groups.ready,
+        partial_modules: module_groups.partial,
+        blocked_modules: module_groups.blocked,
+        unknown_modules: module_groups.unknown,
+        missing_contracts_summary: contract_summary.missing_contracts,
+        dependency_risk_summary: dependency_summary.risks,
+        next_action_plan: next_actions
+    }
+
+HELPERS:
+
+FUNCTION BUILD_HEALTH_SNAPSHOT(
+    architecture_report,
+    contract_results,
+    dependency_results,
+    registry,
+    review_queue
+):
+    RETURN {
+        total_registered_modules: COUNT registry.modules,
+        architecture_readiness_status: architecture_report.status,
+        total_contracts_checked: contract_results.contract_validation_report.total_checked,
+        valid_contracts: contract_results.contract_validation_report.valid_count,
+        partial_contracts: contract_results.contract_validation_report.partial_count,
+        invalid_contracts: contract_results.contract_validation_report.invalid_count,
+        dependency_cycles: dependency_results.dependency_cycle_report.cycles,
+        isolated_modules: dependency_results.isolated_module_report.isolated_modules,
+        missing_links: dependency_results.missing_link_report.missing_links,
+        manual_review_items: COUNT review_queue
+    }
+
+FUNCTION CLASSIFY_MODULE_HEALTH(snapshot):
+    ready = []
+    partial = []
+    blocked = []
+    unknown = []
+
+    FOR each module IN module_registry_index.modules:
+
+        IF module in contract_validation_results.valid_contracts
+           AND module not in pipeline_dependency_results.missing_link_report
+           AND module not in pipeline_dependency_results.dependency_cycle_report:
+            ADD module TO ready
+
+        ELSE IF module in contract_validation_results.partial_contracts
+             OR module in manual_review_queue:
+            ADD module TO partial
+
+        ELSE IF module in contract_validation_results.invalid_contracts
+             OR module in pipeline_dependency_results.dependency_cycle_report.critical_cycles:
+            ADD module TO blocked
+
+        ELSE:
+            ADD module TO unknown
+
+    RETURN {
+        ready: ready,
+        partial: partial,
+        blocked: blocked,
+        unknown: unknown
+    }
+
+FUNCTION SUMMARIZE_CONTRACT_HEALTH(contract_results):
+    RETURN {
+        valid_count: COUNT contract_results.valid_contracts,
+        partial_count: COUNT contract_results.partial_contracts,
+        invalid_count: COUNT contract_results.invalid_contracts,
+        missing_contracts: EXTRACT_MISSING_CONTRACT_FIELDS(contract_results),
+        dominant_contract_issues: GROUP_CONTRACT_ISSUES(contract_results),
+        manual_review_required:
+            true IF contract_results.partial_contracts not empty
+            OR contract_results.invalid_contracts not empty
+            ELSE false
+    }
+
+FUNCTION SUMMARIZE_DEPENDENCY_HEALTH(dependency_results):
+    RETURN {
+        cycle_count: COUNT dependency_results.dependency_cycle_report.cycles,
+        critical_cycle_count: COUNT dependency_results.dependency_cycle_report.critical_cycles,
+        isolated_module_count: dependency_results.isolated_module_report.count,
+        missing_link_count: dependency_results.missing_link_report.count,
+        overlap_count: dependency_results.overlap_warning_report.count,
+        risks: {
+            cycles: dependency_results.dependency_cycle_report,
+            isolated_modules: dependency_results.isolated_module_report,
+            missing_links: dependency_results.missing_link_report,
+            overlaps: dependency_results.overlap_warning_report
+        }
+    }
+
+FUNCTION SUMMARIZE_RENDERER_ENGINE_BOUNDARIES(contract_results, dependency_results):
+    boundary_risks = []
+
+    FOR each result IN contract_results.contract_validation_report.contract_results:
+        IF result.boundary_result.status == "fail":
+            ADD result TO boundary_risks
+
+        IF result.boundary_result.status == "warning":
+            ADD result TO boundary_risks
+
+    RETURN {
+        renderer_engine_boundary_status:
+            "risk_detected" IF boundary_risks not empty ELSE "clean",
+        boundary_risks: boundary_risks
+    }
+
+FUNCTION GENERATE_NEXT_ACTION_PLAN(
+    module_groups,
+    contract_summary,
+    dependency_summary,
+    boundary_summary,
+    health_rules
+):
+    actions = []
+
+    IF module_groups.blocked not empty:
+        ADD {
+            priority: "critical",
+            action: "Resolve blocked modules before adding new modules",
+            target: module_groups.blocked
+        } TO actions
+
+    IF boundary_summary.renderer_engine_boundary_status == "risk_detected":
+        ADD {
+            priority: "critical",
+            action: "Fix renderer / engine boundary violations",
+            target: boundary_summary.boundary_risks
+        } TO actions
+
+    IF contract_summary.missing_contracts not empty:
+        ADD {
+            priority: "high",
+            action: "Complete missing contract fields",
+            target: contract_summary.missing_contracts
+        } TO actions
+
+    IF dependency_summary.critical_cycle_count > 0:
+        ADD {
+            priority: "critical",
+            action: "Break critical dependency cycles",
+            target: dependency_summary.risks.cycles
+        } TO actions
+
+    IF dependency_summary.missing_link_count > 0:
+        ADD {
+            priority: "medium",
+            action: "Resolve missing pipeline links",
+            target: dependency_summary.risks.missing_links
+        } TO actions
+
+    IF module_groups.unknown not empty:
+        ADD {
+            priority: "medium",
+            action: "Classify unknown modules",
+            target: module_groups.unknown
+        } TO actions
+
+    IF actions empty:
+        ADD {
+            priority: "normal",
+            action: "Architecture ready for controlled implementation translation",
+            target: "all validated modules"
+        } TO actions
+
+    RETURN actions
+
+FUNCTION DETERMINE_SYSTEM_HEALTH_STATUS(
+    module_groups,
+    contract_summary,
+    dependency_summary,
+    boundary_summary
+):
+    IF module_groups.blocked not empty:
+        RETURN "blocked"
+
+    IF boundary_summary.renderer_engine_boundary_status == "risk_detected":
+        RETURN "blocked"
+
+    IF dependency_summary.critical_cycle_count > 0:
+        RETURN "blocked"
+
+    IF contract_summary.invalid_count > 0:
+        RETURN "blocked"
+
+    IF module_groups.partial not empty
+       OR module_groups.unknown not empty
+       OR dependency_summary.missing_link_count > 0:
+        RETURN "partial_ready"
+
+    RETURN "healthy"
+
+FAIL:
+IF architecture_validation_report is missing:
+    RETURN FAIL "Missing required input: architecture_validation_report"
+
+IF contract_validation_results is missing:
+    RETURN FAIL "Missing required input: contract_validation_results"
+
+IF module_registry_index is missing:
+    RETURN FAIL "Missing required input: module_registry_index"
+
+IF health_rules are missing:
+    RETURN FAIL "Missing required input: health_rules"
+
+IF reporter attempts to execute module logic:
+    RETURN FAIL "ArchitectureHealthReport cannot execute modules"
+
+IF reporter attempts to render:
+    RETURN FAIL "ArchitectureHealthReport cannot render"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No implementation code
+- HealthReport is read-only
+- HealthReport does not execute modules
+- HealthReport does not render
+- HealthReport does not mutate registry
+- HealthReport only summarizes validation state
+- Blocked modules must not enter implementation translation
+- Partial modules must enter manual review
+- Unknown modules must be classified before dependency mapping
+- Existing modules are preserved
+- v1, v2 and vNext coexist
+- Renderer does not think
+- Renderer only draws

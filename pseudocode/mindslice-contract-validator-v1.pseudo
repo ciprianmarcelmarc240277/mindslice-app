@@ -1,0 +1,453 @@
+MODULE MindSlice_ContractValidator_v1
+
+PURPOSE:
+Validate normalized MindSlice module contracts before dependency mapping and implementation translation.
+Check required fields, INPUT / OUTPUT compatibility, RECEIVES / EMITS consistency, failure behavior, pipeline position, version coexistence, and renderer-passive boundaries.
+
+INPUT:
+- normalized_contracts
+- module_registry_index
+- validation_rules
+- pipeline_map
+- version_policy
+
+OUTPUT:
+- contract_validation_report
+- valid_contracts
+- invalid_contracts
+- partial_contracts
+- compatibility_warnings
+- blocking_issues
+- manual_review_queue
+
+STATE:
+- validator
+- read-only
+- non-rendering
+- non-executing
+- contract-aware
+- registry-aware
+- pipeline-aware
+- strict
+
+FUNCTION RUN:
+
+    VALIDATE input
+
+    validation_report = CREATE_EMPTY_VALIDATION_REPORT()
+
+    FOR each contract IN normalized_contracts:
+
+        structure_result = VALIDATE_REQUIRED_FIELDS(
+            contract,
+            validation_rules
+        )
+
+        io_result = VALIDATE_INPUT_OUTPUT_CONTRACT(
+            contract
+        )
+
+        receive_emit_result = VALIDATE_RECEIVES_EMITS_CONSISTENCY(
+            contract
+        )
+
+        fail_result = VALIDATE_FAILURE_CONTRACT(
+            contract
+        )
+
+        pipeline_result = VALIDATE_PIPELINE_CONTRACT(
+            contract,
+            pipeline_map
+        )
+
+        version_result = VALIDATE_VERSION_CONTRACT(
+            contract,
+            version_policy
+        )
+
+        boundary_result = VALIDATE_RENDERER_ENGINE_BOUNDARY(
+            contract
+        )
+
+        final_result = COMBINE_CONTRACT_VALIDATION_RESULTS(
+            contract,
+            structure_result,
+            io_result,
+            receive_emit_result,
+            fail_result,
+            pipeline_result,
+            version_result,
+            boundary_result
+        )
+
+        ADD final_result TO validation_report.contract_results
+
+    validation_report.summary = BUILD_VALIDATION_SUMMARY(
+        validation_report.contract_results
+    )
+
+    RETURN {
+        contract_validation_report: validation_report,
+        valid_contracts: FILTER_CONTRACTS(validation_report, "valid"),
+        invalid_contracts: FILTER_CONTRACTS(validation_report, "invalid"),
+        partial_contracts: FILTER_CONTRACTS(validation_report, "partial"),
+        compatibility_warnings: EXTRACT_COMPATIBILITY_WARNINGS(validation_report),
+        blocking_issues: EXTRACT_BLOCKING_ISSUES(validation_report),
+        manual_review_queue: EXTRACT_MANUAL_REVIEW_QUEUE(validation_report)
+    }
+
+HELPERS:
+
+FUNCTION CREATE_EMPTY_VALIDATION_REPORT():
+    RETURN {
+        validator_name: "MindSlice_ContractValidator_v1",
+        total_checked: 0,
+        valid_count: 0,
+        partial_count: 0,
+        invalid_count: 0,
+        contract_results: [],
+        blocking_issues: [],
+        warnings: [],
+        manual_review_queue: []
+    }
+
+FUNCTION VALIDATE_REQUIRED_FIELDS(contract, rules):
+    required_fields = [
+        "module_name",
+        "INPUT",
+        "OUTPUT",
+        "STATE",
+        "RECEIVES",
+        "EMITS",
+        "FAIL",
+        "CONSTRAINTS",
+        "PIPELINE_POSITION"
+    ]
+
+    missing = []
+    unknown = []
+    partial = []
+
+    FOR each field IN required_fields:
+
+        IF field missing:
+            ADD field TO missing
+
+        ELSE IF contract[field] == "UNKNOWN":
+            ADD field TO unknown
+
+        ELSE IF contract.classification marks field as partial:
+            ADD field TO partial
+
+    IF missing not empty:
+        RETURN {
+            status: "fail",
+            reason: "Missing required contract fields",
+            missing_fields: missing
+        }
+
+    IF unknown not empty:
+        RETURN {
+            status: "partial",
+            reason: "Unknown required contract fields",
+            unknown_fields: unknown
+        }
+
+    IF partial not empty:
+        RETURN {
+            status: "warning",
+            reason: "Partial contract fields detected",
+            partial_fields: partial
+        }
+
+    RETURN {
+        status: "pass",
+        reason: "Required fields valid"
+    }
+
+FUNCTION VALIDATE_INPUT_OUTPUT_CONTRACT(contract):
+    IF contract.INPUT == "UNKNOWN":
+        RETURN {
+            status: "partial",
+            reason: "INPUT contract unknown"
+        }
+
+    IF contract.OUTPUT == "UNKNOWN":
+        RETURN {
+            status: "partial",
+            reason: "OUTPUT contract unknown"
+        }
+
+    IF contract.INPUT empty AND contract.STATE does not allow no_input:
+        RETURN {
+            status: "warning",
+            reason: "Module has empty INPUT but no no_input state declared"
+        }
+
+    IF contract.OUTPUT empty AND contract.STATE does not allow no_output:
+        RETURN {
+            status: "warning",
+            reason: "Module has empty OUTPUT but no no_output state declared"
+        }
+
+    RETURN {
+        status: "pass",
+        reason: "INPUT / OUTPUT contract valid"
+    }
+
+FUNCTION VALIDATE_RECEIVES_EMITS_CONSISTENCY(contract):
+    warnings = []
+
+    IF contract.RECEIVES == "UNKNOWN":
+        ADD "RECEIVES unknown" TO warnings
+
+    IF contract.EMITS == "UNKNOWN":
+        ADD "EMITS unknown" TO warnings
+
+    IF contract.RECEIVES does not align with contract.INPUT:
+        ADD "RECEIVES does not align with INPUT" TO warnings
+
+    IF contract.EMITS does not align with contract.OUTPUT:
+        ADD "EMITS does not align with OUTPUT" TO warnings
+
+    IF warnings not empty:
+        RETURN {
+            status: "warning",
+            warnings: warnings
+        }
+
+    RETURN {
+        status: "pass",
+        reason: "RECEIVES / EMITS consistency valid"
+    }
+
+FUNCTION VALIDATE_FAILURE_CONTRACT(contract):
+    IF contract.FAIL == "UNKNOWN":
+        RETURN {
+            status: "partial",
+            reason: "FAIL contract unknown"
+        }
+
+    IF contract.FAIL exists BUT no blocking/non_blocking classification:
+        RETURN {
+            status: "warning",
+            reason: "FAIL entries need blocking classification"
+        }
+
+    RETURN {
+        status: "pass",
+        reason: "FAIL contract valid"
+    }
+
+FUNCTION VALIDATE_PIPELINE_CONTRACT(contract, pipeline_map):
+    pipeline = contract.PIPELINE_POSITION
+
+    IF pipeline == "UNKNOWN":
+        RETURN {
+            status: "partial",
+            reason: "Pipeline position unknown"
+        }
+
+    IF pipeline.status == "UNKNOWN":
+        RETURN {
+            status: "partial",
+            reason: "Pipeline position unresolved"
+        }
+
+    IF pipeline.before empty AND pipeline.after empty AND pipeline.depends_on empty:
+        RETURN {
+            status: "warning",
+            reason: "Pipeline position has no relation anchors"
+        }
+
+    IF pipeline references module not in pipeline_map AND not in registry:
+        RETURN {
+            status: "warning",
+            reason: "Pipeline references unresolved module"
+        }
+
+    RETURN {
+        status: "pass",
+        reason: "Pipeline contract valid"
+    }
+
+FUNCTION VALIDATE_VERSION_CONTRACT(contract, version_policy):
+    version = EXTRACT_VERSION_FROM_MODULE_NAME(contract.module_name)
+
+    IF version_policy != "coexistence":
+        RETURN {
+            status: "fail",
+            reason: "Version policy must be coexistence"
+        }
+
+    IF contract.module_name implies overwrite OR replacement:
+        RETURN {
+            status: "fail",
+            reason: "Module naming implies replacement instead of coexistence"
+        }
+
+    IF version missing:
+        RETURN {
+            status: "warning",
+            reason: "Implicit version detected"
+        }
+
+    RETURN {
+        status: "pass",
+        reason: "Version coexistence valid"
+    }
+
+FUNCTION VALIDATE_RENDERER_ENGINE_BOUNDARY(contract):
+    state = contract.STATE
+    constraints = contract.CONSTRAINTS
+
+    IF state contains "renderer":
+        IF contract.EMITS contains semantic_decision OR layout_decision OR hierarchy_decision:
+            RETURN {
+                status: "fail",
+                reason: "Renderer emits decision logic"
+            }
+
+        IF constraints does not contain "Renderer does not think":
+            RETURN {
+                status: "warning",
+                reason: "Renderer boundary law not declared"
+            }
+
+    IF state contains "engine":
+        IF contract.OUTPUT contains svg_draw_command OR rendered_svg_element:
+            RETURN {
+                status: "fail",
+                reason: "Engine outputs render artifacts"
+            }
+
+    RETURN {
+        status: "pass",
+        reason: "Renderer / engine boundary valid"
+    }
+
+FUNCTION COMBINE_CONTRACT_VALIDATION_RESULTS(
+    contract,
+    structure_result,
+    io_result,
+    receive_emit_result,
+    fail_result,
+    pipeline_result,
+    version_result,
+    boundary_result
+):
+    all_results = [
+        structure_result,
+        io_result,
+        receive_emit_result,
+        fail_result,
+        pipeline_result,
+        version_result,
+        boundary_result
+    ]
+
+    IF any result.status == "fail":
+        final_status = "invalid"
+
+    ELSE IF any result.status == "partial":
+        final_status = "partial"
+
+    ELSE IF any result.status == "warning":
+        final_status = "partial"
+
+    ELSE:
+        final_status = "valid"
+
+    RETURN {
+        module_name: contract.module_name,
+        final_status: final_status,
+        structure_result: structure_result,
+        io_result: io_result,
+        receive_emit_result: receive_emit_result,
+        fail_result: fail_result,
+        pipeline_result: pipeline_result,
+        version_result: version_result,
+        boundary_result: boundary_result,
+        manual_review_required: final_status != "valid"
+    }
+
+FUNCTION BUILD_VALIDATION_SUMMARY(results):
+    RETURN {
+        total_checked: COUNT results,
+        valid: COUNT results WHERE final_status == "valid",
+        partial: COUNT results WHERE final_status == "partial",
+        invalid: COUNT results WHERE final_status == "invalid",
+        system_ready_for_dependency_map:
+            true IF invalid == 0
+            ELSE false
+    }
+
+FUNCTION FILTER_CONTRACTS(report, status):
+    RETURN all contract_results WHERE final_status == status
+
+FUNCTION EXTRACT_COMPATIBILITY_WARNINGS(report):
+    RETURN all warnings from contract_results
+
+FUNCTION EXTRACT_BLOCKING_ISSUES(report):
+    RETURN all contract_results WHERE final_status == "invalid"
+
+FUNCTION EXTRACT_MANUAL_REVIEW_QUEUE(report):
+    RETURN all contract_results WHERE manual_review_required == true
+
+FUNCTION EXTRACT_VERSION_FROM_MODULE_NAME(name):
+    IF name contains "vNext":
+        RETURN "vNext"
+
+    IF name contains "v2":
+        RETURN "v2"
+
+    IF name contains "v1":
+        RETURN "v1"
+
+    RETURN "implicit_v1"
+
+FAIL:
+IF normalized_contracts is missing:
+    RETURN FAIL "Missing required input: normalized_contracts"
+
+IF validation_rules are missing:
+    RETURN FAIL "Missing required input: validation_rules"
+
+IF module_registry_index is missing:
+    RETURN FAIL "Missing required input: module_registry_index"
+
+IF version_policy != "coexistence":
+    RETURN FAIL "Invalid version policy"
+
+IF validator attempts to modify contracts:
+    RETURN FAIL "ContractValidator is read-only"
+
+IF validator attempts to execute modules:
+    RETURN FAIL "ContractValidator cannot execute modules"
+
+IF validator attempts to render:
+    RETURN FAIL "ContractValidator cannot render"
+
+IF renderer decision authority detected:
+    RETURN FAIL "Renderer logic leakage detected"
+
+IF engine rendering authority detected:
+    RETURN FAIL "Engine rendering leakage detected"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No implementation code
+- Validator is read-only
+- Validator does not execute modules
+- Validator does not render
+- Validator does not mutate contracts
+- Validator only validates normalized contracts
+- Unknown fields remain UNKNOWN
+- Partial contracts enter manual_review_queue
+- Invalid contracts block dependency mapping
+- Existing modules are preserved
+- v1, v2 and vNext coexist
+- Renderer does not think
+- Renderer only draws

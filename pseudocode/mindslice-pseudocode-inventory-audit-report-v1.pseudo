@@ -1,0 +1,122 @@
+MODULE MindSlice_PseudocodeInventoryAuditReport_v1
+
+PURPOSE:
+Generate a declarative pseudocode inventory audit report for the current /pseudocode folder.
+Record module file counts, index coverage, missing sections, invalid names, malformed module names, and duplicate status without modifying implementation files.
+
+INPUT:
+- pseudocode_folder: "/pseudocode"
+- audit_date: "2026-04-25"
+- audit_rules:
+    - read all .pseudo files
+    - verify one MODULE per file
+    - verify required sections:
+        MODULE
+        PURPOSE
+        INPUT
+        OUTPUT
+        STATE
+        FUNCTION RUN
+        HELPERS
+        FAIL
+        CONSTRAINTS
+    - verify /pseudocode/index.pseudo lists every module
+    - report missing files
+    - report duplicates
+    - report invalid names
+    - report missing sections
+    - report inconsistent module names
+
+OUTPUT:
+- PSEUDOCODE_INVENTORY_AUDIT_REPORT:
+    status: "pass"
+    total_pseudo_files: 121
+    module_files_checked: 120
+    index_file_present: true
+    index_entries: 120
+    valid_module_files: 120
+    one_module_per_file:
+        status: "pass"
+        violations: []
+    duplicate_modules:
+        status: "pass"
+        duplicates: []
+    index_coverage:
+        status: "pass"
+        files_missing_from_index: []
+        index_files_missing_on_disk: []
+        index_modules_missing_on_disk: []
+        inconsistent_index_entries: []
+    missing_required_sections: []
+    malformed_module_names: []
+    invalid_file_names: []
+    repair_actions_applied:
+        - "Added three backfill report modules to index.pseudo"
+        - "Renamed three backfill report files to MindSlice filename convention"
+        - "Corrected four internal MODULE version suffixes"
+        - "Completed missing pseudocode sections in five files"
+
+STATE:
+- reporting
+- read-only
+- non-rendering
+- non-executing
+- inventory-audit
+- pseudocode-only
+
+FUNCTION RUN:
+
+    VALIDATE input
+
+    audit_report = BUILD_AUDIT_REPORT_FROM_RECORDED_FINDINGS()
+
+    RETURN {
+        PSEUDOCODE_INVENTORY_AUDIT_REPORT: audit_report
+    }
+
+HELPERS:
+
+FUNCTION BUILD_AUDIT_REPORT_FROM_RECORDED_FINDINGS():
+    RETURN OUTPUT.PSEUDOCODE_INVENTORY_AUDIT_REPORT
+
+FUNCTION CLASSIFY_AUDIT_STATUS(report):
+    IF report.missing_required_sections not empty:
+        RETURN "needs_revision"
+
+    IF report.index_coverage.files_missing_from_index not empty:
+        RETURN "needs_revision"
+
+    IF report.malformed_module_names not empty:
+        RETURN "needs_revision"
+
+    IF report.invalid_file_names not empty:
+        RETURN "needs_revision"
+
+    RETURN "pass"
+
+FAIL:
+IF pseudocode_folder is missing:
+    RETURN FAIL "Missing required input: pseudocode_folder"
+
+IF index file is missing:
+    RETURN FAIL "Missing required file: /pseudocode/index.pseudo"
+
+IF audit attempts to modify implementation files:
+    RETURN FAIL "Inventory audit is read-only"
+
+IF audit attempts to generate TypeScript:
+    RETURN FAIL "Inventory audit cannot generate implementation code"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No implementation code
+- Report is pseudocode only
+- Report does not execute modules
+- Report does not render
+- Report does not mutate implementation files
+- Report records audit findings only
+- Existing modules are preserved
+- Renderer does not think
+- Renderer only draws

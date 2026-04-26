@@ -1,0 +1,151 @@
+MODULE MindSlice_VisualRenderer_v2
+
+BACKFILL_SOURCE:
+    file_name: concept-visual-renderer-v2-system.ts
+    source_path: mindslice-app/src/lib/mindslice/concept-visual-renderer-v2-system.ts
+    registry_origin: pseudocode_backfill_scan
+    backfill_status: generated_from_typescript_structure
+
+PURPOSE:
+    Define the Visual Renderer contract and behavior as evidenced by main function runVisualRendererV2 within Visual v1 / Legacy / Composer.
+    confirmed_by:
+        - exported_main_function:runVisualRendererV2
+        - file_name:mindslice-visual-renderer-v2.pseudo
+        - registry_category:Visual v1 / Legacy / Composer
+
+INPUT:
+    - input: { structure_output: StructureEngineOutput | StructureVisualOutput; scenario_output: ScenarioEngineOutput | ScenarioVisualOutput; color_output: ColorTheoryEngineOutput | ColorVisualOutput; composition_output: ArtCompositionEngineOutput | CompositionVisualOutput; background_layer_selection: VisualRendererV2BackgroundSelection; text_layout_output?: TextLayoutV2Output | null; render_settings?: Record<string
+    - unknown>; }
+
+OUTPUT:
+    status: confirmed
+    confirmed_by:
+        - main_return_type: VisualSvgScene
+        - return_object_fields: svg_tree, background_layer_output, structure_layer, scenario_layer, composition_layer, text_layer
+        - exported_output_type VisualSvgRoot: type, width, height, viewBox, defs, children
+        - exported_output_type VisualRendererV2BackgroundResult: layer, grammar_plan, pattern_output, fallback_used, warnings
+        - exported_output_type VisualSvgScene: svg_tree, background_layer_output, structure_layer, scenario_layer, composition_layer, text_layer
+
+STATE:
+    - implemented
+    - legacy_retained
+    - Visual v1 / Legacy / Composer
+    - role:renderer
+    - version:v2
+    - non-rendering_if_not_renderer
+    - renderer_passive_if_renderer
+
+PIPELINE_POSITION:
+    status: declared_dependencies
+    before: UNKNOWN_NEEDS_REVIEW
+    after: UNKNOWN_NEEDS_REVIEW
+    depends_on:
+        - MindSlice_ArtCompositionEngine
+        - MindSlice_ColorTheoryEngine
+        - MindSlice_ScenarioEngine
+        - MindSlice_StructureEngine
+        - MindSlice_BackgroundModuleRegistry
+        - MindSlice_GrammarPipelineContract
+        - MindSlice_VisualRenderer
+        - MindSlice_TextLayoutEngine_v2
+        - MindSlice_PaletteContractAdapter
+        - MindSlice_TextWrappingEngine
+    confirmed_by:
+        - existing pseudocode depends_on entries
+
+MODULE_CLASSIFICATION:
+    category: Visual v1 / Legacy / Composer
+    role: renderer
+    version: v2
+    lifecycle: legacy_retained
+    can_render: true
+    can_decide_logic: false
+    requires_manual_review: true
+
+FUNCTION RUN:
+    implementation_function: runVisualRendererV2
+    parameters: input: { structure_output: StructureEngineOutput | StructureVisualOutput; scenario_output: ScenarioEngineOutput | ScenarioVisualOutput; color_output: ColorTheoryEngineOutput | ColorVisualOutput; composition_output: ArtCompositionEngineOutput | CompositionVisualOutput; background_layer_selection: VisualRendererV2BackgroundSelection; text_layout_output?: TextLayoutV2Output | null; render_settings?: Record<string, unknown>; }
+
+HELPERS:
+    exported_types:
+        - VisualSvgNode
+        - VisualSvgRoot
+        - VisualSvgGroup
+        - VisualSvgRect
+        - VisualSvgCircle
+        - VisualSvgLine
+        - VisualSvgText
+        - VisualRendererV2Canvas
+        - VisualRendererV2BackgroundSelection
+        - VisualRendererV2BackgroundResult
+        - VisualSvgScene
+
+    exported_helper_functions:
+        - none_confirmed
+
+    exported_constants:
+        - RUN
+
+DATA_CONTRACT:
+    receives:
+        status: confirmed
+        evidence:
+            - ArtCompositionEngineOutput, from @/lib/mindslice/concept-art-composition-engine-system
+            - ColorTheoryEngineOutput, from @/lib/mindslice/concept-color-theory-engine-system
+            - ScenarioEngineOutput, from @/lib/mindslice/concept-scenario-engine-system
+            - StructureEngineOutput, from @/lib/mindslice/concept-structure-engine-system
+            - BackgroundModuleDefinition, BackgroundModuleKind, from @/lib/mindslice/concept-background-module-registry-system
+            - getBackgroundModule from @/lib/mindslice/concept-background-module-registry-system
+            - runGrammarPipelineContractV1, type GrammarPipelineOutput, from @/lib/mindslice/concept-grammar-pipeline-contract-system
+            - ColorPaletteStop, ColorVisualOutput, CompositionVisualOutput, ScenarioVisualOutput, StructureVisualOutput, from @/lib/mindslice/concept-visual-renderer-system
+            - TextLayoutV2Output from @/lib/mindslice/concept-text-layout-engine-v2-system
+            - runPaletteContractAdapterV1 from @/lib/mindslice/concept-palette-contract-adapter-system
+            - runTextWrappingEngineV1, type WrappedTextNode, from @/lib/mindslice/concept-text-wrapping-engine-system
+    emits:
+        status: confirmed
+        evidence:
+            - export type/interface VisualSvgNode
+            - export type/interface VisualSvgRoot
+            - export type/interface VisualSvgGroup
+            - export type/interface VisualSvgRect
+            - export type/interface VisualSvgCircle
+            - export type/interface VisualSvgLine
+            - export type/interface VisualSvgText
+            - export type/interface VisualRendererV2Canvas
+            - export type/interface VisualRendererV2BackgroundSelection
+            - export type/interface VisualRendererV2BackgroundResult
+            - export type/interface VisualSvgScene
+            - export const RUN
+            - export function runVisualRendererV2
+    mutates:
+        status: none_detected
+        evidence:
+            - no external mutation patterns detected in matching TypeScript file
+    side_effects:
+        status: confirmed
+        value: confirmed_side_effect_or_render_artifact_evidence_present
+        confirmed_by:
+            - rendering_call_or_svg_output line 45: type: "svg";
+            - rendering_call_or_svg_output line 138: svg_tree: VisualSvgRoot;
+            - rendering_call_or_svg_output line 152: type: "svg",
+    contract_status: v3_contract_fields_confirmed
+
+FAIL:
+    confirmed_failure_or_fallback_behavior_present
+    confirmed_by:
+        - line 133: fallback_used: boolean;
+        - line 146: function isFail<T extends { status?: string }>(value: T | unknown): value is T & { status: "fail"; message: string } {
+        - line 208: fallback: string,
+        - line 211: return palette.find((entry) => entry.role === role)?.color ?? fallback;
+        - line 216: return canonical[role] ?? fallback;
+        - line 284: fallback_used: true,
+        - line 313: fallback_used: result.fallback_used,
+
+CONSTRAINTS:
+    - Pseudocode backfill only.
+    - Do not implement from this file without manual contract review.
+    - Do not invent missing contracts.
+    - Preserve implemented module identity.
+    - Preserve version coexistence.
+    - Renderer does not think.
+    - Renderer only draws.

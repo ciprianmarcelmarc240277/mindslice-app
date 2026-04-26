@@ -1,0 +1,139 @@
+MODULE MindSlice_PseudocodeBackfillPlan_v1
+
+PURPOSE:
+Create a standardized backfill plan for generating one pseudocode architecture file for every implemented MindSlice module.
+Extract known structure from existing TypeScript modules, infer only allowed contracts, and mark uncertain fields for review.
+
+INPUT:
+- implemented_typescript_module_list
+- existing_notes
+- module_names
+- inferred_contracts
+- module_registry_index
+- backfill_rules
+
+OUTPUT:
+- pseudocode_file_generation_plan
+- /pseudocode/*.pseudo files
+- /pseudocode/index.pseudo
+- missing_contract_report
+- uncertain_inference_report
+- manual_review_queue
+
+STATE:
+- planning
+- read-only
+- non-rendering
+- non-executing
+- backfill-safe
+
+IF contract cannot be confirmed:
+    DO NOT invent.
+    MARK AS UNKNOWN.
+    ADD TO manual_review_queue.
+
+FUNCTION RUN:
+
+    VALIDATE input
+
+    implemented_modules = READ_IMPLEMENTED_TYPESCRIPT_MODULE_LIST(
+        implemented_typescript_module_list
+    )
+
+    inferred_backfill_contracts = COLLECT_CONFIRMED_AND_INFERRED_CONTRACTS(
+        implemented_modules,
+        existing_notes,
+        inferred_contracts
+    )
+
+    pseudocode_file_generation_plan = BUILD_PSEUDOCODE_FILE_GENERATION_PLAN(
+        implemented_modules,
+        module_names,
+        module_registry_index,
+        backfill_rules
+    )
+
+    missing_contract_report = BUILD_MISSING_CONTRACT_REPORT(
+        inferred_backfill_contracts
+    )
+
+    uncertain_inference_report = BUILD_UNCERTAIN_INFERENCE_REPORT(
+        inferred_backfill_contracts
+    )
+
+    manual_review_queue = BUILD_MANUAL_REVIEW_QUEUE(
+        missing_contract_report,
+        uncertain_inference_report
+    )
+
+    RETURN {
+        pseudocode_file_generation_plan: pseudocode_file_generation_plan,
+        "/pseudocode/*.pseudo files": pseudocode_file_generation_plan.files,
+        "/pseudocode/index.pseudo": pseudocode_file_generation_plan.index_file,
+        missing_contract_report: missing_contract_report,
+        uncertain_inference_report: uncertain_inference_report,
+        manual_review_queue: manual_review_queue
+    }
+
+HELPERS:
+
+FUNCTION READ_IMPLEMENTED_TYPESCRIPT_MODULE_LIST(list):
+    RETURN list
+
+FUNCTION COLLECT_CONFIRMED_AND_INFERRED_CONTRACTS(modules, notes, inferred_contracts):
+    FOR each module IN modules:
+        IF contract cannot be confirmed:
+            MARK field AS "UNKNOWN_NEEDS_REVIEW"
+            ADD field TO manual_review_queue
+
+    RETURN inferred_contracts
+
+FUNCTION BUILD_PSEUDOCODE_FILE_GENERATION_PLAN(modules, names, registry, rules):
+    RETURN {
+        files_to_generate: names,
+        registry_source: registry,
+        generation_rules: rules,
+        implementation_generation_allowed: false
+    }
+
+FUNCTION BUILD_MISSING_CONTRACT_REPORT(contracts):
+    RETURN all contracts WHERE required fields contain "UNKNOWN_NEEDS_REVIEW"
+
+FUNCTION BUILD_UNCERTAIN_INFERENCE_REPORT(contracts):
+    RETURN all contracts WHERE confidence != "confirmed"
+
+FUNCTION BUILD_MANUAL_REVIEW_QUEUE(missing_report, uncertain_report):
+    RETURN merge_unique_review_items(
+        missing_report,
+        uncertain_report
+    )
+
+FAIL:
+IF implemented_typescript_module_list is missing:
+    RETURN FAIL "Missing required input: implemented_typescript_module_list"
+
+IF module_registry_index is missing:
+    RETURN FAIL "Missing required input: module_registry_index"
+
+IF backfill_rules is missing:
+    RETURN FAIL "Missing required input: backfill_rules"
+
+IF plan attempts to generate TypeScript:
+    RETURN FAIL "Backfill plan cannot generate implementation code"
+
+IF plan attempts to invent missing contracts:
+    RETURN FAIL "Unknown contracts must remain UNKNOWN"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No implementation code
+- Backfill plan is read-only
+- Backfill plan does not execute modules
+- Backfill plan does not render
+- Unknown contracts remain UNKNOWN_NEEDS_REVIEW
+- Partial contracts enter manual_review_queue
+- Existing modules are preserved
+- Renderer does not think
+- Renderer only draws

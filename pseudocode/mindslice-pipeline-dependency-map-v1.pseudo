@@ -1,0 +1,394 @@
+MODULE MindSlice_PipelineDependencyMap_v1
+
+PURPOSE:
+Build a dependency map between MindSlice modules using extracted and normalized contracts.
+Connect module OUTPUT to compatible module INPUT, resolve before / after / depends_on relations, detect cycles, isolated modules, missing links, and pipeline gaps.
+
+INPUT:
+- module_contract_map
+- normalized_contracts
+- module_registry_index
+- known_pipeline_map
+- contract_validator
+- dependency_rules
+- version_policy
+
+OUTPUT:
+- pipeline_dependency_graph
+- module_dependency_matrix
+- pipeline_order_map
+- isolated_module_report
+- dependency_cycle_report
+- missing_link_report
+- overlap_warning_report
+
+STATE:
+- mapper
+- non-rendering
+- non-executing
+- registry-aware
+- contract-aware
+- pipeline-aware
+- version-aware
+
+FUNCTION RUN:
+
+    VALIDATE input
+
+    dependency_graph = CREATE_EMPTY_DEPENDENCY_GRAPH()
+
+    normalized_contract_set = SELECT_CONTRACT_SOURCE(
+        input.normalized_contracts,
+        input.module_contract_map
+    )
+
+    FOR each module_contract IN normalized_contract_set:
+
+        module_node = CREATE_MODULE_NODE(
+            module_contract,
+            input.module_registry_index
+        )
+
+        ADD module_node TO dependency_graph
+
+    FOR each source_module IN dependency_graph.nodes:
+
+        FOR each target_module IN dependency_graph.nodes:
+
+            IF source_module == target_module:
+                CONTINUE
+
+            compatibility_result = CHECK_OUTPUT_INPUT_COMPATIBILITY(
+                source_module,
+                target_module,
+                input.contract_validator,
+                input.dependency_rules
+            )
+
+            IF compatibility_result.status == "compatible":
+                ADD_DEPENDENCY_EDGE(
+                    dependency_graph,
+                    source_module,
+                    target_module,
+                    compatibility_result
+                )
+
+    APPLY_DECLARED_PIPELINE_RELATIONS(
+        dependency_graph,
+        input.known_pipeline_map
+    )
+
+    cycle_report = DETECT_DEPENDENCY_CYCLES(
+        dependency_graph
+    )
+
+    isolated_report = DETECT_ISOLATED_MODULES(
+        dependency_graph
+    )
+
+    missing_link_report = DETECT_MISSING_LINKS(
+        dependency_graph,
+        normalized_contract_set
+    )
+
+    overlap_report = DETECT_OVERLAPPING_RESPONSIBILITIES(
+        dependency_graph,
+        normalized_contract_set
+    )
+
+    pipeline_order = BUILD_PIPELINE_ORDER_MAP(
+        dependency_graph,
+        cycle_report
+    )
+
+    IF cycle_report.has_critical_cycle:
+        RETURN FAIL cycle_report
+
+    RETURN {
+        pipeline_dependency_graph: dependency_graph,
+        module_dependency_matrix: BUILD_DEPENDENCY_MATRIX(dependency_graph),
+        pipeline_order_map: pipeline_order,
+        isolated_module_report: isolated_report,
+        dependency_cycle_report: cycle_report,
+        missing_link_report: missing_link_report,
+        overlap_warning_report: overlap_report
+    }
+
+HELPERS:
+
+FUNCTION CREATE_EMPTY_DEPENDENCY_GRAPH():
+    RETURN {
+        graph_name: "MindSlice_PipelineDependencyMap_v1",
+        nodes: [],
+        edges: [],
+        declared_relations: [],
+        inferred_relations: [],
+        warnings: [],
+        critical_failures: []
+    }
+
+FUNCTION SELECT_CONTRACT_SOURCE(normalized_contracts, module_contract_map):
+    IF normalized_contracts exists AND normalized_contracts not empty:
+        RETURN normalized_contracts
+
+    ELSE:
+        RETURN module_contract_map
+
+FUNCTION CREATE_MODULE_NODE(module_contract, registry_index):
+    registry_entry = LOOKUP_REGISTRY_ENTRY(
+        module_contract.module_name,
+        registry_index
+    )
+
+    RETURN {
+        module_name: module_contract.module_name,
+        file_name: registry_entry.file_name OR module_contract.file_name,
+        category: registry_entry.category OR "UNKNOWN",
+        role: registry_entry.role OR "UNKNOWN",
+        version: registry_entry.version OR "UNKNOWN",
+        lifecycle: registry_entry.lifecycle OR "UNKNOWN",
+        receives: module_contract.receives OR [],
+        emits: module_contract.emits OR [],
+        inputs: module_contract.input_contract OR [],
+        outputs: module_contract.output_contract OR [],
+        dependencies: module_contract.dependency_contract OR [],
+        pipeline_position: registry_entry.pipeline_position OR "UNMAPPED",
+        can_render: registry_entry.can_render OR false,
+        can_decide_logic: registry_entry.can_decide_logic OR false
+    }
+
+FUNCTION CHECK_OUTPUT_INPUT_COMPATIBILITY(source_module, target_module, contract_validator, dependency_rules):
+    source_outputs = source_module.outputs + source_module.emits
+    target_inputs = target_module.inputs + target_module.receives
+
+    IF source_outputs empty OR target_inputs empty:
+        RETURN {
+            status: "unknown",
+            reason: "Missing outputs or inputs"
+        }
+
+    compatibility = contract_validator.CHECK_COMPATIBILITY(
+        source_outputs,
+        target_inputs,
+        dependency_rules
+    )
+
+    IF compatibility.match_score >= dependency_rules.minimum_match_score:
+        RETURN {
+            status: "compatible",
+            match_score: compatibility.match_score,
+            matched_fields: compatibility.matched_fields,
+            relation_type: "contract_inferred"
+        }
+
+    RETURN {
+        status: "not_compatible",
+        match_score: compatibility.match_score
+    }
+
+FUNCTION ADD_DEPENDENCY_EDGE(graph, source_module, target_module, compatibility_result):
+    edge = {
+        from: source_module.module_name,
+        to: target_module.module_name,
+        relation_type: compatibility_result.relation_type,
+        match_score: compatibility_result.match_score,
+        matched_fields: compatibility_result.matched_fields,
+        direction: "source_output_to_target_input",
+        confidence: CLASSIFY_EDGE_CONFIDENCE(compatibility_result.match_score)
+    }
+
+    ADD edge TO graph.edges
+    ADD edge TO graph.inferred_relations
+
+FUNCTION APPLY_DECLARED_PIPELINE_RELATIONS(graph, pipeline_map):
+    FOR each pipeline_entry IN pipeline_map:
+
+        module_name = pipeline_entry.module_name
+
+        IF pipeline_entry.after exists:
+            FOR each after_module IN pipeline_entry.after:
+                ADD declared edge:
+                    from: after_module
+                    to: module_name
+                    relation_type: "declared_after"
+
+        IF pipeline_entry.before exists:
+            FOR each before_module IN pipeline_entry.before:
+                ADD declared edge:
+                    from: module_name
+                    to: before_module
+                    relation_type: "declared_before"
+
+        IF pipeline_entry.depends_on exists:
+            FOR each dependency IN pipeline_entry.depends_on:
+                ADD declared edge:
+                    from: dependency
+                    to: module_name
+                    relation_type: "declared_dependency"
+
+FUNCTION DETECT_DEPENDENCY_CYCLES(graph):
+    cycles = FIND_GRAPH_CYCLES(graph)
+
+    critical_cycles = []
+
+    FOR each cycle IN cycles:
+        IF cycle contains runtime execution modules:
+            ADD cycle TO critical_cycles
+
+    RETURN {
+        has_cycles: cycles not empty,
+        has_critical_cycle: critical_cycles not empty,
+        cycles: cycles,
+        critical_cycles: critical_cycles
+    }
+
+FUNCTION DETECT_ISOLATED_MODULES(graph):
+    isolated = []
+
+    FOR each node IN graph.nodes:
+        incoming = COUNT edges WHERE edge.to == node.module_name
+        outgoing = COUNT edges WHERE edge.from == node.module_name
+
+        IF incoming == 0 AND outgoing == 0:
+            ADD node.module_name TO isolated
+
+    RETURN {
+        isolated_modules: isolated,
+        count: COUNT isolated,
+        requires_review: isolated not empty
+    }
+
+FUNCTION DETECT_MISSING_LINKS(graph, contracts):
+    missing = []
+
+    FOR each contract IN contracts:
+        IF contract.requires_dependency == true:
+            IF no graph edge exists for contract.module_name:
+                ADD {
+                    module_name: contract.module_name,
+                    reason: "Required dependency not resolved"
+                } TO missing
+
+        IF contract.input_contract contains UNKNOWN:
+            ADD {
+                module_name: contract.module_name,
+                reason: "Unknown input prevents dependency resolution"
+            } TO missing
+
+        IF contract.output_contract contains UNKNOWN:
+            ADD {
+                module_name: contract.module_name,
+                reason: "Unknown output prevents dependency resolution"
+            } TO missing
+
+    RETURN {
+        missing_links: missing,
+        count: COUNT missing
+    }
+
+FUNCTION DETECT_OVERLAPPING_RESPONSIBILITIES(graph, contracts):
+    overlaps = []
+
+    FOR each module_a IN contracts:
+        FOR each module_b IN contracts:
+            IF module_a == module_b:
+                CONTINUE
+
+            IF module_a.PURPOSE overlaps module_b.PURPOSE:
+                ADD {
+                    module_a: module_a.module_name,
+                    module_b: module_b.module_name,
+                    overlap_type: "purpose_overlap",
+                    action: "manual_review_required"
+                } TO overlaps
+
+            IF module_a.emits same data as module_b.emits:
+                ADD {
+                    module_a: module_a.module_name,
+                    module_b: module_b.module_name,
+                    overlap_type: "duplicate_emit",
+                    action: "resolve authority or adapter"
+                } TO overlaps
+
+    RETURN {
+        overlaps: overlaps,
+        count: COUNT overlaps
+    }
+
+FUNCTION BUILD_PIPELINE_ORDER_MAP(graph, cycle_report):
+    IF cycle_report.has_critical_cycle:
+        RETURN {
+            status: "blocked",
+            reason: "Critical cycle prevents pipeline ordering"
+        }
+
+    ordered_nodes = TOPOLOGICAL_SORT(graph)
+
+    RETURN {
+        status: "ordered",
+        ordered_modules: ordered_nodes,
+        note: "Order derived from declared and inferred dependencies"
+    }
+
+FUNCTION BUILD_DEPENDENCY_MATRIX(graph):
+    matrix = {}
+
+    FOR each node IN graph.nodes:
+        matrix[node.module_name] = {
+            depends_on: FIND_INCOMING_SOURCES(graph, node.module_name),
+            feeds_into: FIND_OUTGOING_TARGETS(graph, node.module_name),
+            isolated: CHECK_IF_ISOLATED(graph, node.module_name)
+        }
+
+    RETURN matrix
+
+FUNCTION CLASSIFY_EDGE_CONFIDENCE(match_score):
+    IF match_score >= 0.9:
+        RETURN "high"
+
+    IF match_score >= 0.6:
+        RETURN "medium"
+
+    RETURN "low"
+
+FAIL:
+IF module_contract_map is missing AND normalized_contracts is missing:
+    RETURN FAIL "Missing required input: module_contract_map or normalized_contracts"
+
+IF module_registry_index is missing:
+    RETURN FAIL "Missing required input: module_registry_index"
+
+IF contract_validator is missing:
+    RETURN FAIL "Missing required input: contract_validator"
+
+IF dependency_rules are missing:
+    RETURN FAIL "Missing required input: dependency_rules"
+
+IF version_policy != "coexistence":
+    RETURN FAIL "Invalid version policy. MindSlice requires v1, v2 and vNext coexistence."
+
+IF critical dependency cycle detected:
+    RETURN FAIL "Critical dependency cycle detected"
+
+IF mapper attempts to render:
+    RETURN FAIL "PipelineDependencyMap cannot render"
+
+IF mapper attempts to execute module logic:
+    RETURN FAIL "PipelineDependencyMap cannot execute modules"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No implementation code
+- Mapper does not execute modules
+- Mapper does not render
+- Mapper does not mutate module logic
+- Mapper only builds dependency maps
+- Declared dependencies override inferred dependencies
+- Unknown contracts must not be forced into dependencies
+- Low-confidence edges require manual review
+- Existing modules are preserved
+- v1, v2 and vNext coexist
+- Renderer does not think
+- Renderer only draws

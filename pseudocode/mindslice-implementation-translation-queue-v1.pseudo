@@ -1,0 +1,380 @@
+MODULE MindSlice_ImplementationTranslationQueue_v1
+
+PURPOSE:
+Prepare validated MindSlice pseudocode modules for later implementation translation.
+Create a controlled queue of modules that may be translated into TypeScript / React / Next.js / CSS only after execution gate approval.
+Do not generate implementation code.
+
+INPUT:
+- execution_gate_status
+- execution_allowed_modules
+- partial_execution_candidates
+- module_registry_index
+- pseudocode_file_list
+- normalized_contracts
+- implementation_bridge
+- translation_rules
+- version_policy
+
+OUTPUT:
+- implementation_translation_queue
+- blocked_translation_items
+- partial_translation_items
+- translation_priority_map
+- translation_preflight_report
+- next_translation_actions
+
+STATE:
+- queue
+- non-rendering
+- non-executing
+- implementation-aware
+- gate-controlled
+- contract-aware
+- version-aware
+- read-only
+
+FUNCTION RUN:
+
+    VALIDATE input
+
+    IF execution_gate_status == "EXECUTION_BLOCKED":
+        RETURN {
+            implementation_translation_queue: [],
+            blocked_translation_items: execution_allowed_modules + partial_execution_candidates,
+            partial_translation_items: [],
+            translation_priority_map: [],
+            translation_preflight_report: BUILD_BLOCKED_PREFLIGHT_REPORT(),
+            next_translation_actions: [
+                "Resolve execution blockers before translation queue creation"
+            ]
+        }
+
+    queue = CREATE_EMPTY_TRANSLATION_QUEUE()
+
+    FOR each module IN execution_allowed_modules:
+
+        pseudocode_file = FIND_PSEUDOCODE_FILE(
+            module,
+            pseudocode_file_list
+        )
+
+        normalized_contract = FIND_NORMALIZED_CONTRACT(
+            module,
+            normalized_contracts
+        )
+
+        bridge_result = CHECK_TRANSLATION_BRIDGE_READINESS(
+            module,
+            pseudocode_file,
+            normalized_contract,
+            implementation_bridge,
+            translation_rules
+        )
+
+        queue_item = BUILD_TRANSLATION_QUEUE_ITEM(
+            module,
+            pseudocode_file,
+            normalized_contract,
+            bridge_result
+        )
+
+        IF bridge_result.status == "ready":
+            ADD queue_item TO queue.ready_items
+
+        ELSE:
+            ADD queue_item TO queue.blocked_items
+
+    FOR each candidate IN partial_execution_candidates:
+
+        partial_item = BUILD_PARTIAL_TRANSLATION_ITEM(
+            candidate,
+            pseudocode_file_list,
+            normalized_contracts
+        )
+
+        ADD partial_item TO queue.partial_items
+
+    priority_map = BUILD_TRANSLATION_PRIORITY_MAP(
+        queue.ready_items,
+        module_registry_index
+    )
+
+    preflight_report = BUILD_TRANSLATION_PREFLIGHT_REPORT(
+        queue,
+        priority_map
+    )
+
+    RETURN {
+        implementation_translation_queue: queue.ready_items,
+        blocked_translation_items: queue.blocked_items,
+        partial_translation_items: queue.partial_items,
+        translation_priority_map: priority_map,
+        translation_preflight_report: preflight_report,
+        next_translation_actions: GENERATE_NEXT_TRANSLATION_ACTIONS(
+            preflight_report
+        )
+    }
+
+HELPERS:
+
+FUNCTION CREATE_EMPTY_TRANSLATION_QUEUE():
+    RETURN {
+        queue_name: "MindSlice_ImplementationTranslationQueue_v1",
+        ready_items: [],
+        blocked_items: [],
+        partial_items: [],
+        warnings: []
+    }
+
+FUNCTION FIND_PSEUDOCODE_FILE(module, pseudocode_files):
+    FOR each file IN pseudocode_files:
+        IF file.MODULE == module.module_name:
+            RETURN file
+
+    RETURN "MISSING"
+
+FUNCTION FIND_NORMALIZED_CONTRACT(module, normalized_contracts):
+    FOR each contract IN normalized_contracts:
+        IF contract.module_name == module.module_name:
+            RETURN contract
+
+    RETURN "MISSING"
+
+FUNCTION CHECK_TRANSLATION_BRIDGE_READINESS(
+    module,
+    pseudocode_file,
+    normalized_contract,
+    bridge,
+    rules
+):
+    IF pseudocode_file == "MISSING":
+        RETURN {
+            status: "blocked",
+            reason: "Missing pseudocode file"
+        }
+
+    IF normalized_contract == "MISSING":
+        RETURN {
+            status: "blocked",
+            reason: "Missing normalized contract"
+        }
+
+    IF normalized_contract.confidence != "confirmed":
+        RETURN {
+            status: "blocked",
+            reason: "Contract is not fully confirmed"
+        }
+
+    bridge_check = bridge.RUN({
+        pseudocode_module: pseudocode_file,
+        module_registry_index: module_registry_index,
+        implementation_target: "TypeScript",
+        translation_rules: rules
+    })
+
+    IF bridge_check.validation_report has critical violation:
+        RETURN {
+            status: "blocked",
+            reason: "Bridge validation failed",
+            bridge_report: bridge_check
+        }
+
+    RETURN {
+        status: "ready",
+        reason: "Module ready for controlled translation",
+        bridge_report: bridge_check
+    }
+
+FUNCTION BUILD_TRANSLATION_QUEUE_ITEM(
+    module,
+    pseudocode_file,
+    normalized_contract,
+    bridge_result
+):
+    RETURN {
+        module_name: module.module_name,
+        file_name: module.file_name,
+        version: module.version,
+        lifecycle: module.lifecycle,
+        pseudocode_file: pseudocode_file,
+        normalized_contract: normalized_contract,
+        translation_status: bridge_result.status,
+        translation_target: "TypeScript",
+        restrictions: [
+            "no automatic code generation",
+            "translation must preserve pseudocode contract",
+            "renderer must remain passive",
+            "existing versions must coexist"
+        ],
+        bridge_result: bridge_result
+    }
+
+FUNCTION BUILD_PARTIAL_TRANSLATION_ITEM(
+    candidate,
+    pseudocode_files,
+    normalized_contracts
+):
+    RETURN {
+        module_name: candidate.module_name,
+        translation_status: "partial_preparation_only",
+        allowed_scope: "translation_preflight_only",
+        restrictions: candidate.restrictions,
+        pseudocode_file: FIND_PSEUDOCODE_FILE(candidate, pseudocode_files),
+        normalized_contract: FIND_NORMALIZED_CONTRACT(candidate, normalized_contracts)
+    }
+
+FUNCTION BUILD_TRANSLATION_PRIORITY_MAP(ready_items, registry):
+    priority_map = []
+
+    FOR each item IN ready_items:
+
+        priority = DETERMINE_TRANSLATION_PRIORITY(
+            item,
+            registry
+        )
+
+        ADD {
+            module_name: item.module_name,
+            priority: priority,
+            reason: EXPLAIN_PRIORITY(item, priority)
+        } TO priority_map
+
+    SORT priority_map BY priority DESC
+
+    RETURN priority_map
+
+FUNCTION DETERMINE_TRANSLATION_PRIORITY(item, registry):
+    IF item.lifecycle == "active_vnext":
+        RETURN 100
+
+    IF item.lifecycle == "active_parallel_version":
+        RETURN 80
+
+    IF item.lifecycle == "active":
+        RETURN 70
+
+    IF item.lifecycle == "planned":
+        RETURN 60
+
+    IF item.lifecycle == "legacy_retained":
+        RETURN 20
+
+    RETURN 50
+
+FUNCTION EXPLAIN_PRIORITY(item, priority):
+    IF priority == 100:
+        RETURN "vNext active pipeline module"
+
+    IF priority == 80:
+        RETURN "Parallel active version"
+
+    IF priority == 70:
+        RETURN "Active implemented module"
+
+    IF priority == 60:
+        RETURN "Planned module ready for implementation"
+
+    IF priority == 20:
+        RETURN "Legacy retained module; translate only if adapter required"
+
+    RETURN "Default translation priority"
+
+FUNCTION BUILD_TRANSLATION_PREFLIGHT_REPORT(queue, priority_map):
+    RETURN {
+        ready_count: COUNT queue.ready_items,
+        blocked_count: COUNT queue.blocked_items,
+        partial_count: COUNT queue.partial_items,
+        highest_priority_modules: FIRST 10 priority_map,
+        queue_status:
+            IF queue.ready_items empty AND queue.blocked_items not empty:
+                "blocked"
+            ELSE IF queue.ready_items not empty AND queue.partial_items not empty:
+                "partial_ready"
+            ELSE IF queue.ready_items not empty:
+                "ready"
+            ELSE:
+                "empty"
+    }
+
+FUNCTION GENERATE_NEXT_TRANSLATION_ACTIONS(report):
+    IF report.queue_status == "blocked":
+        RETURN [
+            "Resolve blocked translation items",
+            "Confirm missing contracts",
+            "Re-run ExecutionGateController"
+        ]
+
+    IF report.queue_status == "partial_ready":
+        RETURN [
+            "Translate only ready modules after explicit implementation request",
+            "Keep partial modules in review"
+        ]
+
+    IF report.queue_status == "ready":
+        RETURN [
+            "Proceed only after explicit request for TypeScript implementation"
+        ]
+
+    RETURN [
+        "No modules ready for translation"
+    ]
+
+FUNCTION BUILD_BLOCKED_PREFLIGHT_REPORT():
+    RETURN {
+        queue_status: "blocked",
+        reason: "Execution gate blocked translation queue creation",
+        ready_count: 0,
+        blocked_count: "all",
+        partial_count: 0
+    }
+
+FAIL:
+IF execution_gate_status is missing:
+    RETURN FAIL "Missing required input: execution_gate_status"
+
+IF module_registry_index is missing:
+    RETURN FAIL "Missing required input: module_registry_index"
+
+IF pseudocode_file_list is missing:
+    RETURN FAIL "Missing required input: pseudocode_file_list"
+
+IF normalized_contracts is missing:
+    RETURN FAIL "Missing required input: normalized_contracts"
+
+IF implementation_bridge is missing:
+    RETURN FAIL "Missing required input: implementation_bridge"
+
+IF translation_rules are missing:
+    RETURN FAIL "Missing required input: translation_rules"
+
+IF version_policy != "coexistence":
+    RETURN FAIL "Invalid version policy"
+
+IF queue attempts to generate implementation code:
+    RETURN FAIL "ImplementationTranslationQueue cannot generate code"
+
+IF queue attempts to execute modules:
+    RETURN FAIL "ImplementationTranslationQueue cannot execute modules"
+
+IF queue attempts to render:
+    RETURN FAIL "ImplementationTranslationQueue cannot render"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No implementation code
+- Queue does not implement
+- Queue does not execute modules
+- Queue does not render
+- Queue only prepares translation order
+- Translation requires explicit user request
+- EXECUTION_BLOCKED prevents queue creation
+- Partial modules cannot be implemented
+- Missing pseudocode blocks translation
+- Missing confirmed contract blocks translation
+- Existing modules are preserved
+- v1, v2 and vNext coexist
+- Renderer does not think
+- Renderer only draws

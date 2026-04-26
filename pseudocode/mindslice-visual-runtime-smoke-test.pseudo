@@ -1,0 +1,80 @@
+MODULE MindSlice_VisualRuntimeSmokeTest
+
+BACKFILL_SOURCE:
+    file_name: concept-visual-runtime-smoke-test-system.ts
+    source_path: mindslice-app/src/lib/mindslice/concept-visual-runtime-smoke-test-system.ts
+    registry_origin: pseudocode_backfill_scan
+    backfill_status: generated_from_typescript_structure
+
+PURPOSE:
+    UNKNOWN_NEEDS_REVIEW
+    Backfilled architecture pseudocode record for implemented MindSlice module.
+    Do not treat inferred fields as final unless manually reviewed.
+
+INPUT:
+    - activeRuntime: MindSliceActiveRuntime | null | undefined
+    - testSlice = defaultVisualRuntimeSmokeTestSlice(
+
+OUTPUT:
+    - UNKNOWN_NEEDS_REVIEW
+    - inferred_from_implementation_return_contract_if_declared
+
+STATE:
+    - implemented
+    - active
+    - Runtime / Safety / Audit
+    - role:audit
+    - version:implicit_v1
+    - non-rendering_if_not_renderer
+    - renderer_passive_if_renderer
+
+PIPELINE_POSITION:
+    status: UNKNOWN_NEEDS_REVIEW
+    before: UNKNOWN_NEEDS_REVIEW
+    after: UNKNOWN_NEEDS_REVIEW
+    depends_on:
+        - MindSlice_ModuleLoader
+
+MODULE_CLASSIFICATION:
+    category: Runtime / Safety / Audit
+    role: audit
+    version: implicit_v1
+    lifecycle: active
+    can_render: false
+    can_decide_logic: true
+    requires_manual_review: true
+
+FUNCTION RUN:
+    implementation_function: runVisualRuntimeSmokeTestV1
+    parameters: activeRuntime: MindSliceActiveRuntime | null | undefined, testSlice = defaultVisualRuntimeSmokeTestSlice(
+
+HELPERS:
+    exported_types:
+        - VisualRuntimeSmokeSettings
+        - VisualRuntimeSmokeTestReport
+
+    exported_helper_functions:
+        - defaultVisualRuntimeSmokeTestSlice
+
+    exported_constants:
+        - RUN
+
+DATA_CONTRACT:
+    receives: UNKNOWN_NEEDS_REVIEW
+    emits: UNKNOWN_NEEDS_REVIEW
+    mutates: UNKNOWN_NEEDS_REVIEW
+    side_effects: UNKNOWN_NEEDS_REVIEW
+    contract_status: incomplete_until_manual_review
+
+FAIL:
+    UNKNOWN_NEEDS_REVIEW
+    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+
+CONSTRAINTS:
+    - Pseudocode backfill only.
+    - Do not implement from this file without manual contract review.
+    - Do not invent missing contracts.
+    - Preserve implemented module identity.
+    - Preserve version coexistence.
+    - Renderer does not think.
+    - Renderer only draws.

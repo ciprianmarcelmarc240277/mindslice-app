@@ -1,0 +1,347 @@
+MODULE MindSlice_ModuleContractExtractor_v1
+
+PURPOSE:
+Extract standardized architecture contracts from existing implemented MindSlice modules and pseudocode files.
+Identify confirmed INPUT, OUTPUT, STATE, dependencies, emitted data, received data, failure modes, and missing contract fields without inventing behavior.
+
+INPUT:
+- implemented_module_file_list
+- pseudocode_file_list
+- module_registry_index
+- backfill_plan
+- extraction_rules
+- known_pipeline_map
+- version_policy
+
+OUTPUT:
+- module_contract_map
+- confirmed_contracts
+- missing_contract_report
+- uncertain_contract_report
+- dependency_extraction_report
+- manual_review_queue
+
+STATE:
+- extractor
+- read-only
+- non-rendering
+- non-executing
+- registry-aware
+- contract-focused
+- conservative-inference
+
+FUNCTION RUN:
+
+    VALIDATE input
+
+    extraction_report = CREATE_EMPTY_EXTRACTION_REPORT()
+
+    FOR each module_file IN implemented_module_file_list:
+
+        module_identity = RESOLVE_MODULE_IDENTITY(
+            module_file,
+            module_registry_index
+        )
+
+        matching_pseudocode = FIND_MATCHING_PSEUDOCODE_FILE(
+            module_identity,
+            pseudocode_file_list
+        )
+
+        extracted_from_code = EXTRACT_CODE_LEVEL_CONTRACT_HINTS(
+            module_file,
+            extraction_rules
+        )
+
+        extracted_from_pseudocode = EXTRACT_PSEUDOCODE_CONTRACT(
+            matching_pseudocode
+        )
+
+        merged_contract = MERGE_CONFIRMED_CONTRACTS_ONLY(
+            extracted_from_code,
+            extracted_from_pseudocode
+        )
+
+        dependency_contract = EXTRACT_DEPENDENCY_CONTRACT(
+            module_file,
+            matching_pseudocode,
+            known_pipeline_map
+        )
+
+        failure_contract = EXTRACT_FAILURE_CONTRACT(
+            module_file,
+            matching_pseudocode
+        )
+
+        uncertainty_report = DETECT_UNCONFIRMED_FIELDS(
+            merged_contract,
+            dependency_contract,
+            failure_contract
+        )
+
+        finalized_contract = BUILD_MODULE_CONTRACT_RECORD(
+            module_identity,
+            merged_contract,
+            dependency_contract,
+            failure_contract,
+            uncertainty_report
+        )
+
+        ADD finalized_contract TO extraction_report.module_contracts
+
+        IF uncertainty_report.has_unknown_fields:
+            ADD finalized_contract TO extraction_report.manual_review_queue
+
+    RETURN {
+        module_contract_map: BUILD_CONTRACT_MAP(extraction_report),
+        confirmed_contracts: EXTRACT_CONFIRMED_CONTRACTS(extraction_report),
+        missing_contract_report: EXTRACT_MISSING_CONTRACTS(extraction_report),
+        uncertain_contract_report: EXTRACT_UNCERTAIN_CONTRACTS(extraction_report),
+        dependency_extraction_report: EXTRACT_DEPENDENCY_REPORT(extraction_report),
+        manual_review_queue: extraction_report.manual_review_queue
+    }
+
+HELPERS:
+
+FUNCTION CREATE_EMPTY_EXTRACTION_REPORT():
+    RETURN {
+        extractor_name: "MindSlice_ModuleContractExtractor_v1",
+        module_contracts: [],
+        missing_contracts: [],
+        uncertain_contracts: [],
+        dependency_findings: [],
+        manual_review_queue: [],
+        critical_failures: []
+    }
+
+FUNCTION RESOLVE_MODULE_IDENTITY(module_file, registry_index):
+    IF module_file exists in registry_index:
+        RETURN registry_index[module_file].module_identity
+
+    ELSE:
+        RETURN {
+            file_name: module_file,
+            module_name: INFER_MODULE_NAME_FROM_FILE(module_file),
+            registry_status: "unknown"
+        }
+
+FUNCTION FIND_MATCHING_PSEUDOCODE_FILE(module_identity, pseudocode_file_list):
+    FOR each pseudo_file IN pseudocode_file_list:
+        IF pseudo_file MODULE name matches module_identity.module_name:
+            RETURN pseudo_file
+
+    RETURN null
+
+FUNCTION EXTRACT_CODE_LEVEL_CONTRACT_HINTS(module_file, extraction_rules):
+    READ module_file structurally
+
+    EXTRACT confirmed hints:
+    - exported function names
+    - exported object names
+    - declared input-like parameters
+    - declared return-like structures
+    - imported dependencies
+    - explicit error handling
+    - explicit validation guards
+    - renderer-related operations
+    - engine-related operations
+
+    DO NOT infer hidden intent
+
+    RETURN {
+        confirmed_inputs: detected_parameters,
+        confirmed_outputs: detected_returns,
+        confirmed_dependencies: detected_imports,
+        confirmed_failure_modes: detected_errors,
+        renderer_operations_detected: detected_render_calls,
+        engine_decisions_detected: detected_decision_logic,
+        unknown_fields: fields_not_confirmed
+    }
+
+FUNCTION EXTRACT_PSEUDOCODE_CONTRACT(pseudocode_file):
+    IF pseudocode_file is null:
+        RETURN {
+            status: "missing_pseudocode",
+            confirmed_inputs: [],
+            confirmed_outputs: [],
+            confirmed_state: [],
+            confirmed_fail: [],
+            unknown_fields: ["INPUT", "OUTPUT", "STATE", "FAIL"]
+        }
+
+    READ:
+    - MODULE
+    - PURPOSE
+    - INPUT
+    - OUTPUT
+    - STATE
+    - FUNCTION RUN
+    - HELPERS
+    - FAIL
+    - CONSTRAINTS
+
+    RETURN parsed_contract
+
+FUNCTION MERGE_CONFIRMED_CONTRACTS_ONLY(code_contract, pseudo_contract):
+    merged = EMPTY_CONTRACT()
+
+    FOR each field:
+        IF code_contract confirms field AND pseudo_contract confirms same field:
+            ADD field TO merged.confirmed
+
+        ELSE IF only one source confirms field:
+            ADD field TO merged.partial_confirmed
+            MARK source
+
+        ELSE:
+            ADD field TO merged.unknown
+
+    RETURN merged
+
+FUNCTION EXTRACT_DEPENDENCY_CONTRACT(module_file, pseudocode_file, pipeline_map):
+    dependencies = []
+
+    IF module_file imports known MindSlice module:
+        ADD import TO dependencies AS "code_confirmed"
+
+    IF pseudocode_file declares depends_on:
+        ADD depends_on TO dependencies AS "pseudocode_declared"
+
+    IF pipeline_map declares before / after:
+        ADD pipeline relation TO dependencies AS "pipeline_declared"
+
+    RETURN {
+        dependencies: dependencies,
+        dependency_status: CLASSIFY_DEPENDENCY_STATUS(dependencies)
+    }
+
+FUNCTION EXTRACT_FAILURE_CONTRACT(module_file, pseudocode_file):
+    failures = []
+
+    IF module_file contains explicit error return:
+        ADD error return TO failures
+
+    IF module_file contains throw:
+        ADD throw mode TO failures
+
+    IF pseudocode_file contains FAIL section:
+        ADD FAIL entries TO failures
+
+    IF failures empty:
+        RETURN {
+            status: "unknown",
+            failures: [],
+            note: "Failure behavior not confirmed"
+        }
+
+    RETURN {
+        status: "confirmed_or_partial",
+        failures: failures
+    }
+
+FUNCTION DETECT_UNCONFIRMED_FIELDS(merged_contract, dependency_contract, failure_contract):
+    unknown = []
+
+    CHECK required fields:
+    - INPUT
+    - OUTPUT
+    - STATE
+    - DEPENDENCIES
+    - RECEIVES
+    - EMITS
+    - FAIL
+    - CONSTRAINTS
+    - PIPELINE_POSITION
+
+    IF any field missing or partial:
+        ADD field TO unknown
+
+    RETURN {
+        has_unknown_fields: unknown not empty,
+        unknown_fields: unknown
+    }
+
+FUNCTION BUILD_MODULE_CONTRACT_RECORD(
+    module_identity,
+    merged_contract,
+    dependency_contract,
+    failure_contract,
+    uncertainty_report
+):
+    RETURN {
+        module_name: module_identity.module_name,
+        file_name: module_identity.file_name,
+        registry_status: module_identity.registry_status,
+        input_contract: merged_contract.INPUT OR "UNKNOWN",
+        output_contract: merged_contract.OUTPUT OR "UNKNOWN",
+        state_contract: merged_contract.STATE OR "UNKNOWN",
+        dependency_contract: dependency_contract,
+        failure_contract: failure_contract,
+        receives: merged_contract.RECEIVES OR "UNKNOWN",
+        emits: merged_contract.EMITS OR "UNKNOWN",
+        constraints: merged_contract.CONSTRAINTS OR "UNKNOWN",
+        confidence:
+            "confirmed" IF uncertainty_report.has_unknown_fields == false
+            ELSE "partial",
+        manual_review_required: uncertainty_report.has_unknown_fields,
+        unknown_fields: uncertainty_report.unknown_fields
+    }
+
+FUNCTION BUILD_CONTRACT_MAP(extraction_report):
+    map = {}
+
+    FOR each contract IN extraction_report.module_contracts:
+        map[contract.module_name] = contract
+
+    RETURN map
+
+FUNCTION EXTRACT_CONFIRMED_CONTRACTS(extraction_report):
+    RETURN all module_contracts WHERE confidence == "confirmed"
+
+FUNCTION EXTRACT_MISSING_CONTRACTS(extraction_report):
+    RETURN all module_contracts WHERE unknown_fields contains critical field
+
+FUNCTION EXTRACT_UNCERTAIN_CONTRACTS(extraction_report):
+    RETURN all module_contracts WHERE confidence == "partial"
+
+FUNCTION EXTRACT_DEPENDENCY_REPORT(extraction_report):
+    RETURN all dependency_contracts grouped by module_name
+
+FAIL:
+IF implemented_module_file_list is missing:
+    RETURN FAIL "Missing required input: implemented_module_file_list"
+
+IF module_registry_index is missing:
+    RETURN FAIL "Missing required input: module_registry_index"
+
+IF extraction_rules are missing:
+    RETURN FAIL "Missing required input: extraction_rules"
+
+IF extractor attempts to modify implementation files:
+    RETURN FAIL "ModuleContractExtractor is read-only"
+
+IF extractor attempts to invent missing contracts:
+    RETURN FAIL "Contract extraction cannot invent unknown behavior"
+
+IF extractor detects renderer decision logic:
+    RETURN FAIL "Renderer logic leakage detected"
+
+IF extractor detects engine rendering behavior:
+    RETURN FAIL "Engine rendering leakage detected"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No implementation code
+- Extractor is read-only
+- Extractor does not execute modules
+- Extractor does not render
+- Extractor does not mutate registry directly
+- Extractor does not invent missing contracts
+- Unknown fields must be marked UNKNOWN
+- Partial contracts must enter manual_review_queue
+- Existing modules are preserved
+- v1, v2 and vNext coexist
+- Renderer does not think
+- Renderer only draws

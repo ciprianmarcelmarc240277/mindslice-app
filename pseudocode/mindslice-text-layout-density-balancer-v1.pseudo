@@ -1,0 +1,190 @@
+MODULE MindSlice_TextLayoutDensityBalancer_v1
+
+PURPOSE:
+Normalizeaza densitatea vizuala a textului inainte de randare.
+Previne aglomerarea, golurile excesive si dezechilibrul dintre zonele textuale.
+
+INPUT:
+- text_layout_map
+- text_blocks
+- echo_constellations
+- collision_report
+- canvas_bounds
+- density_rules
+
+OUTPUT:
+- balanced_text_layout_map
+- density_adjustment_report
+- unresolved_density_warnings
+
+STATE:
+- passive_layout_adjuster
+- non-rendering
+- post-collision
+- pre-renderer
+
+PIPELINE_POSITION:
+after:
+- TextLayoutCollisionResolver_v2
+
+before:
+- VisualRenderer_v2
+
+depends_on:
+- TextLayoutEngine_v2
+- TextEchoConstellationEngine_v1
+- TextLayoutCollisionResolver_v2
+
+DATA_CONTRACT:
+receives:
+- positioned text objects
+- collision-free or partially resolved layout
+- semantic hierarchy data
+- spatial bounds
+
+emits:
+- adjusted text positions
+- density score per region
+- spacing correction values
+
+does_not_modify:
+- source text
+- semantic meaning
+- font identity
+- renderer instructions
+
+FUNCTION RUN(input):
+
+    VALIDATE input
+
+    density_map = COMPUTE_DENSITY_MAP(
+        input.text_layout_map,
+        input.canvas_bounds
+    )
+
+    imbalance_report = DETECT_DENSITY_IMBALANCE(
+        density_map,
+        input.density_rules
+    )
+
+    IF imbalance_report.status == "balanced":
+        RETURN input.text_layout_map WITH density_adjustment_report
+
+    candidate_adjustments = GENERATE_ADJUSTMENT_CANDIDATES(
+        imbalance_report,
+        input.text_blocks,
+        input.echo_constellations
+    )
+
+    safe_adjustments = FILTER_SEMANTICALLY_SAFE_ADJUSTMENTS(
+        candidate_adjustments
+    )
+
+    adjusted_layout = APPLY_DENSITY_ADJUSTMENTS(
+        input.text_layout_map,
+        safe_adjustments
+    )
+
+    final_density_map = COMPUTE_DENSITY_MAP(
+        adjusted_layout,
+        input.canvas_bounds
+    )
+
+    final_report = VALIDATE_DENSITY_BALANCE(
+        final_density_map,
+        input.density_rules
+    )
+
+    RETURN {
+        balanced_text_layout_map: adjusted_layout,
+        density_adjustment_report: final_report,
+        unresolved_density_warnings: final_report.warnings
+    }
+
+HELPERS:
+
+FUNCTION COMPUTE_DENSITY_MAP(layout, canvas_bounds):
+    Divide canvas into regions
+    Count visual weight per region
+    Measure:
+    - text area coverage
+    - proximity between text objects
+    - hierarchy weight
+    - echo repetition load
+    RETURN density_map
+
+FUNCTION DETECT_DENSITY_IMBALANCE(density_map, density_rules):
+    IF region_density > max_density:
+        mark region as "overloaded"
+    IF region_density < min_density:
+        mark region as "empty"
+    IF contrast_between_adjacent_regions > allowed_delta:
+        mark as "unstable_density_transition"
+    RETURN imbalance_report
+
+FUNCTION GENERATE_ADJUSTMENT_CANDIDATES(report, text_blocks, echo_constellations):
+    For overloaded regions:
+        - increase spacing
+        - shift secondary text outward
+        - reduce echo proximity
+        - redistribute minor text units
+
+    For empty regions:
+        - allow secondary echoes to expand
+        - move low-priority text into available space
+        - increase constellation spread
+
+    RETURN candidate_adjustments
+
+FUNCTION FILTER_SEMANTICALLY_SAFE_ADJUSTMENTS(adjustments):
+    Reject adjustment IF:
+    - changes reading order
+    - breaks hierarchy
+    - detaches echo from source
+    - creates new collision
+    - moves text outside canvas bounds
+    RETURN safe_adjustments
+
+FUNCTION APPLY_DENSITY_ADJUSTMENTS(layout, safe_adjustments):
+    Apply only positional corrections
+    Preserve:
+    - text content
+    - semantic group
+    - hierarchy rank
+    - source parity
+    RETURN adjusted_layout
+
+FUNCTION VALIDATE_DENSITY_BALANCE(density_map, density_rules):
+    Compute final density score
+    Report:
+    - balanced regions
+    - overloaded regions
+    - empty regions
+    - unresolved warnings
+    RETURN final_report
+
+FAIL:
+IF missing text_layout_map:
+    RETURN FAIL "Missing required input: text_layout_map"
+
+IF missing canvas_bounds:
+    RETURN FAIL "Missing required input: canvas_bounds"
+
+IF collision_report contains critical unresolved collision:
+    RETURN FAIL "Density balancing blocked by unresolved collision"
+
+IF adjustment requires semantic change:
+    RETURN FAIL "Density balancing cannot alter semantic structure"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No UI explanation
+- No storytelling
+- No simplifications
+- Renderer cannot decide density
+- DensityBalancer cannot render
+- DensityBalancer cannot rewrite text
+- DensityBalancer cannot change semantic hierarchy
+- DensityBalancer only adjusts spatial distribution

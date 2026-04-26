@@ -1,0 +1,83 @@
+MODULE MindSlice_TemplateLikeTextPlacementEngine
+
+BACKFILL_SOURCE:
+    file_name: concept-template-like-text-placement-engine-system.ts
+    source_path: mindslice-app/src/lib/mindslice/concept-template-like-text-placement-engine-system.ts
+    registry_origin: pseudocode_backfill_scan
+    backfill_status: generated_from_typescript_structure
+
+PURPOSE:
+    UNKNOWN_NEEDS_REVIEW
+    Backfilled architecture pseudocode record for implemented MindSlice module.
+    Do not treat inferred fields as final unless manually reviewed.
+
+INPUT:
+    - input: { bridged_text_source: BridgedTextSource; canvas: TextLayoutV2Canvas; structure_output?: StructureVisualOutput | unknown; scenario_output?: unknown; composition_output?: CompositionVisualOutput | unknown; placement_settings?: TemplateLikeTextPlacementSettings; }
+
+OUTPUT:
+    - UNKNOWN_NEEDS_REVIEW
+    - inferred_from_implementation_return_contract_if_declared
+
+STATE:
+    - implemented
+    - active
+    - Text / SVG Text
+    - role:engine
+    - version:implicit_v1
+    - non-rendering_if_not_renderer
+    - renderer_passive_if_renderer
+
+PIPELINE_POSITION:
+    status: UNKNOWN_NEEDS_REVIEW
+    before: UNKNOWN_NEEDS_REVIEW
+    after: UNKNOWN_NEEDS_REVIEW
+    depends_on:
+        - MindSlice_VisualRenderer
+        - MindSlice_TextSourceParityBridge
+        - MindSlice_TextLayoutEngine_v2
+
+MODULE_CLASSIFICATION:
+    category: Text / SVG Text
+    role: engine
+    version: implicit_v1
+    lifecycle: active
+    can_render: false
+    can_decide_logic: true
+    requires_manual_review: true
+
+FUNCTION RUN:
+    implementation_function: runTemplateLikeTextPlacementEngineV1
+    parameters: input: { bridged_text_source: BridgedTextSource; canvas: TextLayoutV2Canvas; structure_output?: StructureVisualOutput | unknown; scenario_output?: unknown; composition_output?: CompositionVisualOutput | unknown; placement_settings?: TemplateLikeTextPlacementSettings; }
+
+HELPERS:
+    exported_types:
+        - TemplateLikeTextPlacementSettings
+        - TemplateLikeTextLayout
+        - TemplateLikeTextPlacementReport
+        - TemplateLikeTextPlacementOutput
+
+    exported_helper_functions:
+        - none_confirmed
+
+    exported_constants:
+        - RUN
+
+DATA_CONTRACT:
+    receives: UNKNOWN_NEEDS_REVIEW
+    emits: UNKNOWN_NEEDS_REVIEW
+    mutates: UNKNOWN_NEEDS_REVIEW
+    side_effects: UNKNOWN_NEEDS_REVIEW
+    contract_status: incomplete_until_manual_review
+
+FAIL:
+    UNKNOWN_NEEDS_REVIEW
+    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+
+CONSTRAINTS:
+    - Pseudocode backfill only.
+    - Do not implement from this file without manual contract review.
+    - Do not invent missing contracts.
+    - Preserve implemented module identity.
+    - Preserve version coexistence.
+    - Renderer does not think.
+    - Renderer only draws.

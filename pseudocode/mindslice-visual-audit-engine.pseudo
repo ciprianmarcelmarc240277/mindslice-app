@@ -1,0 +1,108 @@
+MODULE MindSlice_VisualAuditEngine
+
+BACKFILL_SOURCE:
+    file_name: concept-visual-audit-engine-system.ts
+    source_path: mindslice-app/src/lib/mindslice/concept-visual-audit-engine-system.ts
+    registry_origin: pseudocode_backfill_scan
+    backfill_status: generated_from_typescript_structure
+
+PURPOSE:
+    Define the Visual Audit Engine contract and behavior as evidenced by main function runVisualAuditEngineV1 within Runtime / Safety / Audit.
+    confirmed_by:
+        - exported_main_function:runVisualAuditEngineV1
+        - file_name:mindslice-visual-audit-engine.pseudo
+        - registry_category:Runtime / Safety / Audit
+
+INPUT:
+    - input: { svg_tree: unknown; background_layer_output?: VisualRendererV2BackgroundResult | null; text_layout_output?: TextLayoutV2Output | null; background_layer_selection?: VisualRendererV2BackgroundSelection | null; canvas: VisualRendererV2Canvas; }
+
+OUTPUT:
+    status: confirmed
+    confirmed_by:
+        - main_return_type: VisualAuditResult
+        - return_object_fields: audit_score, repair_suggestions, warnings
+        - exported_output_type VisualAuditResult: audit_score, warnings, repair_suggestions
+
+STATE:
+    - implemented
+    - active
+    - Runtime / Safety / Audit
+    - role:audit
+    - version:implicit_v1
+    - non-rendering_if_not_renderer
+    - renderer_passive_if_renderer
+
+PIPELINE_POSITION:
+    status: declared_dependencies
+    before: UNKNOWN_NEEDS_REVIEW
+    after: UNKNOWN_NEEDS_REVIEW
+    depends_on:
+        - MindSlice_BackgroundModuleRegistry
+        - MindSlice_VisualRenderer_v2
+        - MindSlice_TextLayoutEngine_v2
+    confirmed_by:
+        - existing pseudocode depends_on entries
+
+MODULE_CLASSIFICATION:
+    category: Runtime / Safety / Audit
+    role: audit
+    version: implicit_v1
+    lifecycle: active
+    can_render: false
+    can_decide_logic: true
+    requires_manual_review: true
+
+FUNCTION RUN:
+    implementation_function: runVisualAuditEngineV1
+    parameters: input: { svg_tree: unknown; background_layer_output?: VisualRendererV2BackgroundResult | null; text_layout_output?: TextLayoutV2Output | null; background_layer_selection?: VisualRendererV2BackgroundSelection | null; canvas: VisualRendererV2Canvas; }
+
+HELPERS:
+    exported_types:
+        - VisualAuditResult
+
+    exported_helper_functions:
+        - none_confirmed
+
+    exported_constants:
+        - RUN
+
+DATA_CONTRACT:
+    receives:
+        status: confirmed
+        evidence:
+            - BackgroundModuleDefinition, from @/lib/mindslice/concept-background-module-registry-system
+            - VisualRendererV2BackgroundResult, VisualRendererV2BackgroundSelection, VisualRendererV2Canvas, from @/lib/mindslice/concept-visual-renderer-v2-system
+            - TextLayoutV2Item, TextLayoutV2Output, from @/lib/mindslice/concept-text-layout-engine-v2-system
+    emits:
+        status: confirmed
+        evidence:
+            - export type/interface VisualAuditResult
+            - export const RUN
+            - export function runVisualAuditEngineV1
+    mutates:
+        status: none_detected
+        evidence:
+            - no external mutation patterns detected in matching TypeScript file
+    side_effects:
+        status: confirmed
+        value: confirmed_side_effect_or_render_artifact_evidence_present
+        confirmed_by:
+            - rendering_call_or_svg_output line 373: suggestions.add("saniti
+    contract_status: v3_contract_fields_confirmed
+
+FAIL:
+    confirmed_failure_or_fallback_behavior_present
+    confirmed_by:
+        - line 345: suggestions.add("select_fallback_background_module");
+        - line 143: if (!Number.isFinite(value)) {
+        - line 286: if (!hasLayer(svgTree, layerName)) {
+        - line 304: if (!VALID_SVG_NODE_TYPES.has(type)) {
+
+CONSTRAINTS:
+    - Pseudocode backfill only.
+    - Do not implement from this file without manual contract review.
+    - Do not invent missing contracts.
+    - Preserve implemented module identity.
+    - Preserve version coexistence.
+    - Renderer does not think.
+    - Renderer only draws.

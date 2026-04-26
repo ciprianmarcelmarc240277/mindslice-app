@@ -1,0 +1,186 @@
+MODULE MindSlice_ModuleLoader
+
+BACKFILL_SOURCE:
+    file_name: concept-module-loader-system.ts
+    source_path: mindslice-app/src/lib/mindslice/concept-module-loader-system.ts
+    registry_origin: pseudocode_backfill_scan
+    backfill_status: generated_from_typescript_structure
+
+PURPOSE:
+    Define the Module Loader contract and behavior as evidenced by main function runModuleLoaderV1 within Unclassified / Needs Review.
+    confirmed_by:
+        - exported_main_function:runModuleLoaderV1
+        - file_name:mindslice-module-loader.pseudo
+        - registry_category:Unclassified / Needs Review
+
+INPUT:
+    - moduleManifest: MindSliceModuleManifest = { modules: [] }
+    - runtimeConfig: MindSliceModuleRuntimeConfig = {}
+    - exportSettings?: MindSliceModuleExportSettings
+
+OUTPUT:
+    status: confirmed
+    confirmed_by:
+        - main_return_type: MindSliceModuleLoaderResult
+        - return_object_fields: loader_result, status, active_modules, load_order, dependency_graph, validation_report, graph_report, smoke_test_report, runtime_context, active_runtime
+        - exported_output_type MindSliceModuleManifest: modules
+        - exported_output_type MindSliceModuleRuntimeConfig: system_name, version, mode, strict_mode, allow_fallbacks, allow_export, default_canvas, width, height, margin, default_render_settings, activate_core, allow_missing_optional, overrides, context
+        - exported_output_type MindSliceModuleRecord: name, type, version, module_ref, activate, dependencies, provides, requires, status, metadata, previous_version_required
+        - exported_output_type MindSliceDependencyGraphNode: dependencies, dependents
+        - exported_output_type MindSliceActiveModuleRecord: name, type, version, instance, status, boot_report
+        - exported_output_type MindSliceValidationReport: status, errors, warnings, missing_core_modules, invalid_modules, dependency_errors
+        - exported_output_type MindSliceGraphReport: status, errors, warnings
+        - exported_output_type MindSliceSmokeTestReport: status, errors, warnings, checks
+
+STATE:
+    - implemented
+    - active
+    - Unclassified / Needs Review
+    - role:orchestration
+    - version:implicit_v1
+    - non-rendering_if_not_renderer
+    - renderer_passive_if_renderer
+
+PIPELINE_POSITION:
+    status: declared_dependencies
+    before: UNKNOWN_NEEDS_REVIEW
+    after: UNKNOWN_NEEDS_REVIEW
+    depends_on:
+        - MindSlice_BackgroundModuleRegistry
+        - MindSlice_GrammarPipelineContract
+        - MindSlice_BackgroundLayerOrchestrator
+        - MindSlice_VisualRenderer_v2
+        - MindSlice_TextLayoutEngine_v2
+        - MindSlice_VisualAuditEngine
+        - MindSlice_SVGObjectSerializer
+        - MindSlice_SafeSVGMount
+        - MindSlice_LegacyVisualRetirementPlan
+        - MindSlice_BackgroundSelectionTelemetry
+        - MindSlice_VisualRuntimeSmokeTest
+        - MindSlice_VisualErrorBoundaryContract
+        - MindSlice_TextEchoConstellationEngine
+        - MindSlice_TextSourceParityBridge
+        - MindSlice_TemplateLikeTextPlacementEngine
+        - MindSlice_TextLayoutCollisionResolver
+        - MindSlice_TextLayoutCollisionResolver_v2
+        - MindSlice_VisualPipelineController_vNext
+    confirmed_by:
+        - existing pseudocode depends_on entries
+
+MODULE_CLASSIFICATION:
+    category: Unclassified / Needs Review
+    role: orchestration
+    version: implicit_v1
+    lifecycle: active
+    can_render: false
+    can_decide_logic: true
+    requires_manual_review: true
+
+FUNCTION RUN:
+    implementation_function: runModuleLoaderV1
+    parameters: moduleManifest: MindSliceModuleManifest = { modules: [] }, runtimeConfig: MindSliceModuleRuntimeConfig = {}, exportSettings?: MindSliceModuleExportSettings,
+
+HELPERS:
+    exported_types:
+        - MindSliceModuleType
+        - MindSliceModuleDefinition
+        - MindSliceModuleManifest
+        - MindSliceModuleRuntimeConfig
+        - MindSliceModuleExportSettings
+        - MindSliceModuleRecord
+        - MindSliceDependencyGraphNode
+        - MindSliceActiveModuleRecord
+        - MindSliceValidationReport
+        - MindSliceGraphReport
+        - MindSliceSmokeTestReport
+        - MindSliceRuntimeContext
+        - MindSliceActiveRuntime
+        - MindSliceModuleLoaderResult
+
+    exported_helper_functions:
+        - none_confirmed
+
+    exported_constants:
+        - MindSlice_VisualSVGArchitecture_Manifest_vNext
+        - MindSlice_ModuleVersionPolicy_v1
+        - RUN
+
+DATA_CONTRACT:
+    receives:
+        status: confirmed
+        evidence:
+            - runBackgroundModuleRegistryV1 from @/lib/mindslice/concept-background-module-registry-system
+            - runGrammarPipelineContractV1 from @/lib/mindslice/concept-grammar-pipeline-contract-system
+            - runBackgroundOrchestratorV2 from @/lib/mindslice/concept-background-layer-orchestrator-system
+            - runVisualRendererV2 from @/lib/mindslice/concept-visual-renderer-v2-system
+            - runTextLayoutEngineV2 from @/lib/mindslice/concept-text-layout-engine-v2-system
+            - runVisualAuditEngineV1 from @/lib/mindslice/concept-visual-audit-engine-system
+            - runSvgObjectSerializerV1 from @/lib/mindslice/concept-svg-object-serializer-system
+            - runSafeSvgMountV1 from @/lib/mindslice/concept-safe-svg-mount-system
+            - runLegacyVisualRetirementPlanV1 from @/lib/mindslice/concept-legacy-visual-retirement-plan-system
+            - runBackgroundSelectionTelemetryV1 from @/lib/mindslice/concept-background-selection-telemetry-system
+            - runVisualRuntimeSmokeTestV1 from @/lib/mindslice/concept-visual-runtime-smoke-test-system
+            - runVisualErrorBoundaryContractV1 from @/lib/mindslice/concept-visual-error-boundary-contract-system
+            - runTextEchoConstellationEngineV1 from @/lib/mindslice/concept-text-echo-constellation-engine-system
+            - runTextSourceParityBridgeV1 from @/lib/mindslice/concept-text-source-parity-bridge-system
+            - runTemplateLikeTextPlacementEngineV1 from @/lib/mindslice/concept-template-like-text-placement-engine-system
+            - runTextLayoutCollisionResolverV1 from @/lib/mindslice/concept-text-layout-collision-resolver-system
+            - runTextLayoutCollisionResolverV2 from @/lib/mindslice/concept-text-layout-collision-resolver-v2-system
+            - runVisualPipelineControllerVNext from @/lib/mindslice/concept-visual-pipeline-controller-vnext-system
+    emits:
+        status: confirmed
+        evidence:
+            - export type/interface MindSliceModuleType
+            - export type/interface MindSliceModuleDefinition
+            - export type/interface MindSliceModuleManifest
+            - export type/interface MindSliceModuleRuntimeConfig
+            - export type/interface MindSliceModuleExportSettings
+            - export type/interface MindSliceModuleRecord
+            - export type/interface MindSliceDependencyGraphNode
+            - export type/interface MindSliceActiveModuleRecord
+            - export type/interface MindSliceValidationReport
+            - export type/interface MindSliceGraphReport
+            - export type/interface MindSliceSmokeTestReport
+            - export type/interface MindSliceRuntimeContext
+            - export type/interface MindSliceActiveRuntime
+            - export type/interface MindSliceModuleLoaderResult
+            - export const MindSlice_VisualSVGArchitecture_Manifest_vNext
+            - export const MindSlice_ModuleVersionPolicy_v1
+            - export const RUN
+            - export function runModuleLoaderV1
+    mutates:
+        status: none_detected
+        evidence:
+            - no external mutation patterns detected in matching TypeScript file
+    side_effects:
+        status: confirmed
+        value: confirmed_side_effect_or_render_artifact_evidence_present
+        confirmed_by:
+            - rendering_call_or_svg_output line 434: "svg_tree",
+            - rendering_call_or_svg_output line 454: input_contract: ["svg_tree"],
+            - rendering_call_or_svg_output line 497: input_contract: ["svg_tree OR svg_string", "render_mode"],
+    contract_status: v3_contract_fields_confirmed
+
+FAIL:
+    confirmed_failure_or_fallback_behavior_present
+    confirmed_by:
+        - line 62: allow_fallbacks?: boolean;
+        - line 140: allow_fallbacks: boolean;
+        - line 253: "FALLBACK_PATTERN_OUTPUT",
+        - line 643: "fallback_unplaceable_item",
+        - line 685: input_contract: ["error", "runtime_context", "fallback_settings"],
+        - line 689: "fallback_svg",
+        - line 695: "build_fallback_svg",
+        - line 760: status: "fail",
+        - line 775: allow_fallbacks: runtimeConfig.allow_fallbacks ?? true,
+        - line 1415: status: "fail",
+        - line 899: if (!moduleRecord.version) {
+
+CONSTRAINTS:
+    - Pseudocode backfill only.
+    - Do not implement from this file without manual contract review.
+    - Do not invent missing contracts.
+    - Preserve implemented module identity.
+    - Preserve version coexistence.
+    - Renderer does not think.
+    - Renderer only draws.

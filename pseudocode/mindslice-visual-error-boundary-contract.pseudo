@@ -1,0 +1,124 @@
+MODULE MindSlice_VisualErrorBoundaryContract
+
+BACKFILL_SOURCE:
+    file_name: concept-visual-error-boundary-contract-system.ts
+    source_path: mindslice-app/src/lib/mindslice/concept-visual-error-boundary-contract-system.ts
+    registry_origin: pseudocode_backfill_scan
+    backfill_status: generated_from_typescript_structure
+
+PURPOSE:
+    Define the Visual Error Boundary Contract contract and behavior as evidenced by main function runVisualErrorBoundaryContractV1 within Runtime / Safety / Audit.
+    confirmed_by:
+        - exported_main_function:runVisualErrorBoundaryContractV1
+        - file_name:mindslice-visual-error-boundary-contract.pseudo
+        - registry_category:Runtime / Safety / Audit
+
+INPUT:
+    - error: unknown
+    - runtimeContext: VisualErrorBoundaryRuntimeContext = {}
+    - fallbackSettings: VisualErrorBoundaryFallbackSettings = {}
+
+OUTPUT:
+    status: confirmed
+    confirmed_by:
+        - main_return_type: VisualErrorBoundaryOutput
+        - return_object_fields: user_safe_message, developer_diagnostics, fallback_svg, fallback_svg_string, recovery_action
+        - exported_output_type VisualErrorBoundaryRuntimeContext: mode, modules, active_modules
+        - exported_output_type VisualErrorBoundaryOutput: user_safe_message, developer_diagnostics, error_message, error_type, runtime_mode, active_modules, timestamp, fallback_svg, fallback_svg_string, recovery_action
+
+STATE:
+    - implemented
+    - active
+    - Runtime / Safety / Audit
+    - role:safety
+    - version:implicit_v1
+    - non-rendering_if_not_renderer
+    - renderer_passive_if_renderer
+
+PIPELINE_POSITION:
+    status: declared_dependencies
+    before: UNKNOWN_NEEDS_REVIEW
+    after: UNKNOWN_NEEDS_REVIEW
+    depends_on:
+        - MindSlice_SVGObjectSerializer
+    confirmed_by:
+        - existing pseudocode depends_on entries
+
+MODULE_CLASSIFICATION:
+    category: Runtime / Safety / Audit
+    role: safety
+    version: implicit_v1
+    lifecycle: active
+    can_render: false
+    can_decide_logic: true
+    requires_manual_review: true
+
+FUNCTION RUN:
+    implementation_function: runVisualErrorBoundaryContractV1
+    parameters: error: unknown, runtimeContext: VisualErrorBoundaryRuntimeContext = {}, fallbackSettings: VisualErrorBoundaryFallbackSettings = {},
+
+HELPERS:
+    exported_types:
+        - VisualErrorBoundaryRuntimeContext
+        - VisualErrorBoundaryFallbackSettings
+        - VisualErrorBoundaryOutput
+
+    exported_helper_functions:
+        - buildUserSafeMessage
+        - buildDeveloperDiagnostics
+        - buildFallbackSvg
+        - chooseRecoveryAction
+
+    exported_constants:
+        - RUN
+
+DATA_CONTRACT:
+    receives:
+        status: confirmed
+        evidence:
+            - runSvgObjectSerializerV1, type SvgSerializableNode, from @/lib/mindslice/concept-svg-object-serializer-system
+    emits:
+        status: confirmed
+        evidence:
+            - export type/interface VisualErrorBoundaryRuntimeContext
+            - export type/interface VisualErrorBoundaryFallbackSettings
+            - export type/interface VisualErrorBoundaryOutput
+            - export const RUN
+            - export function buildUserSafeMessage
+            - export function buildDeveloperDiagnostics
+            - export function buildFallbackSvg
+            - export function chooseRecoveryAction
+            - export function runVisualErrorBoundaryContractV1
+    mutates:
+        status: none_detected
+        evidence:
+            - no external mutation patterns detected in matching TypeScript file
+    side_effects:
+        status: confirmed
+        value: confirmed_side_effect_or_render_artifact_evidence_present
+        confirmed_by:
+    contract_status: v3_contract_fields_confirmed
+
+FAIL:
+    confirmed_failure_or_fallback_behavior_present
+    confirmed_by:
+        - line 13: export type VisualErrorBoundaryFallbackSettings = {
+        - line 29: fallback_svg: SvgSerializableNode;
+        - line 30: fallback_svg_string: string;
+        - line 33: | "fallback_to_pattern_background"
+        - line 89: export function buildFallbackSvg(
+        - line 91: fallbackSettings: VisualErrorBoundaryFallbackSettings = {},
+        - line 93: const width = fallbackSettings.width ?? 1080;
+        - line 94: const height = fallbackSettings.height ?? 1080;
+        - line 95: const background = fallbackSettings.background ?? "#F6F4EF";
+        - line 96: const ink = fallbackSettings.ink ?? "#1C1C1C";
+        - line 156: return "fallback_to_pattern_background";
+
+CONSTRAINTS:
+    - Pseudocode backfill only.
+    - Do not implement from this file without manual contract review.
+    - Do not invent missing contracts.
+    - Preserve implemented module identity.
+    - Preserve version coexistence.
+    - Renderer does not think.
+    - Renderer only draws.

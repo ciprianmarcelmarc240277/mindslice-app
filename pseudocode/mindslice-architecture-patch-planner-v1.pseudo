@@ -1,0 +1,269 @@
+MODULE MindSlice_ArchitecturePatchPlanner_v1
+
+PURPOSE:
+Plan and order architecture-level patches derived from manual review resolution.
+Transform contract, registry, and dependency patch plans into a safe, ordered, non-breaking architecture patch sequence.
+Do not modify implementation files or execute changes.
+
+INPUT:
+- contract_patch_plan
+- registry_patch_plan
+- dependency_patch_plan
+- module_registry_index
+- pipeline_map
+- version_policy
+- patch_rules
+
+OUTPUT:
+- architecture_patch_sequence
+- patch_batches
+- patch_dependency_graph
+- patch_conflict_report
+- patch_safety_report
+- patch_execution_guidelines
+
+STATE:
+- planner
+- non-rendering
+- non-executing
+- read-only
+- registry-aware
+- dependency-aware
+- version-aware
+- deterministic
+
+FUNCTION RUN:
+
+    VALIDATE input
+
+    all_patches = MERGE_PATCH_PLANS(
+        contract_patch_plan,
+        registry_patch_plan,
+        dependency_patch_plan
+    )
+
+    classified_patches = CLASSIFY_PATCH_TYPES(
+        all_patches
+    )
+
+    dependency_graph = BUILD_PATCH_DEPENDENCY_GRAPH(
+        classified_patches,
+        module_registry_index,
+        pipeline_map
+    )
+
+    ordered_patches = ORDER_PATCHES_BY_DEPENDENCY(
+        dependency_graph
+    )
+
+    conflict_report = DETECT_PATCH_CONFLICTS(
+        ordered_patches,
+        module_registry_index,
+        version_policy
+    )
+
+    safety_report = VALIDATE_PATCH_SAFETY(
+        ordered_patches,
+        patch_rules,
+        version_policy
+    )
+
+    IF conflict_report.has_blocking_conflict:
+        RETURN FAIL conflict_report
+
+    IF safety_report.has_critical_violation:
+        RETURN FAIL safety_report
+
+    patch_batches = GROUP_PATCHES_INTO_BATCHES(
+        ordered_patches
+    )
+
+    execution_guidelines = GENERATE_PATCH_EXECUTION_GUIDELINES(
+        patch_batches,
+        safety_report
+    )
+
+    RETURN {
+        architecture_patch_sequence: ordered_patches,
+        patch_batches: patch_batches,
+        patch_dependency_graph: dependency_graph,
+        patch_conflict_report: conflict_report,
+        patch_safety_report: safety_report,
+        patch_execution_guidelines: execution_guidelines
+    }
+
+HELPERS:
+
+FUNCTION MERGE_PATCH_PLANS(contract_plan, registry_plan, dependency_plan):
+    merged = []
+
+    ADD all contract_plan items TO merged
+    ADD all registry_plan items TO merged
+    ADD all dependency_plan items TO merged
+
+    RETURN merged
+
+FUNCTION CLASSIFY_PATCH_TYPES(patches):
+    FOR each patch IN patches:
+
+        IF patch.patch_target == "contract":
+            patch.type = "contract_patch"
+
+        IF patch.patch_target == "registry":
+            patch.type = "registry_patch"
+
+        IF patch.patch_target == "dependency_map" OR patch.patch_target == "pipeline_map":
+            patch.type = "dependency_patch"
+
+        IF patch.patch_target == "registry_and_dependency_map":
+            patch.type = "composite_patch"
+
+    RETURN patches
+
+FUNCTION BUILD_PATCH_DEPENDENCY_GRAPH(patches, registry, pipeline_map):
+    graph = CREATE_EMPTY_GRAPH()
+
+    FOR each patch IN patches:
+        ADD patch AS node
+
+    FOR each patch_a IN patches:
+        FOR each patch_b IN patches:
+
+            IF patch_a affects module required by patch_b:
+                ADD edge patch_a -> patch_b
+
+            IF patch_a modifies pipeline_position AND patch_b depends on pipeline:
+                ADD edge patch_a -> patch_b
+
+            IF patch_a.type == "registry_patch" AND patch_b.type == "dependency_patch":
+                ADD edge patch_a -> patch_b
+
+    RETURN graph
+
+FUNCTION ORDER_PATCHES_BY_DEPENDENCY(graph):
+    IF graph contains cycle:
+        RETURN FAIL "Patch dependency cycle detected"
+
+    RETURN TOPOLOGICAL_SORT(graph)
+
+FUNCTION DETECT_PATCH_CONFLICTS(patches, registry, version_policy):
+    conflicts = []
+
+    FOR each patch IN patches:
+
+        IF patch attempts to overwrite existing module:
+            ADD conflict "overwrite_forbidden"
+
+        IF patch creates duplicate module_name:
+            ADD conflict "duplicate_module_name"
+
+        IF patch breaks version coexistence:
+            ADD conflict "version_conflict"
+
+        IF patch assigns multiple authorities to same responsibility:
+            ADD conflict "responsibility_conflict"
+
+    RETURN {
+        conflicts: conflicts,
+        has_blocking_conflict: conflicts not empty
+    }
+
+FUNCTION VALIDATE_PATCH_SAFETY(patches, rules, version_policy):
+    violations = []
+
+    FOR each patch IN patches:
+
+        IF patch modifies implementation code:
+            ADD violation "implementation_modification_forbidden"
+
+        IF patch introduces renderer decision logic:
+            ADD violation "renderer_logic_violation"
+
+        IF patch introduces engine rendering:
+            ADD violation "engine_render_violation"
+
+        IF patch removes existing module without replacement strategy:
+            ADD violation "destructive_patch"
+
+        IF patch breaks version coexistence:
+            ADD violation "version_violation"
+
+    RETURN {
+        violations: violations,
+        has_critical_violation: violations not empty
+    }
+
+FUNCTION GROUP_PATCHES_INTO_BATCHES(ordered_patches):
+    batches = []
+
+    current_batch = []
+
+    FOR each patch IN ordered_patches:
+
+        IF patch depends on previous patch:
+            ADD patch TO current_batch
+
+        ELSE:
+            ADD current_batch TO batches
+            current_batch = [patch]
+
+    ADD final current_batch TO batches
+
+    RETURN batches
+
+FUNCTION GENERATE_PATCH_EXECUTION_GUIDELINES(batches, safety_report):
+    guidelines = []
+
+    FOR each batch IN batches:
+        ADD {
+            batch_id: index,
+            execution_order: batch,
+            rules: [
+                "apply registry patches before dependency patches",
+                "validate after each batch",
+                "do not apply if validation fails",
+                "preserve existing versions"
+            ]
+        } TO guidelines
+
+    IF safety_report.violations not empty:
+        ADD "Resolve safety violations before applying patches" TO guidelines
+
+    RETURN guidelines
+
+FAIL:
+IF contract_patch_plan missing AND registry_patch_plan missing AND dependency_patch_plan missing:
+    RETURN FAIL "Missing all patch plans"
+
+IF module_registry_index missing:
+    RETURN FAIL "Missing required input: module_registry_index"
+
+IF version_policy != "coexistence":
+    RETURN FAIL "Invalid version policy"
+
+IF patch dependency cycle detected:
+    RETURN FAIL "Patch sequence cannot be ordered"
+
+IF patch introduces renderer decision logic:
+    RETURN FAIL "Renderer logic violation"
+
+IF patch introduces engine rendering:
+    RETURN FAIL "Engine rendering violation"
+
+IF patch attempts to modify implementation:
+    RETURN FAIL "Implementation modification forbidden"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No implementation code
+- Planner does not execute patches
+- Planner does not render
+- Planner does not modify modules
+- Planner only generates patch sequence
+- Patches must be non-destructive
+- Existing modules must be preserved
+- Version coexistence is mandatory
+- Renderer does not think
+- Renderer only draws

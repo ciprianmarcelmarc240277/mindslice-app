@@ -1,0 +1,362 @@
+MODULE MindSlice_ContractNormalizationEngine_v1
+
+PURPOSE:
+Normalize extracted MindSlice module contracts into a single canonical format.
+Unify naming, structure, and semantics across INPUT, OUTPUT, STATE, RECEIVES, EMITS, FAIL, CONSTRAINTS, and PIPELINE_POSITION.
+Preserve only confirmed data, classify fields as confirmed / partial / unknown, and prepare contracts for validation and dependency mapping.
+
+INPUT:
+- module_contract_map
+- normalization_rules
+- naming_conventions
+- pipeline_map
+- version_policy
+
+OUTPUT:
+- normalized_contracts
+- normalization_report
+- field_mapping_log
+- unresolved_fields_report
+- manual_review_queue
+
+STATE:
+- normalizer
+- read-only
+- non-rendering
+- non-executing
+- contract-focused
+- deterministic
+- conservative
+
+FUNCTION RUN:
+
+    VALIDATE input
+
+    normalized_set = []
+    normalization_report = CREATE_EMPTY_NORMALIZATION_REPORT()
+
+    FOR each module_name, contract IN module_contract_map:
+
+        canonical_name = NORMALIZE_MODULE_NAME(
+            module_name,
+            naming_conventions
+        )
+
+        normalized_input = NORMALIZE_INPUT_FIELD(
+            contract.input_contract,
+            normalization_rules
+        )
+
+        normalized_output = NORMALIZE_OUTPUT_FIELD(
+            contract.output_contract,
+            normalization_rules
+        )
+
+        normalized_state = NORMALIZE_STATE_FIELD(
+            contract.state_contract,
+            normalization_rules
+        )
+
+        normalized_receives = NORMALIZE_RECEIVES_FIELD(
+            contract.receives,
+            normalized_input,
+            normalization_rules
+        )
+
+        normalized_emits = NORMALIZE_EMITS_FIELD(
+            contract.emits,
+            normalized_output,
+            normalization_rules
+        )
+
+        normalized_fail = NORMALIZE_FAIL_FIELD(
+            contract.failure_contract,
+            normalization_rules
+        )
+
+        normalized_constraints = NORMALIZE_CONSTRAINTS_FIELD(
+            contract.constraints,
+            normalization_rules
+        )
+
+        normalized_pipeline = NORMALIZE_PIPELINE_POSITION(
+            contract,
+            pipeline_map
+        )
+
+        classification = CLASSIFY_FIELD_CONFIDENCE(
+            contract,
+            normalized_input,
+            normalized_output,
+            normalized_state,
+            normalized_receives,
+            normalized_emits,
+            normalized_fail,
+            normalized_constraints,
+            normalized_pipeline
+        )
+
+        normalized_contract = BUILD_NORMALIZED_CONTRACT(
+            canonical_name,
+            contract.file_name,
+            normalized_input,
+            normalized_output,
+            normalized_state,
+            normalized_receives,
+            normalized_emits,
+            normalized_fail,
+            normalized_constraints,
+            normalized_pipeline,
+            classification
+        )
+
+        ADD normalized_contract TO normalized_set
+        UPDATE normalization_report WITH classification
+
+        IF classification.contains_unknown OR classification.contains_partial:
+            ADD normalized_contract TO normalization_report.manual_review_queue
+
+    RETURN {
+        normalized_contracts: normalized_set,
+        normalization_report: normalization_report,
+        field_mapping_log: EXTRACT_FIELD_MAPPING_LOG(normalized_set),
+        unresolved_fields_report: EXTRACT_UNRESOLVED_FIELDS(normalized_set),
+        manual_review_queue: normalization_report.manual_review_queue
+    }
+
+HELPERS:
+
+FUNCTION CREATE_EMPTY_NORMALIZATION_REPORT():
+    RETURN {
+        normalizer_name: "MindSlice_ContractNormalizationEngine_v1",
+        total_modules: 0,
+        fully_normalized: 0,
+        partially_normalized: 0,
+        unknown_fields_detected: 0,
+        manual_review_queue: []
+    }
+
+FUNCTION NORMALIZE_MODULE_NAME(name, conventions):
+    APPLY:
+    - enforce prefix "MindSlice_"
+    - enforce PascalCase
+    - preserve version suffix (v1, v2, vNext)
+    RETURN normalized_name
+
+FUNCTION NORMALIZE_INPUT_FIELD(input_field, rules):
+    IF input_field is empty:
+        RETURN "UNKNOWN"
+
+    CONVERT:
+    - params -> INPUT
+    - inputs -> INPUT
+    - args -> INPUT
+
+    STANDARDIZE structure:
+    - list of named input descriptors
+    - no implicit types
+
+    RETURN normalized_input
+
+FUNCTION NORMALIZE_OUTPUT_FIELD(output_field, rules):
+    IF output_field is empty:
+        RETURN "UNKNOWN"
+
+    CONVERT:
+    - return -> OUTPUT
+    - returns -> OUTPUT
+    - emits_primary -> OUTPUT
+
+    STANDARDIZE structure:
+    - list of named output descriptors
+
+    RETURN normalized_output
+
+FUNCTION NORMALIZE_STATE_FIELD(state_field, rules):
+    IF state_field is empty:
+        RETURN "UNKNOWN"
+
+    STANDARDIZE:
+    - execution characteristics
+    - flags: rendering / non-rendering / audit / registry / controller
+
+    RETURN normalized_state
+
+FUNCTION NORMALIZE_RECEIVES_FIELD(receives_field, normalized_input, rules):
+    IF receives_field exists:
+        RETURN STANDARDIZE_LIST(receives_field)
+
+    IF normalized_input != "UNKNOWN":
+        RETURN INFER_RECEIVES_FROM_INPUT(normalized_input)
+
+    RETURN "UNKNOWN"
+
+FUNCTION NORMALIZE_EMITS_FIELD(emits_field, normalized_output, rules):
+    IF emits_field exists:
+        RETURN STANDARDIZE_LIST(emits_field)
+
+    IF normalized_output != "UNKNOWN":
+        RETURN INFER_EMITS_FROM_OUTPUT(normalized_output)
+
+    RETURN "UNKNOWN"
+
+FUNCTION NORMALIZE_FAIL_FIELD(failure_field, rules):
+    IF failure_field is empty:
+        RETURN "UNKNOWN"
+
+    STANDARDIZE:
+    - failure conditions
+    - failure messages
+    - blocking vs non-blocking
+
+    RETURN normalized_fail
+
+FUNCTION NORMALIZE_CONSTRAINTS_FIELD(constraints_field, rules):
+    IF constraints_field is empty:
+        RETURN "UNKNOWN"
+
+    STANDARDIZE:
+    - system constraints
+    - engine vs renderer boundaries
+    - version rules
+    - non-execution rules
+
+    RETURN normalized_constraints
+
+FUNCTION NORMALIZE_PIPELINE_POSITION(contract, pipeline_map):
+    IF contract has explicit pipeline_position:
+        RETURN STANDARDIZE_PIPELINE(contract.pipeline_position)
+
+    IF contract.module_name exists in pipeline_map:
+        RETURN pipeline_map[contract.module_name]
+
+    RETURN {
+        status: "UNKNOWN",
+        before: [],
+        after: [],
+        depends_on: []
+    }
+
+FUNCTION CLASSIFY_FIELD_CONFIDENCE(
+    original_contract,
+    input,
+    output,
+    state,
+    receives,
+    emits,
+    fail,
+    constraints,
+    pipeline
+):
+    classification = {
+        confirmed_fields: [],
+        partial_fields: [],
+        unknown_fields: []
+    }
+
+    FOR each field IN [input, output, state, receives, emits, fail, constraints, pipeline]:
+
+        IF field == "UNKNOWN":
+            ADD field TO classification.unknown_fields
+
+        ELSE IF field derived from single source:
+            ADD field TO classification.partial_fields
+
+        ELSE:
+            ADD field TO classification.confirmed_fields
+
+    classification.contains_unknown = classification.unknown_fields not empty
+    classification.contains_partial = classification.partial_fields not empty
+
+    RETURN classification
+
+FUNCTION BUILD_NORMALIZED_CONTRACT(
+    name,
+    file_name,
+    input,
+    output,
+    state,
+    receives,
+    emits,
+    fail,
+    constraints,
+    pipeline,
+    classification
+):
+    RETURN {
+        module_name: name,
+        file_name: file_name,
+        INPUT: input,
+        OUTPUT: output,
+        STATE: state,
+        RECEIVES: receives,
+        EMITS: emits,
+        FAIL: fail,
+        CONSTRAINTS: constraints,
+        PIPELINE_POSITION: pipeline,
+        classification: classification,
+        confidence:
+            "confirmed" IF classification.contains_unknown == false AND classification.contains_partial == false
+            ELSE IF classification.contains_unknown == false
+            THEN "partial"
+            ELSE "low",
+        requires_manual_review: classification.contains_unknown OR classification.contains_partial
+    }
+
+FUNCTION EXTRACT_FIELD_MAPPING_LOG(normalized_set):
+    RETURN mapping of:
+        original_field_name -> normalized_field_name
+
+FUNCTION EXTRACT_UNRESOLVED_FIELDS(normalized_set):
+    unresolved = []
+
+    FOR each contract IN normalized_set:
+        IF contract.requires_manual_review:
+            ADD {
+                module_name: contract.module_name,
+                unknown_fields: contract.classification.unknown_fields
+            } TO unresolved
+
+    RETURN unresolved
+
+FAIL:
+IF module_contract_map is missing:
+    RETURN FAIL "Missing required input: module_contract_map"
+
+IF normalization_rules are missing:
+    RETURN FAIL "Missing required input: normalization_rules"
+
+IF naming_conventions are missing:
+    RETURN FAIL "Missing required input: naming_conventions"
+
+IF version_policy != "coexistence":
+    RETURN FAIL "Invalid version policy"
+
+IF normalizer attempts to modify implementation:
+    RETURN FAIL "ContractNormalizationEngine is read-only"
+
+IF normalizer attempts to invent contract data:
+    RETURN FAIL "Normalization cannot invent unknown fields"
+
+IF normalizer detects renderer decision authority:
+    RETURN FAIL "Renderer logic leakage detected"
+
+IF normalizer detects engine rendering authority:
+    RETURN FAIL "Engine rendering leakage detected"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No implementation code
+- Normalizer is read-only
+- Normalizer does not execute modules
+- Normalizer does not render
+- Normalizer does not mutate source contracts
+- Unknown fields must remain UNKNOWN
+- Partial fields must be marked
+- No semantic drift allowed
+- Existing modules are preserved
+- v1, v2 and vNext coexist
+- Renderer does not think
+- Renderer only draws

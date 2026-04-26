@@ -1,0 +1,1059 @@
+MODULE MindSlice_TextSourceParityBridge_v2
+
+PURPOSE:
+    Make vNext SVG text use the same strong visible text sources as the original TextConstellation template,
+    while preserving all new vNext text layers.
+
+UPGRADE_FROM_v1:
+    Adds:
+        source quality scoring
+        semantic normalization
+        duplicate map
+        priority-based merging
+        visual role mapping
+        visibility policy
+        fallback from parsed_slice
+        stronger parity diagnostics
+
+RULE:
+    Renderer does not think.
+    Renderer only draws.
+    Text source selection, merging, priority, and visibility happen here.
+
+INPUT:
+    parsed_slice
+    thought_state OPTIONAL
+    thought_scene OPTIONAL
+    shape_grammar OPTIONAL
+    clock_display OPTIONAL
+    existing_vnext_text_layout OPTIONAL
+    text_settings
+
+OUTPUT:
+    bridged_text_source
+    source_parity_report
+
+STATE:
+    settings
+    template_sources
+    vnext_sources
+    source_quality_score
+    duplicate_map
+    merged_sources
+    visibility_policy
+    visual_role_source_map
+
+DEFAULTS:
+    text_settings.use_template_sources = true
+    text_settings.preserve_vnext_sources = true
+    text_settings.template_source_priority = "high"
+    text_settings.merge_duplicates = true
+
+    text_settings.max_visible_template_fragments = 4
+    text_settings.max_visible_template_keywords = 6
+    text_settings.max_visible_stray_letters = 8
+    text_settings.max_visible_grammar_particles = 4
+    text_settings.max_visible_temporal_particles = 4
+    text_settings.max_visible_echo_terms = 8
+
+    text_settings.vnext_enrichment_opacity_multiplier = 0.72
+    text_settings.max_center_line_chars = 42
+    text_settings.max_fragment_chars = 64
+    text_settings.max_keyword_chars = 28
+
+// =====================================================
+// MAIN
+// =====================================================
+
+FUNCTION RUN(
+    parsed_slice,
+    thought_state OPTIONAL,
+    thought_scene OPTIONAL,
+    shape_grammar OPTIONAL,
+    clock_display OPTIONAL,
+    existing_vnext_text_layout OPTIONAL,
+    text_settings
+):
+
+    settings = normalize_settings(text_settings)
+
+    template_sources = extract_template_sources(
+        parsed_slice,
+        thought_state,
+        thought_scene,
+        shape_grammar,
+        clock_display,
+        settings
+    )
+
+    vnext_sources = extract_vnext_sources(
+        parsed_slice,
+        existing_vnext_text_layout,
+        settings
+    )
+
+    source_quality_score = score_source_quality(
+        template_sources
+    )
+
+    duplicate_map = build_duplicate_map(
+        template_sources,
+        vnext_sources
+    )
+
+    merged_sources = merge_template_and_vnext_sources(
+        template_sources,
+        vnext_sources,
+        duplicate_map,
+        settings
+    )
+
+    visibility_policy = build_visibility_policy(
+        settings
+    )
+
+    visual_role_source_map = map_sources_to_visual_roles(
+        merged_sources,
+        visibility_policy,
+        settings
+    )
+
+    bridged_text_source = build_bridged_text_source(
+        merged_sources,
+        visual_role_source_map,
+        parsed_slice,
+        settings
+    )
+
+    source_parity_report = build_source_parity_report(
+        template_sources,
+        vnext_sources,
+        bridged_text_source,
+        duplicate_map,
+        source_quality_score
+    )
+
+    RETURN {
+        bridged_text_source: bridged_text_source,
+        source_parity_report: source_parity_report
+    }
+
+HELPERS:
+
+// =====================================================
+// SETTINGS
+// =====================================================
+
+FUNCTION normalize_settings(text_settings):
+
+    RETURN {
+        use_template_sources:
+            text_settings.use_template_sources OR true,
+
+        preserve_vnext_sources:
+            text_settings.preserve_vnext_sources OR true,
+
+        template_source_priority:
+            text_settings.template_source_priority OR "high",
+
+        merge_duplicates:
+            text_settings.merge_duplicates OR true,
+
+        max_visible_template_fragments:
+            text_settings.max_visible_template_fragments OR 4,
+
+        max_visible_template_keywords:
+            text_settings.max_visible_template_keywords OR 6,
+
+        max_visible_stray_letters:
+            text_settings.max_visible_stray_letters OR 8,
+
+        max_visible_grammar_particles:
+            text_settings.max_visible_grammar_particles OR 4,
+
+        max_visible_temporal_particles:
+            text_settings.max_visible_temporal_particles OR 4,
+
+        max_visible_echo_terms:
+            text_settings.max_visible_echo_terms OR 8,
+
+        vnext_enrichment_opacity_multiplier:
+            text_settings.vnext_enrichment_opacity_multiplier OR 0.72,
+
+        max_center_line_chars:
+            text_settings.max_center_line_chars OR 42,
+
+        max_fragment_chars:
+            text_settings.max_fragment_chars OR 64,
+
+        max_keyword_chars:
+            text_settings.max_keyword_chars OR 28
+    }
+
+// =====================================================
+// TEMPLATE SOURCE EXTRACTION
+// =====================================================
+
+FUNCTION extract_template_sources(
+    parsed_slice,
+    thought_state,
+    thought_scene,
+    shape_grammar,
+    clock_display,
+    settings
+):
+
+    IF settings.use_template_sources == false:
+
+        RETURN build_fallback_sources_from_parsed_slice(
+            parsed_slice,
+            settings
+        )
+
+    IF thought_state IS EMPTY:
+
+        fallback = build_fallback_sources_from_parsed_slice(
+            parsed_slice,
+            settings
+        )
+
+        fallback.source_status = "fallback_no_thought_state"
+
+        RETURN fallback
+
+    center_title = normalize_semantic_text_item(
+        thought_state.direction
+    )
+
+    center_fragment = normalize_semantic_text_item(
+        thought_scene.sceneGraph.thoughtCenterFragment OR
+        thought_state.fragments[0] OR
+        thought_state.keywords[0] OR
+        thought_state.direction
+    )
+
+    center_lines = normalize_text_list(
+        thought_scene.sceneGraph.thoughtLines OR
+        split_text_into_short_lines(
+            thought_state.thought,
+            settings.max_center_line_chars
+        )
+    )
+
+    fragments = normalize_text_list(
+        first_n(
+            thought_state.fragments OR [],
+            settings.max_visible_template_fragments
+        )
+    )
+
+    fragments = limit_text_items_length(
+        fragments,
+        settings.max_fragment_chars
+    )
+
+    keywords = normalize_text_list(
+        first_n(
+            thought_state.keywords OR [],
+            settings.max_visible_template_keywords
+        )
+    )
+
+    keywords = limit_text_items_length(
+        keywords,
+        settings.max_keyword_chars
+    )
+
+    stray_letters = extract_template_stray_letters(
+        thought_state,
+        thought_scene,
+        settings
+    )
+
+    grammar_particles = normalize_text_list(
+        first_n(
+            shape_grammar.rulesApplied OR [],
+            settings.max_visible_grammar_particles
+        )
+    )
+
+    temporal_particles = extract_clock_tokens(
+        clock_display,
+        settings
+    )
+
+    RETURN {
+        source_status: "template",
+        center_title: center_title,
+        center_fragment: center_fragment,
+        center_lines: center_lines,
+        fragments: fragments,
+        keywords: keywords,
+        stray_letters: stray_letters,
+        grammar_particles: grammar_particles,
+        temporal_particles: temporal_particles
+    }
+
+// =====================================================
+// VNEXT SOURCE EXTRACTION
+// =====================================================
+
+FUNCTION extract_vnext_sources(
+    parsed_slice,
+    existing_vnext_text_layout,
+    settings
+):
+
+    RETURN {
+        main_text:
+            normalize_semantic_text_item(parsed_slice.content.text),
+
+        tags:
+            normalize_text_list(parsed_slice.metadata.tags OR []),
+
+        pipeline:
+            normalize_text_list(parsed_slice.process.pipeline OR []),
+
+        content_type:
+            normalize_semantic_text_item(parsed_slice.content.type),
+
+        control_tokens:
+            extract_control_tokens(parsed_slice.control),
+
+        echo_terms:
+            extract_texts_by_role(
+                existing_vnext_text_layout,
+                "text_echo_constellation"
+            ),
+
+        constellation_terms:
+            extract_texts_by_role(
+                existing_vnext_text_layout,
+                "text_constellation"
+            )
+    }
+
+FUNCTION extract_control_tokens(control):
+
+    tokens = []
+
+    IF control.allow_contamination == true:
+        tokens.APPEND("contamination")
+
+    IF control.allow_transformation == true:
+        tokens.APPEND("transformation")
+
+    IF control.visibility EXISTS:
+        tokens.APPEND(control.visibility)
+
+    RETURN tokens
+
+FUNCTION extract_texts_by_role(text_layout, role):
+
+    output = []
+
+    IF text_layout IS EMPTY:
+        RETURN output
+
+    all_items = flatten_text_items(text_layout)
+
+    FOR each item IN all_items:
+
+        IF item.role == role:
+            output.APPEND(item.text)
+
+    RETURN normalize_text_list(output)
+
+// =====================================================
+// FALLBACK FROM PARSED SLICE
+// =====================================================
+
+FUNCTION build_fallback_sources_from_parsed_slice(
+    parsed_slice,
+    settings
+):
+
+    fragment = normalize_semantic_text_item(
+        parsed_slice.content.text
+    )
+
+    tags = normalize_text_list(
+        parsed_slice.metadata.tags OR []
+    )
+
+    pipeline = normalize_text_list(
+        parsed_slice.process.pipeline OR []
+    )
+
+    RETURN {
+        source_status: "fallback_parsed_slice",
+        center_title: parsed_slice.identity.index_name,
+        center_fragment: fragment,
+        center_lines: split_text_into_short_lines(
+            fragment,
+            settings.max_center_line_chars
+        ),
+        fragments: first_n(
+            [fragment],
+            settings.max_visible_template_fragments
+        ),
+        keywords: first_n(
+            tags,
+            settings.max_visible_template_keywords
+        ),
+        stray_letters: evenly_sample(
+            extract_letters_and_numbers(fragment),
+            settings.max_visible_stray_letters
+        ),
+        grammar_particles: [
+            parsed_slice.content.type
+        ],
+        temporal_particles: first_n(
+            pipeline,
+            settings.max_visible_temporal_particles
+        )
+    }
+
+// =====================================================
+// SOURCE QUALITY SCORING
+// =====================================================
+
+FUNCTION score_source_quality(template_sources):
+
+    score = 0
+
+    IF template_sources.center_title NOT EMPTY:
+        score += 2
+
+    IF template_sources.center_fragment NOT EMPTY:
+        score += 2
+
+    IF count(template_sources.center_lines) > 0:
+        score += 1
+
+    IF count(template_sources.fragments) > 0:
+        score += 2
+
+    IF count(template_sources.keywords) > 0:
+        score += 2
+
+    IF count(template_sources.temporal_particles) > 0:
+        score += 1
+
+    IF count(template_sources.grammar_particles) > 0:
+        score += 1
+
+    RETURN clamp(score, 0, 10)
+
+// =====================================================
+// DUPLICATE MAP
+// =====================================================
+
+FUNCTION build_duplicate_map(template_sources, vnext_sources):
+
+    all_items = collect_all_text_items_with_source(
+        template_sources,
+        vnext_sources
+    )
+
+    duplicate_map = {}
+
+    FOR each item IN all_items:
+
+        key = normalize_for_match(item.text)
+
+        IF key IS EMPTY:
+            CONTINUE
+
+        duplicate_map[key].APPEND(item)
+
+    RETURN duplicate_map
+
+FUNCTION collect_all_text_items_with_source(template_sources, vnext_sources):
+
+    items = []
+
+    ADD_SOURCE_ITEMS(items, "template_center_title", [template_sources.center_title])
+    ADD_SOURCE_ITEMS(items, "template_center_fragment", [template_sources.center_fragment])
+    ADD_SOURCE_ITEMS(items, "template_fragments", template_sources.fragments)
+    ADD_SOURCE_ITEMS(items, "template_keywords", template_sources.keywords)
+    ADD_SOURCE_ITEMS(items, "template_stray_letters", template_sources.stray_letters)
+    ADD_SOURCE_ITEMS(items, "template_grammar_particles", template_sources.grammar_particles)
+    ADD_SOURCE_ITEMS(items, "template_temporal_particles", template_sources.temporal_particles)
+
+    ADD_SOURCE_ITEMS(items, "vnext_main_text", [vnext_sources.main_text])
+    ADD_SOURCE_ITEMS(items, "vnext_tags", vnext_sources.tags)
+    ADD_SOURCE_ITEMS(items, "vnext_pipeline", vnext_sources.pipeline)
+    ADD_SOURCE_ITEMS(items, "vnext_content_type", [vnext_sources.content_type])
+    ADD_SOURCE_ITEMS(items, "vnext_echo_terms", vnext_sources.echo_terms)
+    ADD_SOURCE_ITEMS(items, "vnext_constellation_terms", vnext_sources.constellation_terms)
+
+    RETURN items
+
+FUNCTION ADD_SOURCE_ITEMS(items, source_family, values):
+
+    FOR each value IN values:
+
+        IF value IS NOT EMPTY:
+
+            items.APPEND({
+                text: value,
+                source_family: source_family
+            })
+
+// =====================================================
+// MERGE SOURCES
+// =====================================================
+
+FUNCTION merge_template_and_vnext_sources(
+    template_sources,
+    vnext_sources,
+    duplicate_map,
+    settings
+):
+
+    merged = {}
+
+    merged.center = {
+        title:
+            template_sources.center_title OR
+            vnext_sources.content_type,
+
+        fragment:
+            template_sources.center_fragment OR
+            vnext_sources.main_text,
+
+        lines:
+            template_sources.center_lines
+    }
+
+    merged.fragments = merge_text_lists_by_priority(
+        primary = template_sources.fragments,
+        secondary = [vnext_sources.main_text],
+        max_count = settings.max_visible_template_fragments,
+        settings = settings
+    )
+
+    merged.keywords = merge_text_lists_by_priority(
+        primary = template_sources.keywords,
+        secondary = vnext_sources.tags + vnext_sources.constellation_terms,
+        max_count = settings.max_visible_template_keywords,
+        settings = settings
+    )
+
+    merged.stray_letters = first_n(
+        template_sources.stray_letters,
+        settings.max_visible_stray_letters
+    )
+
+    merged.grammar_particles = merge_text_lists_by_priority(
+        primary = template_sources.grammar_particles,
+        secondary = [vnext_sources.content_type] + vnext_sources.control_tokens,
+        max_count = settings.max_visible_grammar_particles,
+        settings = settings
+    )
+
+    merged.temporal_particles = merge_text_lists_by_priority(
+        primary = template_sources.temporal_particles,
+        secondary = vnext_sources.pipeline,
+        max_count = settings.max_visible_temporal_particles,
+        settings = settings
+    )
+
+    merged.echo_terms = merge_text_lists_by_priority(
+        primary = vnext_sources.echo_terms,
+        secondary = template_sources.keywords,
+        max_count = settings.max_visible_echo_terms,
+        settings = settings
+    )
+
+    RETURN merged
+
+FUNCTION merge_text_lists_by_priority(
+    primary,
+    secondary,
+    max_count,
+    settings
+):
+
+    combined = []
+
+    FOR each item IN primary:
+        combined.APPEND({
+            text: item,
+            priority: "primary"
+        })
+
+    FOR each item IN secondary:
+        combined.APPEND({
+            text: item,
+            priority: "secondary"
+        })
+
+    IF settings.merge_duplicates == true:
+
+        combined = merge_duplicates_by_priority(
+            combined,
+            priority_order = ["primary", "secondary"]
+        )
+
+    output = []
+
+    FOR each item IN combined:
+
+        output.APPEND(item.text)
+
+    RETURN first_n(output, max_count)
+
+FUNCTION merge_duplicates_by_priority(items, priority_order):
+
+    grouped = {}
+
+    FOR each item IN items:
+
+        key = normalize_for_match(item.text)
+
+        grouped[key].APPEND(item)
+
+    output = []
+
+    FOR each key, group IN grouped:
+
+        selected = highest_priority_item(
+            group,
+            priority_order
+        )
+
+        output.APPEND(selected)
+
+    RETURN output
+
+FUNCTION highest_priority_item(group, priority_order):
+
+    RETURN sort group BY index_of(item.priority, priority_order) ASC FIRST
+
+// =====================================================
+// VISIBILITY POLICY
+// =====================================================
+
+FUNCTION build_visibility_policy(settings):
+
+    RETURN {
+        template_center: {
+            opacity: 0.92,
+            scale: 1.0,
+            priority: 1,
+            visibility: "high"
+        },
+
+        template_fragments: {
+            opacity: 0.72,
+            scale: 0.92,
+            priority: 2,
+            visibility: "high"
+        },
+
+        template_keywords: {
+            opacity: 0.55,
+            scale: 0.78,
+            priority: 3,
+            visibility: "high"
+        },
+
+        template_temporal_particles: {
+            opacity: 0.30,
+            scale: 0.66,
+            priority: 4,
+            visibility: "low"
+        },
+
+        template_grammar_particles: {
+            opacity: 0.28,
+            scale: 0.62,
+            priority: 5,
+            visibility: "low"
+        },
+
+        template_stray_letters: {
+            opacity: 0.22,
+            scale: 0.65,
+            priority: 6,
+            visibility: "medium"
+        },
+
+        vnext_echo: {
+            opacity: settings.vnext_enrichment_opacity_multiplier * 0.22,
+            scale: 0.60,
+            priority: 7,
+            visibility: "low"
+        }
+    }
+
+// =====================================================
+// MAP SOURCES TO VISUAL ROLES
+// =====================================================
+
+FUNCTION map_sources_to_visual_roles(
+    merged_sources,
+    visibility_policy,
+    settings
+):
+
+    RETURN {
+        center_text: {
+            role: "center_text",
+            title: merged_sources.center.title,
+            text: merged_sources.center.fragment,
+            lines: merged_sources.center.lines,
+            visibility: visibility_policy.template_center,
+            source_priority: "primary_template"
+        },
+
+        peripheral_text: map_items(
+            merged_sources.fragments,
+            role = "peripheral_text",
+            visibility = visibility_policy.template_fragments,
+            source_priority = "primary_template"
+        ),
+
+        text_constellation: map_items(
+            merged_sources.keywords,
+            role = "text_constellation",
+            visibility = visibility_policy.template_keywords,
+            source_priority = "primary_template"
+        ),
+
+        temporal_particles: map_items(
+            merged_sources.temporal_particles,
+            role = "temporal_particle",
+            visibility = visibility_policy.template_temporal_particles,
+            source_priority = "secondary_template"
+        ),
+
+        grammar_particles: map_items(
+            merged_sources.grammar_particles,
+            role = "grammar_particle",
+            visibility = visibility_policy.template_grammar_particles,
+            source_priority = "secondary_template"
+        ),
+
+        stray_letters: map_items(
+            merged_sources.stray_letters,
+            role = "stray_letter",
+            visibility = visibility_policy.template_stray_letters,
+            source_priority = "template_controlled"
+        ),
+
+        text_echo_constellation: map_items(
+            merged_sources.echo_terms,
+            role = "text_echo_constellation",
+            visibility = visibility_policy.vnext_echo,
+            source_priority = "vnext_enrichment"
+        )
+    }
+
+FUNCTION map_items(items, role, visibility, source_priority):
+
+    output = []
+
+    FOR each item IN items:
+
+        output.APPEND({
+            role: role,
+            text: item,
+            opacity: visibility.opacity,
+            scale: visibility.scale,
+            priority: visibility.priority,
+            visibility: visibility.visibility,
+            source_priority: source_priority
+        })
+
+    RETURN output
+
+// =====================================================
+// BUILD BRIDGED TEXT SOURCE
+// =====================================================
+
+FUNCTION build_bridged_text_source(
+    merged_sources,
+    visual_role_source_map,
+    parsed_slice,
+    settings
+):
+
+    RETURN {
+        source_mode: "template_parity_plus_vnext_enrichment",
+
+        center_text_source:
+            visual_role_source_map.center_text,
+
+        peripheral_text_source:
+            visual_role_source_map.peripheral_text,
+
+        keyword_text_source:
+            visual_role_source_map.text_constellation,
+
+        stray_letter_source:
+            visual_role_source_map.stray_letters,
+
+        grammar_particle_source:
+            visual_role_source_map.grammar_particles,
+
+        temporal_particle_source:
+            visual_role_source_map.temporal_particles,
+
+        echo_constellation_source:
+            visual_role_source_map.text_echo_constellation,
+
+        merged_sources: merged_sources,
+
+        original_parsed_slice: parsed_slice
+    }
+
+// =====================================================
+// REPORT
+// =====================================================
+
+FUNCTION build_source_parity_report(
+    template_sources,
+    vnext_sources,
+    bridged_text_source,
+    duplicate_map,
+    source_quality_score
+):
+
+    warnings = []
+
+    IF source_quality_score < 5:
+        warnings.APPEND("LOW_TEMPLATE_SOURCE_QUALITY")
+
+    IF count(template_sources.fragments) == 0:
+        warnings.APPEND("NO_TEMPLATE_FRAGMENTS_FOUND")
+
+    IF count(template_sources.keywords) == 0:
+        warnings.APPEND("NO_TEMPLATE_KEYWORDS_FOUND")
+
+    IF count(vnext_sources.tags) == 0:
+        warnings.APPEND("NO_VNEXT_TAGS_FOUND")
+
+    RETURN {
+        status: IF count(warnings) == 0 THEN "ok" ELSE "warning",
+        source_quality_score: source_quality_score,
+        template_sources_used: count_all_text_items(template_sources),
+        vnext_sources_preserved: count_all_text_items(vnext_sources),
+        duplicate_groups: count_duplicate_groups(duplicate_map),
+        final_visible_sources: count_all_text_items(bridged_text_source),
+        parity_level: resolve_parity_level(source_quality_score),
+        warnings: warnings
+    }
+
+FUNCTION resolve_parity_level(source_quality_score):
+
+    IF source_quality_score >= 8:
+        RETURN "strong_template_parity"
+
+    IF source_quality_score >= 5:
+        RETURN "partial_template_parity"
+
+    RETURN "fallback_vnext_parity"
+
+// =====================================================
+// TEXT HELPERS
+// =====================================================
+
+FUNCTION normalize_semantic_text_item(text):
+
+    IF text IS EMPTY:
+        RETURN ""
+
+    text = to_string(text)
+    text = trim(text)
+    text = remove_duplicate_spaces(text)
+    text = remove_empty_symbols(text)
+
+    RETURN text
+
+FUNCTION normalize_text_list(items):
+
+    output = []
+
+    FOR each item IN items:
+
+        clean = normalize_semantic_text_item(item)
+
+        IF clean NOT EMPTY:
+            output.APPEND(clean)
+
+    RETURN output
+
+FUNCTION normalize_for_match(text):
+
+    text = normalize_semantic_text_item(text)
+    text = lowercase(text)
+    text = remove_diacritic_variants(text)
+    text = remove_punctuation(text)
+
+    RETURN text
+
+FUNCTION limit_text_items_length(items, max_chars):
+
+    output = []
+
+    FOR each item IN items:
+
+        IF length(item) <= max_chars:
+            output.APPEND(item)
+
+        ELSE:
+            output.APPEND(substring(item, 0, max_chars) + "...")
+
+    RETURN output
+
+FUNCTION split_text_into_short_lines(text, max_chars):
+
+    words = split(text, " ")
+
+    lines = []
+    current = ""
+
+    FOR each word IN words:
+
+        candidate = current + " " + word
+
+        IF length(candidate) <= max_chars:
+            current = candidate
+
+        ELSE:
+            lines.APPEND(trim(current))
+            current = word
+
+    IF current NOT EMPTY:
+        lines.APPEND(trim(current))
+
+    RETURN first_n(lines, 3)
+
+FUNCTION extract_template_stray_letters(
+    thought_state,
+    thought_scene,
+    settings
+):
+
+    visible_texts = join([
+        thought_state.thought,
+        thought_scene.sceneGraph.thoughtCenterFragment,
+        thought_state.fragments,
+        thought_state.keywords
+    ])
+
+    glyphs = extract_letters_and_numbers(visible_texts)
+
+    RETURN evenly_sample(
+        glyphs,
+        settings.max_visible_stray_letters
+    )
+
+FUNCTION extract_clock_tokens(clock_display, settings):
+
+    IF clock_display IS EMPTY:
+        RETURN []
+
+    tokens = [
+        clock_display.hours,
+        clock_display.minutes,
+        clock_display.seconds,
+        replace(clock_display.transition, "_", " ")
+    ]
+
+    tokens = normalize_text_list(tokens)
+
+    RETURN first_n(
+        tokens,
+        settings.max_visible_temporal_particles
+    )
+
+FUNCTION evenly_sample(items, max_count):
+
+    IF count(items) <= max_count:
+        RETURN items
+
+    output = []
+
+    step = count(items) / max_count
+
+    FOR i FROM 0 TO max_count - 1:
+
+        index = floor(i * step)
+
+        output.APPEND(items[index])
+
+    RETURN output
+
+FUNCTION count_duplicate_groups(duplicate_map):
+
+    count_groups = 0
+
+    FOR each key, group IN duplicate_map:
+
+        IF count(group) > 1:
+            count_groups += 1
+
+    RETURN count_groups
+
+FUNCTION count_all_text_items(source_object):
+
+    total = 0
+
+    FOR each key, value IN source_object:
+
+        IF value IS string AND value NOT EMPTY:
+            total += 1
+
+        IF value IS array:
+            total += count(value)
+
+        IF value IS object:
+            total += count_all_text_items(value)
+
+    RETURN total
+
+FUNCTION extract_letters_and_numbers(text):
+
+    output = []
+
+    FOR each character IN text:
+
+        IF character IS letter OR character IS number:
+            output.APPEND(character)
+
+    RETURN output
+
+FAIL:
+IF parsed_slice is missing:
+    RETURN FAIL "Missing required input: parsed_slice"
+
+IF text source selection is attempted inside renderer:
+    RETURN FAIL "Renderer logic leakage detected"
+
+IF bridge attempts to render SVG:
+    RETURN FAIL "TextSourceParityBridge cannot render"
+
+IF bridge attempts to rewrite semantic source text:
+    RETURN FAIL "TextSourceParityBridge cannot rewrite source meaning"
+
+IF template and vNext sources are both unavailable:
+    RETURN FAIL "No usable text source available"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No implementation code
+- Bridge does not render
+- Bridge does not execute renderer logic
+- Bridge only selects, normalizes, merges, prioritizes, and reports text sources
+- Renderer does not think
+- Renderer only draws
+- Template sources remain primary when available
+- vNext text layers are preserved as enrichment
+- Duplicate merging must preserve highest priority source
+- Fallback from parsed_slice is allowed only when template sources are missing or disabled

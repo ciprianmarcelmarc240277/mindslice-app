@@ -1,0 +1,561 @@
+MINDSLICE PSEUDOCODE INDEX
+
+STATUS:
+    generated_by: MindSlice_PseudocodeInventoryAuditReport_v1
+    generated_from: /pseudocode/*.pseudo
+    index_order: pipeline_order
+    implementation_rule: pseudocode first, implementation later
+    no_typescript_generated: true
+    implementation_files_modified: false
+
+REQUIRED_SECTIONS:
+- MODULE
+- PURPOSE
+- INPUT
+- OUTPUT
+- STATE
+- FUNCTION RUN
+- HELPERS
+- FAIL
+- CONSTRAINTS
+
+STATUS_VALUES:
+- planned
+- validation
+- review
+- patch
+- gate
+- translation_queue
+- implemented_validated
+
+INVENTORY_AUDIT:
+    total_pseudo_files: 122
+    module_files_checked: 121
+    index_entries: 121
+    one_module_per_file_violations: 0
+    missing_required_sections: 0
+    duplicate_modules: 0
+    invalid_file_names: 0
+    malformed_module_names: 0
+    files_missing_from_index: 0
+    modules_missing_from_index: 0
+    index_files_missing_on_disk: 0
+    index_modules_missing_on_disk: 0
+    valid_module_files: 121
+
+PIPELINE_STAGE: registry_and_backfill
+
+- mindslice-module-registry-index-v1.pseudo
+  MODULE: MindSlice_ModuleRegistryIndex_v1
+  STATUS: planned
+
+- mindslice-pseudocode-backfill-plan-v1.pseudo
+  MODULE: MindSlice_PseudocodeBackfillPlan_v1
+  STATUS: planned
+
+- mindslice-registry-backfill-scanner-v1.pseudo
+  MODULE: MindSlice_RegistryBackfillScanner_v1
+  STATUS: validation
+
+PIPELINE_STAGE: validation
+
+- mindslice-pseudocode-runtime-controller-v1.pseudo
+  MODULE: MindSlice_PseudocodeRuntimeController_v1
+  STATUS: validation
+
+- mindslice-pseudocode-module-integration-audit-v1.pseudo
+  MODULE: MindSlice_PseudocodeModuleIntegrationAudit_v1
+  STATUS: validation
+
+- mindslice-pseudocode-to-implementation-bridge-v1.pseudo
+  MODULE: MindSlice_PseudocodeToImplementationBridge_v1
+  STATUS: validation
+
+- mindslice-module-contract-extractor-v1.pseudo
+  MODULE: MindSlice_ModuleContractExtractor_v1
+  STATUS: validation
+
+- mindslice-contract-normalization-engine-v1.pseudo
+  MODULE: MindSlice_ContractNormalizationEngine_v1
+  STATUS: validation
+
+- mindslice-contract-validator-v1.pseudo
+  MODULE: MindSlice_ContractValidator_v1
+  STATUS: validation
+
+- mindslice-pipeline-dependency-map-v1.pseudo
+  MODULE: MindSlice_PipelineDependencyMap_v1
+  STATUS: validation
+
+- mindslice-architecture-validation-orchestrator-v1.pseudo
+  MODULE: MindSlice_ArchitectureValidationOrchestrator_v1
+  STATUS: validation
+
+- mindslice-architecture-health-report-v1.pseudo
+  MODULE: MindSlice_ArchitectureHealthReport_v1
+  STATUS: validation
+
+- mindslice-pseudocode-inventory-audit-report-v1.pseudo
+  MODULE: MindSlice_PseudocodeInventoryAuditReport_v1
+  STATUS: validation
+
+PIPELINE_STAGE: review
+
+- mindslice-pseudocode-backfill-missing-contract-report-v1.pseudo
+  MODULE: MindSlice_PseudocodeBackfillMissingContractReport_v1
+  STATUS: review
+
+- mindslice-pseudocode-backfill-uncertain-inference-report-v1.pseudo
+  MODULE: MindSlice_PseudocodeBackfillUncertainInferenceReport_v1
+  STATUS: review
+
+- mindslice-pseudocode-backfill-manual-review-queue-v1.pseudo
+  MODULE: MindSlice_PseudocodeBackfillManualReviewQueue_v1
+  STATUS: review
+
+- mindslice-manual-review-queue-resolver-v1.pseudo
+  MODULE: MindSlice_ManualReviewQueueResolver_v1
+  STATUS: review
+
+PIPELINE_STAGE: patch
+
+- mindslice-architecture-patch-planner-v1.pseudo
+  MODULE: MindSlice_ArchitecturePatchPlanner_v1
+  STATUS: patch
+
+- mindslice-architecture-patch-validator-v1.pseudo
+  MODULE: MindSlice_ArchitecturePatchValidator_v1
+  STATUS: patch
+
+PIPELINE_STAGE: gate
+
+- mindslice-execution-gate-controller-v1.pseudo
+  MODULE: MindSlice_ExecutionGateController_v1
+  STATUS: gate
+
+PIPELINE_STAGE: translation_queue
+
+- mindslice-implementation-translation-queue-v1.pseudo
+  MODULE: MindSlice_ImplementationTranslationQueue_v1
+  STATUS: translation_queue
+
+PIPELINE_STAGE: planned_modules
+
+- mindslice-analytic-engine.pseudo
+  MODULE: MindSlice_AnalyticEngine
+  STATUS: planned
+
+- mindslice-architecture-validator.pseudo
+  MODULE: MindSlice_ArchitectureValidator
+  STATUS: planned
+
+- mindslice-art-composition.pseudo
+  MODULE: MindSlice_ArtComposition
+  STATUS: planned
+
+- mindslice-art-composition-engine.pseudo
+  MODULE: MindSlice_ArtCompositionEngine
+  STATUS: planned
+
+- mindslice-art-movements.pseudo
+  MODULE: MindSlice_ArtMovements
+  STATUS: planned
+
+- mindslice-author-engine.pseudo
+  MODULE: MindSlice_AuthorEngine
+  STATUS: planned
+
+- mindslice-author-reputation.pseudo
+  MODULE: MindSlice_AuthorReputation
+  STATUS: planned
+
+- mindslice-author-value.pseudo
+  MODULE: MindSlice_AuthorValue
+  STATUS: planned
+
+- mindslice-background-layer-orchestrator.pseudo
+  MODULE: MindSlice_BackgroundLayerOrchestrator
+  STATUS: planned
+
+- mindslice-background-module-registry.pseudo
+  MODULE: MindSlice_BackgroundModuleRegistry
+  STATUS: planned
+
+- mindslice-background-selection-telemetry.pseudo
+  MODULE: MindSlice_BackgroundSelectionTelemetry
+  STATUS: planned
+
+- mindslice-canon-engine.pseudo
+  MODULE: MindSlice_CanonEngine
+  STATUS: planned
+
+- mindslice-canvas-access-policy.pseudo
+  MODULE: MindSlice_CanvasAccessPolicy
+  STATUS: planned
+
+- mindslice-clock.pseudo
+  MODULE: MindSlice_Clock
+  STATUS: planned
+
+- mindslice-color-theory.pseudo
+  MODULE: MindSlice_ColorTheory
+  STATUS: planned
+
+- mindslice-color-theory-engine.pseudo
+  MODULE: MindSlice_ColorTheoryEngine
+  STATUS: planned
+
+- mindslice-composition-structure.pseudo
+  MODULE: MindSlice_CompositionStructure
+  STATUS: planned
+
+- mindslice-conceptual-preset.pseudo
+  MODULE: MindSlice_ConceptualPreset
+  STATUS: planned
+
+- mindslice-contamination.pseudo
+  MODULE: MindSlice_Contamination
+  STATUS: planned
+
+- mindslice-deviation-mode.pseudo
+  MODULE: MindSlice_DeviationMode
+  STATUS: planned
+
+- mindslice-display-engine.pseudo
+  MODULE: MindSlice_DisplayEngine
+  STATUS: planned
+
+- mindslice-execution-engine.pseudo
+  MODULE: MindSlice_ExecutionEngine
+  STATUS: planned
+
+- mindslice-flat-abstract-grammar-engine.pseudo
+  MODULE: MindSlice_FlatAbstractGrammarEngine
+  STATUS: planned
+
+- mindslice-flat-abstract-pattern-engine.pseudo
+  MODULE: MindSlice_FlatAbstractPatternEngine
+  STATUS: planned
+
+- mindslice-flat-abstract-pattern-svg-renderer.pseudo
+  MODULE: MindSlice_FlatAbstractPatternSVGRenderer
+  STATUS: planned
+
+- mindslice-formation.pseudo
+  MODULE: MindSlice_Formation
+  STATUS: planned
+
+- mindslice-geometry-engine.pseudo
+  MODULE: MindSlice_GeometryEngine
+  STATUS: planned
+
+- mindslice-grammar-pipeline-contract.pseudo
+  MODULE: MindSlice_GrammarPipelineContract
+  STATUS: planned
+
+- mindslice-identity-format-engine.pseudo
+  MODULE: MindSlice_IdentityFormatEngine
+  STATUS: planned
+
+- mindslice-input-engine.pseudo
+  MODULE: MindSlice_InputEngine
+  STATUS: planned
+
+- mindslice-interpretation.pseudo
+  MODULE: MindSlice_Interpretation
+  STATUS: planned
+
+- mindslice-isometric-grammar-engine.pseudo
+  MODULE: MindSlice_IsometricGrammarEngine
+  STATUS: planned
+
+- mindslice-isometric-pattern-engine.pseudo
+  MODULE: MindSlice_IsometricPatternEngine
+  STATUS: planned
+
+- mindslice-isometric-pattern-svg-renderer.pseudo
+  MODULE: MindSlice_IsometricPatternSVGRenderer
+  STATUS: planned
+
+- mindslice-iteration.pseudo
+  MODULE: MindSlice_Iteration
+  STATUS: planned
+
+- mindslice-learning-loop-engine.pseudo
+  MODULE: MindSlice_LearningLoopEngine
+  STATUS: planned
+
+- mindslice-learning-loop-engine-slices.pseudo
+  MODULE: MindSlice_LearningLoopEngineSlices
+  STATUS: planned
+
+- mindslice-legacy-visual-retirement-plan.pseudo
+  MODULE: MindSlice_LegacyVisualRetirementPlan
+  STATUS: planned
+
+- mindslice-literary-movements.pseudo
+  MODULE: MindSlice_LiteraryMovements
+  STATUS: planned
+
+- mindslice-main-loop.pseudo
+  MODULE: MindSlice_MainLoop
+  STATUS: planned
+
+- mindslice-master-engine.pseudo
+  MODULE: MindSlice_MasterEngine
+  STATUS: planned
+
+- mindslice-meta.pseudo
+  MODULE: MindSlice_Meta
+  STATUS: planned
+
+- mindslice-modular-grammar-engine.pseudo
+  MODULE: MindSlice_ModularGrammarEngine
+  STATUS: planned
+
+- mindslice-module-loader.pseudo
+  MODULE: MindSlice_ModuleLoader
+  STATUS: planned
+
+- mindslice-output.pseudo
+  MODULE: MindSlice_Output
+  STATUS: planned
+
+- mindslice-palette-contract-adapter.pseudo
+  MODULE: MindSlice_PaletteContractAdapter
+  STATUS: planned
+
+- mindslice-parser-engine.pseudo
+  MODULE: MindSlice_ParserEngine
+  STATUS: planned
+
+- mindslice-pattern-engine.pseudo
+  MODULE: MindSlice_PatternEngine
+  STATUS: planned
+
+- mindslice-pattern-svg-renderer.pseudo
+  MODULE: MindSlice_PatternSVGRenderer
+  STATUS: planned
+
+- mindslice-photography-theory.pseudo
+  MODULE: MindSlice_PhotographyTheory
+  STATUS: planned
+
+- mindslice-process.pseudo
+  MODULE: MindSlice_Process
+  STATUS: planned
+
+- mindslice-promotion.pseudo
+  MODULE: MindSlice_Promotion
+  STATUS: planned
+
+- mindslice-retro-grid-pattern-engine.pseudo
+  MODULE: MindSlice_RetroGridPatternEngine
+  STATUS: planned
+
+- mindslice-retro-grid-pattern-svg-renderer.pseudo
+  MODULE: MindSlice_RetroGridPatternSVGRenderer
+  STATUS: planned
+
+- mindslice-runtime-boot-controller.pseudo
+  MODULE: MindSlice_RuntimeBootController
+  STATUS: planned
+
+- mindslice-safe-svg-mount.pseudo
+  MODULE: MindSlice_SafeSVGMount
+  STATUS: planned
+
+- mindslice-scenario.pseudo
+  MODULE: MindSlice_Scenario
+  STATUS: planned
+
+- mindslice-scenario-engine.pseudo
+  MODULE: MindSlice_ScenarioEngine
+  STATUS: planned
+
+- mindslice-scoring-engine.pseudo
+  MODULE: MindSlice_ScoringEngine
+  STATUS: planned
+
+- mindslice-shape-grammar.pseudo
+  MODULE: MindSlice_ShapeGrammar
+  STATUS: planned
+
+- mindslice-shape-theory.pseudo
+  MODULE: MindSlice_ShapeTheory
+  STATUS: planned
+
+- mindslice-slice-repetition-engine.pseudo
+  MODULE: MindSlice_SliceRepetitionEngine
+  STATUS: planned
+
+- mindslice-slices-api-performance-guard.pseudo
+  MODULE: MindSlice_SlicesAPIPerformanceGuard
+  STATUS: planned
+
+- mindslice-snap-engine.pseudo
+  MODULE: MindSlice_SnapEngine
+  STATUS: planned
+
+- mindslice-snap-profile.pseudo
+  MODULE: MindSlice_SnapProfile
+  STATUS: planned
+
+- mindslice-structure-engine.pseudo
+  MODULE: MindSlice_StructureEngine
+  STATUS: planned
+
+- mindslice-svg-object-serializer.pseudo
+  MODULE: MindSlice_SVGObjectSerializer
+  STATUS: implemented_validated
+
+- mindslice-svg-renderer.pseudo
+  MODULE: MindSlice_SVGRenderer
+  STATUS: planned
+
+- mindslice-template-like-text-placement-engine.pseudo
+  MODULE: MindSlice_TemplateLikeTextPlacementEngine
+  STATUS: planned
+
+- mindslice-template-text-graphic-design-system-v1.pseudo
+  MODULE: MindSlice_TemplateTextGraphicDesignSystem_v1
+  STATUS: planned
+
+- mindslice-termination.pseudo
+  MODULE: MindSlice_Termination
+  STATUS: planned
+
+- mindslice-text-echo-constellation-engine.pseudo
+  MODULE: MindSlice_TextEchoConstellationEngine
+  STATUS: planned
+
+- mindslice-text-layout-collision-resolver.pseudo
+  MODULE: MindSlice_TextLayoutCollisionResolver
+  STATUS: planned
+
+- mindslice-text-layout-collision-resolver-v2.pseudo
+  MODULE: MindSlice_TextLayoutCollisionResolver_v2
+  STATUS: planned
+
+- mindslice-text-layout-density-balancer-v1.pseudo
+  MODULE: MindSlice_TextLayoutDensityBalancer_v1
+  STATUS: planned
+
+- mindslice-text-layout-engine.pseudo
+  MODULE: MindSlice_TextLayoutEngine
+  STATUS: planned
+
+- mindslice-text-layout-engine-v2.pseudo
+  MODULE: MindSlice_TextLayoutEngine_v2
+  STATUS: planned
+
+- mindslice-text-source-parity-bridge.pseudo
+  MODULE: MindSlice_TextSourceParityBridge
+  STATUS: planned
+
+- mindslice-text-source-parity-bridge-v2.pseudo
+  MODULE: MindSlice_TextSourceParityBridge_v2
+  STATUS: planned
+
+- mindslice-text-wrapping-engine.pseudo
+  MODULE: MindSlice_TextWrappingEngine
+  STATUS: planned
+
+- mindslice-thinking-engine.pseudo
+  MODULE: MindSlice_ThinkingEngine
+  STATUS: planned
+
+- mindslice-threshold.pseudo
+  MODULE: MindSlice_Threshold
+  STATUS: planned
+
+- mindslice-threshold-model.pseudo
+  MODULE: MindSlice_ThresholdModel
+  STATUS: planned
+
+- mindslice-triangulation-engine.pseudo
+  MODULE: MindSlice_TriangulationEngine
+  STATUS: planned
+
+- mindslice-triangulation-svg-renderer.pseudo
+  MODULE: MindSlice_TriangulationSVGRenderer
+  STATUS: planned
+
+- mindslice-validation.pseudo
+  MODULE: MindSlice_Validation
+  STATUS: planned
+
+- mindslice-visual-audit-engine.pseudo
+  MODULE: MindSlice_VisualAuditEngine
+  STATUS: implemented_validated
+
+- mindslice-visual-composer.pseudo
+  MODULE: MindSlice_VisualComposer
+  STATUS: planned
+
+- mindslice-visual-debug-mode.pseudo
+  MODULE: MindSlice_VisualDebugMode
+  STATUS: planned
+
+- mindslice-visual-error-boundary-contract.pseudo
+  MODULE: MindSlice_VisualErrorBoundaryContract
+  STATUS: planned
+
+- mindslice-visual-mapping-rules.pseudo
+  MODULE: MindSlice_VisualMappingRules
+  STATUS: planned
+
+- mindslice-visual-pipeline.pseudo
+  MODULE: MindSlice_VisualPipeline
+  STATUS: planned
+
+- mindslice-visual-pipeline-controller.pseudo
+  MODULE: MindSlice_VisualPipelineController
+  STATUS: planned
+
+- mindslice-visual-pipeline-controller-vnext.pseudo
+  MODULE: MindSlice_VisualPipelineController_vNext
+  STATUS: planned
+
+- mindslice-visual-renderer.pseudo
+  MODULE: MindSlice_VisualRenderer
+  STATUS: planned
+
+- mindslice-visual-renderer-v2.pseudo
+  MODULE: MindSlice_VisualRenderer_v2
+  STATUS: implemented_validated
+
+- mindslice-visual-runtime-smoke-test.pseudo
+  MODULE: MindSlice_VisualRuntimeSmokeTest
+  STATUS: implemented_validated
+
+- mindslice-zigzag-grammar-engine.pseudo
+  MODULE: MindSlice_ZigzagGrammarEngine
+  STATUS: planned
+
+- mindslice-zigzag-pattern-engine.pseudo
+  MODULE: MindSlice_ZigzagPatternEngine
+  STATUS: planned
+
+- mindslice-zigzag-pattern-svg-renderer.pseudo
+  MODULE: MindSlice_ZigzagPatternSVGRenderer
+  STATUS: planned
+
+COVERAGE_REPORT:
+    files_missing_from_index: []
+    modules_missing_from_index: []
+    index_files_missing_on_disk: []
+    index_modules_missing_on_disk: []
+    duplicate_modules: []
+    malformed_internal_module_names: []
+    invalid_file_names: []
+    missing_required_sections: []
+
+RULES:
+- These files are pseudocode only.
+- Do not generate TypeScript from this index.
+- Do not modify implementation files from this index.
+- Pseudocode first. Implementation later.
+- Renderer does not think.
+- Renderer only draws.
+- Existing versions coexist.

@@ -1,0 +1,479 @@
+MODULE MindSlice_TemplateTextGraphicDesignSystem_v1
+
+PURPOSE:
+    Preserve the graphic text design language from the original MindSlice SVG template.
+    Convert already selected and already placed text items into draw-ready graphic style instructions.
+    Keep the template text feeling visible, elegant, layered, and readable without giving the renderer decision authority.
+
+INPUT:
+    - text_layout_ready
+        already computed center text, peripheral text, text constellation, grammar particles, temporal particles, and stray letters
+    - visual_palette
+        already selected ink, accent, background, muted, and contrast colors
+    - canvas
+        width and height only for scale bounds, not semantic placement
+    - template_text_style_rules OPTIONAL
+    - renderer_passive_law
+
+OUTPUT:
+    - template_text_graphic_design
+    - center_text_design
+    - center_backplate_design
+    - peripheral_text_design
+    - text_constellation_design
+    - grammar_particle_design
+    - temporal_particle_design
+    - stray_letter_design
+    - text_graphic_design_report
+
+STATE:
+    - design-contract
+    - text-graphic-system
+    - template-parity
+    - non-rendering
+    - non-executing
+    - renderer-passive
+    - deterministic
+
+FUNCTION RUN:
+
+    VALIDATE input
+
+    style_rules = NORMALIZE_TEMPLATE_TEXT_STYLE_RULES(
+        input.template_text_style_rules
+    )
+
+    palette = RESOLVE_TEMPLATE_TEXT_PALETTE(
+        input.visual_palette
+    )
+
+    role_groups = GROUP_TEXT_LAYOUT_BY_ROLE(
+        input.text_layout_ready
+    )
+
+    center_backplate_design = BUILD_CENTER_BACKPLATE_DESIGN(
+        role_groups.center_text,
+        palette,
+        style_rules
+    )
+
+    center_text_design = BUILD_CENTER_TEXT_DESIGN(
+        role_groups.center_text,
+        palette,
+        style_rules
+    )
+
+    peripheral_text_design = BUILD_PERIPHERAL_TEXT_DESIGN(
+        role_groups.peripheral_text,
+        role_groups.template_fragments,
+        role_groups.sentence_fragments,
+        palette,
+        style_rules
+    )
+
+    text_constellation_design = BUILD_TEXT_CONSTELLATION_DESIGN(
+        role_groups.text_constellation,
+        role_groups.wandering_words,
+        palette,
+        style_rules
+    )
+
+    grammar_particle_design = BUILD_GRAMMAR_PARTICLE_DESIGN(
+        role_groups.grammar_particles,
+        palette,
+        style_rules
+    )
+
+    temporal_particle_design = BUILD_TEMPORAL_PARTICLE_DESIGN(
+        role_groups.temporal_particles,
+        palette,
+        style_rules
+    )
+
+    stray_letter_design = BUILD_STRAY_LETTER_DESIGN(
+        role_groups.stray_letters,
+        role_groups.wandering_letters,
+        palette,
+        style_rules
+    )
+
+    template_text_graphic_design = ASSEMBLE_TEMPLATE_TEXT_GRAPHIC_DESIGN(
+        center_backplate_design,
+        center_text_design,
+        peripheral_text_design,
+        text_constellation_design,
+        grammar_particle_design,
+        temporal_particle_design,
+        stray_letter_design
+    )
+
+    text_graphic_design_report = BUILD_TEXT_GRAPHIC_DESIGN_REPORT(
+        template_text_graphic_design,
+        role_groups
+    )
+
+    RETURN {
+        template_text_graphic_design: template_text_graphic_design,
+        center_text_design: center_text_design,
+        center_backplate_design: center_backplate_design,
+        peripheral_text_design: peripheral_text_design,
+        text_constellation_design: text_constellation_design,
+        grammar_particle_design: grammar_particle_design,
+        temporal_particle_design: temporal_particle_design,
+        stray_letter_design: stray_letter_design,
+        text_graphic_design_report: text_graphic_design_report
+    }
+
+HELPERS:
+
+FUNCTION NORMALIZE_TEMPLATE_TEXT_STYLE_RULES(style_rules):
+    RETURN {
+        center_label_text: style_rules.center_label_text OR "DIN FISIERUL SLICES",
+        center_label_font: "ui-monospace, SFMono-Regular, Menlo, monospace",
+        center_title_font: "Georgia, Times New Roman, serif",
+        center_body_font: "ui-sans-serif, system-ui, sans-serif",
+        peripheral_font: "Georgia, Times New Roman, serif",
+        particle_font: "ui-monospace, SFMono-Regular, Menlo, monospace",
+        center_label_letter_spacing: "0.18em",
+        peripheral_letter_spacing: "0.03em",
+        stray_letter_spacing: "0.02em",
+        temporal_letter_spacing: "0.12em",
+        particle_letter_spacing: "0.16em",
+        center_title_max_chars: 18,
+        center_fragment_max_chars: 24,
+        center_line_max_chars: 34,
+        peripheral_max_chars: 38,
+        constellation_max_chars: 18,
+        grammar_max_chars: 16,
+        temporal_max_chars: 24,
+        center_backplate_opacity: 0.78,
+        center_backplate_stroke_opacity: 0.12,
+        center_accent_halo_opacity: 0.12,
+        center_inner_ring_opacity: 0.20,
+        center_label_opacity: 0.62,
+        center_fragment_opacity: 0.58,
+        center_lines_opacity: 0.44
+    }
+
+FUNCTION RESOLVE_TEMPLATE_TEXT_PALETTE(visual_palette):
+    IF visual_palette is missing:
+        RETURN FAIL "Missing required input: visual_palette"
+
+    RETURN {
+        ink: visual_palette.ink,
+        accent: visual_palette.accent,
+        background: visual_palette.background,
+        muted: visual_palette.muted OR visual_palette.ink,
+        contrast: visual_palette.contrast OR visual_palette.ink
+    }
+
+FUNCTION GROUP_TEXT_LAYOUT_BY_ROLE(text_layout_ready):
+    IF text_layout_ready is missing:
+        RETURN FAIL "Missing required input: text_layout_ready"
+
+    RETURN {
+        center_text: FIND role "center_text",
+        peripheral_text: FIND all role "peripheral_text",
+        template_fragments: FIND all role "template_fragment",
+        sentence_fragments: FIND all role "sentence_fragment",
+        text_constellation: FIND all role "text_constellation",
+        wandering_words: FIND all role "wandering_word",
+        grammar_particles: FIND all role "grammar_particle",
+        temporal_particles: FIND all role "temporal_particle",
+        stray_letters: FIND all role "stray_letter",
+        wandering_letters: FIND all role "wandering_letter"
+    }
+
+FUNCTION BUILD_CENTER_BACKPLATE_DESIGN(center_text, palette, style_rules):
+    IF center_text is missing:
+        RETURN {
+            status: "not_applicable",
+            reason: "No center text was provided"
+        }
+
+    RETURN {
+        role: "center_backplate",
+        shape_stack: [
+            {
+                shape: "ellipse",
+                fill: palette.background,
+                opacity: style_rules.center_backplate_opacity,
+                stroke: palette.ink,
+                stroke_opacity: style_rules.center_backplate_stroke_opacity,
+                stroke_width: 1.4
+            },
+            {
+                shape: "accent_halo_ellipse",
+                fill: palette.accent,
+                opacity: style_rules.center_accent_halo_opacity,
+                offset_x: 26,
+                offset_y: 22
+            },
+            {
+                shape: "inner_dashed_ellipse",
+                fill: "none",
+                stroke: palette.accent,
+                stroke_opacity: style_rules.center_inner_ring_opacity,
+                stroke_width: 1,
+                dash_pattern: "5 8"
+            }
+        ],
+        renderer_instruction: "draw_shapes_exactly_as_provided"
+    }
+
+FUNCTION BUILD_CENTER_TEXT_DESIGN(center_text, palette, style_rules):
+    IF center_text is missing:
+        RETURN {
+            status: "missing_center_text",
+            warning: "Center text graphic design cannot be produced without center text"
+        }
+
+    RETURN {
+        role: "center_text",
+        label: {
+            text: style_rules.center_label_text,
+            font_family: style_rules.center_label_font,
+            font_size: 12,
+            letter_spacing: style_rules.center_label_letter_spacing,
+            fill: palette.accent,
+            opacity: style_rules.center_label_opacity,
+            anchor: "middle"
+        },
+        title: {
+            font_family: style_rules.center_title_font,
+            font_size: 22,
+            font_weight: 700,
+            fill: palette.ink,
+            max_chars: style_rules.center_title_max_chars,
+            anchor: "middle"
+        },
+        fragment: {
+            font_family: style_rules.center_body_font,
+            font_size: 13,
+            fill: palette.ink,
+            opacity: style_rules.center_fragment_opacity,
+            max_chars: style_rules.center_fragment_max_chars,
+            anchor: "middle"
+        },
+        lines: {
+            font_family: style_rules.center_body_font,
+            font_size: 12,
+            fill: palette.ink,
+            opacity: style_rules.center_lines_opacity,
+            max_lines: 2,
+            max_chars: style_rules.center_line_max_chars,
+            line_gap: 18,
+            anchor: "middle"
+        }
+    }
+
+FUNCTION BUILD_PERIPHERAL_TEXT_DESIGN(peripheral_text, template_fragments, sentence_fragments, palette, style_rules):
+    items = peripheral_text + template_fragments + sentence_fragments
+
+    RETURN MAP_TEXT_ITEMS_TO_GRAPHIC_STYLE(
+        items,
+        {
+            role: "peripheral_text",
+            font_family: style_rules.peripheral_font,
+            letter_spacing: style_rules.peripheral_letter_spacing,
+            fill: palette.ink,
+            opacity_source: "item_opacity",
+            max_chars: style_rules.peripheral_max_chars,
+            transform_source: "item_rotation_and_scale",
+            anchor_source: "item_anchor"
+        }
+    )
+
+FUNCTION BUILD_TEXT_CONSTELLATION_DESIGN(text_constellation, wandering_words, palette, style_rules):
+    items = text_constellation + wandering_words
+
+    RETURN MAP_TEXT_ITEMS_TO_GRAPHIC_STYLE(
+        items,
+        {
+            role: "text_constellation",
+            font_family: style_rules.particle_font,
+            letter_spacing: style_rules.particle_letter_spacing,
+            fill: palette.accent,
+            opacity_source: "item_opacity",
+            text_transform: "uppercase",
+            max_chars: style_rules.constellation_max_chars,
+            transform_source: "item_rotation_and_scale",
+            anchor_source: "item_anchor"
+        }
+    )
+
+FUNCTION BUILD_GRAMMAR_PARTICLE_DESIGN(grammar_particles, palette, style_rules):
+    RETURN MAP_TEXT_ITEMS_TO_GRAPHIC_STYLE(
+        grammar_particles,
+        {
+            role: "grammar_particle",
+            font_family: style_rules.particle_font,
+            letter_spacing: style_rules.particle_letter_spacing,
+            fill: palette.accent,
+            opacity_source: "item_opacity",
+            text_transform: "uppercase",
+            max_chars: style_rules.grammar_max_chars,
+            transform_source: "item_rotation_and_scale",
+            anchor_source: "item_anchor"
+        }
+    )
+
+FUNCTION BUILD_TEMPORAL_PARTICLE_DESIGN(temporal_particles, palette, style_rules):
+    RETURN MAP_TEXT_ITEMS_TO_GRAPHIC_STYLE(
+        temporal_particles,
+        {
+            role: "temporal_particle",
+            font_family: style_rules.particle_font,
+            letter_spacing: style_rules.temporal_letter_spacing,
+            fill: palette.ink,
+            opacity_source: "item_opacity",
+            text_transform: "uppercase",
+            max_chars: style_rules.temporal_max_chars,
+            transform_source: "item_rotation_and_scale",
+            anchor_source: "item_anchor"
+        }
+    )
+
+FUNCTION BUILD_STRAY_LETTER_DESIGN(stray_letters, wandering_letters, palette, style_rules):
+    items = stray_letters + wandering_letters
+
+    RETURN MAP_TEXT_ITEMS_TO_GRAPHIC_STYLE(
+        items,
+        {
+            role: "stray_letter",
+            font_family: style_rules.peripheral_font,
+            letter_spacing: style_rules.stray_letter_spacing,
+            fill: palette.ink,
+            opacity_source: "item_opacity",
+            max_chars: 1,
+            transform_source: "item_rotation_and_scale",
+            anchor_source: "item_anchor"
+        }
+    )
+
+FUNCTION MAP_TEXT_ITEMS_TO_GRAPHIC_STYLE(items, style_descriptor):
+    output = []
+
+    FOR each item IN items:
+        ADD {
+            id: item.id,
+            role: style_descriptor.role,
+            text: item.text,
+            x: item.x,
+            y: item.y,
+            anchor: item.anchor,
+            baseline: item.baseline OR "middle",
+            font_family: style_descriptor.font_family,
+            font_size: item.font_size OR RESOLVE_FONT_SIZE_FROM_ROLE(style_descriptor.role),
+            letter_spacing: style_descriptor.letter_spacing,
+            fill: style_descriptor.fill,
+            opacity: item.opacity,
+            rotation: item.rotation,
+            scale: item.scale OR 1,
+            max_chars: style_descriptor.max_chars,
+            text_transform: style_descriptor.text_transform OR "none",
+            renderer_instruction: "draw_text_exactly_as_provided"
+        } TO output
+
+    RETURN output
+
+FUNCTION RESOLVE_FONT_SIZE_FROM_ROLE(role):
+    IF role == "peripheral_text":
+        RETURN 28
+
+    IF role == "text_constellation":
+        RETURN 13
+
+    IF role == "grammar_particle":
+        RETURN 12
+
+    IF role == "temporal_particle":
+        RETURN 12
+
+    IF role == "stray_letter":
+        RETURN 26
+
+    RETURN 14
+
+FUNCTION ASSEMBLE_TEMPLATE_TEXT_GRAPHIC_DESIGN(
+    center_backplate_design,
+    center_text_design,
+    peripheral_text_design,
+    text_constellation_design,
+    grammar_particle_design,
+    temporal_particle_design,
+    stray_letter_design
+):
+    RETURN {
+        design_name: "template_text_graphic_design_v1",
+        source_contract: "text_layout_ready",
+        draw_order: [
+            "center_backplate_design",
+            "peripheral_text_design",
+            "text_constellation_design",
+            "grammar_particle_design",
+            "temporal_particle_design",
+            "stray_letter_design",
+            "center_text_design"
+        ],
+        center_backplate_design: center_backplate_design,
+        center_text_design: center_text_design,
+        peripheral_text_design: peripheral_text_design,
+        text_constellation_design: text_constellation_design,
+        grammar_particle_design: grammar_particle_design,
+        temporal_particle_design: temporal_particle_design,
+        stray_letter_design: stray_letter_design
+    }
+
+FUNCTION BUILD_TEXT_GRAPHIC_DESIGN_REPORT(template_text_graphic_design, role_groups):
+    warnings = []
+
+    IF role_groups.center_text is missing:
+        ADD "CENTER_TEXT_MISSING" TO warnings
+
+    IF count(role_groups.peripheral_text + role_groups.template_fragments + role_groups.sentence_fragments) == 0:
+        ADD "NO_PERIPHERAL_TEXT_ITEMS" TO warnings
+
+    IF count(role_groups.text_constellation + role_groups.wandering_words) == 0:
+        ADD "NO_TEXT_CONSTELLATION_ITEMS" TO warnings
+
+    RETURN {
+        status: "ok" IF warnings empty ELSE "warning",
+        design_contract: template_text_graphic_design.design_name,
+        renderer_law_preserved: true,
+        warnings: warnings
+    }
+
+FAIL:
+IF text_layout_ready is missing:
+    RETURN FAIL "Missing required input: text_layout_ready"
+
+IF visual_palette is missing:
+    RETURN FAIL "Missing required input: visual_palette"
+
+IF module attempts to choose semantic text source:
+    RETURN FAIL "TemplateTextGraphicDesignSystem cannot choose text source"
+
+IF module attempts to compute semantic layout:
+    RETURN FAIL "TemplateTextGraphicDesignSystem cannot compute semantic layout"
+
+IF module attempts to render SVG:
+    RETURN FAIL "TemplateTextGraphicDesignSystem cannot render"
+
+IF renderer is asked to decide missing text styling:
+    RETURN FAIL "Renderer logic leakage detected"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No implementation code
+- This module does not select text sources
+- This module does not compute semantic meaning
+- This module does not compute layout hierarchy
+- This module does not render SVG
+- This module only produces graphic style instructions for already prepared text layout
+- Text source selection belongs upstream
+- Text placement belongs upstream
+- Renderer does not think
+- Renderer only draws

@@ -1,0 +1,2608 @@
+unknown_resolution_report: 
+  modules_checked: 97
+  purpose_patch_candidates: 97
+  fail_patch_candidates: 50
+  side_effects_patch_candidates: 11
+  modules_ready_for_patch_v2: 7
+  modules_still_blocked_v2: 90
+purpose_patch_candidates: 
+  - 
+    module: "MindSlice_AnalyticEngine"
+    field: "PURPOSE"
+    value: "Define the Analytic Engine contract and behavior as evidenced by main function runAnalyticEngine within Core Concept Engines."
+    evidence: 
+      - "exported_main_function:runAnalyticEngine"
+      - "file_name:mindslice-analytic-engine.pseudo"
+      - "registry_category:Core Concept Engines"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ArchitectureValidator"
+    field: "PURPOSE"
+    value: "Define the Architecture Validator contract and behavior as evidenced by main function runArchitectureValidatorV1 within Runtime / Safety / Audit."
+    evidence: 
+      - "exported_main_function:runArchitectureValidatorV1"
+      - "file_name:mindslice-architecture-validator.pseudo"
+      - "registry_category:Runtime / Safety / Audit"
+      - "registry_role:audit"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ArtCompositionEngine"
+    field: "PURPOSE"
+    value: "Define the Art Composition Engine contract and behavior as evidenced by main function runArtCompositionEngineV1 within Visual Pipeline vNext."
+    evidence: 
+      - "exported_main_function:runArtCompositionEngineV1"
+      - "file_name:mindslice-art-composition-engine.pseudo"
+      - "registry_category:Visual Pipeline vNext"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ArtComposition"
+    field: "PURPOSE"
+    value: "Define the Art Composition contract and behavior as evidenced by module file name within Visual Pipeline vNext."
+    evidence: 
+      - "file_name:mindslice-art-composition.pseudo"
+      - "registry_category:Visual Pipeline vNext"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ArtMovements"
+    field: "PURPOSE"
+    value: "Define the Art Movements contract and behavior as evidenced by main function runArtMovementsSystem within Art / Narrative / Shape / Color."
+    evidence: 
+      - "exported_main_function:runArtMovementsSystem"
+      - "file_name:mindslice-art-movements.pseudo"
+      - "registry_category:Art / Narrative / Shape / Color"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_AuthorEngine"
+    field: "PURPOSE"
+    value: "Define the Author Engine contract and behavior as evidenced by module file name within Author / Identity / Memory Logic."
+    evidence: 
+      - "file_name:mindslice-author-engine.pseudo"
+      - "registry_category:Author / Identity / Memory Logic"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_AuthorReputation"
+    field: "PURPOSE"
+    value: "Define the Author Reputation contract and behavior as evidenced by main function runAuthorReputationSystemV1 within Author / Identity / Memory Logic."
+    evidence: 
+      - "exported_main_function:runAuthorReputationSystemV1"
+      - "file_name:mindslice-author-reputation.pseudo"
+      - "registry_category:Author / Identity / Memory Logic"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_AuthorValue"
+    field: "PURPOSE"
+    value: "Define the Author Value contract and behavior as evidenced by main function runAuthorValueSystemV1 within Author / Identity / Memory Logic."
+    evidence: 
+      - "exported_main_function:runAuthorValueSystemV1"
+      - "file_name:mindslice-author-value.pseudo"
+      - "registry_category:Author / Identity / Memory Logic"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_BackgroundLayerOrchestrator"
+    field: "PURPOSE"
+    value: "Define the Background Layer Orchestrator contract and behavior as evidenced by main function runBackgroundOrchestratorV2 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runBackgroundOrchestratorV2"
+      - "file_name:mindslice-background-layer-orchestrator.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:orchestration"
+    confidence: "medium"
+  - 
+    module: "MindSlice_BackgroundModuleRegistry"
+    field: "PURPOSE"
+    value: "Define the Background Module Registry contract and behavior as evidenced by main function runBackgroundModuleRegistryV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runBackgroundModuleRegistryV1"
+      - "file_name:mindslice-background-module-registry.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:registry"
+    confidence: "medium"
+  - 
+    module: "MindSlice_BackgroundSelectionTelemetry"
+    field: "PURPOSE"
+    value: "Define the Background Selection Telemetry contract and behavior as evidenced by main function runBackgroundSelectionTelemetryV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runBackgroundSelectionTelemetryV1"
+      - "file_name:mindslice-background-selection-telemetry.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_CanonEngine"
+    field: "PURPOSE"
+    value: "Define the Canon Engine contract and behavior as evidenced by main function runCanonEngineV1 within Core Concept Engines."
+    evidence: 
+      - "exported_main_function:runCanonEngineV1"
+      - "file_name:mindslice-canon-engine.pseudo"
+      - "registry_category:Core Concept Engines"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_CanvasAccessPolicy"
+    field: "PURPOSE"
+    value: "Define the Canvas Access Policy contract and behavior as evidenced by main function runCanvasAccessPolicyV1 within Runtime / Safety / Audit."
+    evidence: 
+      - "exported_main_function:runCanvasAccessPolicyV1"
+      - "file_name:mindslice-canvas-access-policy.pseudo"
+      - "registry_category:Runtime / Safety / Audit"
+      - "registry_role:safety"
+    confidence: "medium"
+  - 
+    module: "MindSlice_Clock"
+    field: "PURPOSE"
+    value: "Define the Clock contract and behavior as evidenced by module file name within Unclassified / Needs Review."
+    evidence: 
+      - "file_name:mindslice-clock.pseudo"
+      - "registry_category:Unclassified / Needs Review"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ColorTheoryEngine"
+    field: "PURPOSE"
+    value: "Define the Color Theory Engine contract and behavior as evidenced by main function runColorTheoryEngineV1 within Visual Pipeline vNext."
+    evidence: 
+      - "exported_main_function:runColorTheoryEngineV1"
+      - "file_name:mindslice-color-theory-engine.pseudo"
+      - "registry_category:Visual Pipeline vNext"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ColorTheory"
+    field: "PURPOSE"
+    value: "Define the Color Theory contract and behavior as evidenced by main function runColorIdeaSetMainLoop within Visual Pipeline vNext."
+    evidence: 
+      - "exported_main_function:runColorIdeaSetMainLoop"
+      - "file_name:mindslice-color-theory.pseudo"
+      - "registry_category:Visual Pipeline vNext"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_CompositionStructure"
+    field: "PURPOSE"
+    value: "Define the Composition Structure contract and behavior as evidenced by module file name within Visual Pipeline vNext."
+    evidence: 
+      - "file_name:mindslice-composition-structure.pseudo"
+      - "registry_category:Visual Pipeline vNext"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ConceptualPreset"
+    field: "PURPOSE"
+    value: "Define the Conceptual Preset contract and behavior as evidenced by main function runConceptualPresetSystemV1 within Visual Pipeline vNext."
+    evidence: 
+      - "exported_main_function:runConceptualPresetSystemV1"
+      - "file_name:mindslice-conceptual-preset.pseudo"
+      - "registry_category:Visual Pipeline vNext"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_Contamination"
+    field: "PURPOSE"
+    value: "Define the Contamination contract and behavior as evidenced by module file name within System Behavior."
+    evidence: 
+      - "file_name:mindslice-contamination.pseudo"
+      - "registry_category:System Behavior"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_DeviationMode"
+    field: "PURPOSE"
+    value: "Define the Deviation Mode contract and behavior as evidenced by main function runDeviationModeV2 within System Behavior."
+    evidence: 
+      - "exported_main_function:runDeviationModeV2"
+      - "file_name:mindslice-deviation-mode.pseudo"
+      - "registry_category:System Behavior"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_DisplayEngine"
+    field: "PURPOSE"
+    value: "Define the Display Engine contract and behavior as evidenced by module file name within Author / Identity / Memory Logic."
+    evidence: 
+      - "file_name:mindslice-display-engine.pseudo"
+      - "registry_category:Author / Identity / Memory Logic"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ExecutionEngine"
+    field: "PURPOSE"
+    value: "Define the Execution Engine contract and behavior as evidenced by main function runExecutionEngineV3 within Core Concept Engines."
+    evidence: 
+      - "exported_main_function:runExecutionEngineV3"
+      - "file_name:mindslice-execution-engine.pseudo"
+      - "registry_category:Core Concept Engines"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_FlatAbstractGrammarEngine"
+    field: "PURPOSE"
+    value: "Define the Flat Abstract Grammar Engine contract and behavior as evidenced by main function runFlatAbstractGrammarEngineV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runFlatAbstractGrammarEngineV1"
+      - "file_name:mindslice-flat-abstract-grammar-engine.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_FlatAbstractPatternEngine"
+    field: "PURPOSE"
+    value: "Define the Flat Abstract Pattern Engine contract and behavior as evidenced by main function runFlatAbstractPatternEngineV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runFlatAbstractPatternEngineV1"
+      - "file_name:mindslice-flat-abstract-pattern-engine.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_FlatAbstractPatternSVGRenderer"
+    field: "PURPOSE"
+    value: "Define the Flat Abstract Pattern SVG Renderer contract and behavior as evidenced by main function runFlatAbstractPatternSvgRendererV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runFlatAbstractPatternSvgRendererV1"
+      - "file_name:mindslice-flat-abstract-pattern-svg-renderer.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:renderer"
+    confidence: "medium"
+  - 
+    module: "MindSlice_Formation"
+    field: "PURPOSE"
+    value: "Define the Formation contract and behavior as evidenced by main function runMindSliceCore within Core Concept Engines."
+    evidence: 
+      - "exported_main_function:runMindSliceCore"
+      - "file_name:mindslice-formation.pseudo"
+      - "registry_category:Core Concept Engines"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_GeometryEngine"
+    field: "PURPOSE"
+    value: "Define the Geometry Engine contract and behavior as evidenced by main function runGeometryEngineV1 within Visual Pipeline vNext."
+    evidence: 
+      - "exported_main_function:runGeometryEngineV1"
+      - "file_name:mindslice-geometry-engine.pseudo"
+      - "registry_category:Visual Pipeline vNext"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_GrammarPipelineContract"
+    field: "PURPOSE"
+    value: "Define the Grammar Pipeline Contract contract and behavior as evidenced by main function runGrammarPipelineContractV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runGrammarPipelineContractV1"
+      - "file_name:mindslice-grammar-pipeline-contract.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_IdentityFormatEngine"
+    field: "PURPOSE"
+    value: "Define the Identity Format Engine contract and behavior as evidenced by main function runIdentityFormatEngineV1 within Author / Identity / Memory Logic."
+    evidence: 
+      - "exported_main_function:runIdentityFormatEngineV1"
+      - "file_name:mindslice-identity-format-engine.pseudo"
+      - "registry_category:Author / Identity / Memory Logic"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_InputEngine"
+    field: "PURPOSE"
+    value: "Define the Input Engine contract and behavior as evidenced by module file name within Core Concept Engines."
+    evidence: 
+      - "file_name:mindslice-input-engine.pseudo"
+      - "registry_category:Core Concept Engines"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_Interpretation"
+    field: "PURPOSE"
+    value: "Define the Interpretation contract and behavior as evidenced by module file name within Core Concept Engines."
+    evidence: 
+      - "file_name:mindslice-interpretation.pseudo"
+      - "registry_category:Core Concept Engines"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_IsometricGrammarEngine"
+    field: "PURPOSE"
+    value: "Define the Isometric Grammar Engine contract and behavior as evidenced by main function runIsometricGrammarEngineV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runIsometricGrammarEngineV1"
+      - "file_name:mindslice-isometric-grammar-engine.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_IsometricPatternEngine"
+    field: "PURPOSE"
+    value: "Define the Isometric Pattern Engine contract and behavior as evidenced by main function runIsometricPatternEngineV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runIsometricPatternEngineV1"
+      - "file_name:mindslice-isometric-pattern-engine.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_IsometricPatternSVGRenderer"
+    field: "PURPOSE"
+    value: "Define the Isometric Pattern SVG Renderer contract and behavior as evidenced by main function runIsometricPatternSvgRendererV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runIsometricPatternSvgRendererV1"
+      - "file_name:mindslice-isometric-pattern-svg-renderer.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:renderer"
+    confidence: "medium"
+  - 
+    module: "MindSlice_Iteration"
+    field: "PURPOSE"
+    value: "Define the Iteration contract and behavior as evidenced by module file name within Core Concept Engines."
+    evidence: 
+      - "file_name:mindslice-iteration.pseudo"
+      - "registry_category:Core Concept Engines"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_LearningLoopEngineSlices"
+    field: "PURPOSE"
+    value: "Define the Learning Loop Engine Slices contract and behavior as evidenced by main function runLearningLoopEngineV2Slices within System Behavior."
+    evidence: 
+      - "exported_main_function:runLearningLoopEngineV2Slices"
+      - "file_name:mindslice-learning-loop-engine-slices.pseudo"
+      - "registry_category:System Behavior"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_LearningLoopEngine"
+    field: "PURPOSE"
+    value: "Define the Learning Loop Engine contract and behavior as evidenced by main function runLearningLoopEngineV2 within System Behavior."
+    evidence: 
+      - "exported_main_function:runLearningLoopEngineV2"
+      - "file_name:mindslice-learning-loop-engine.pseudo"
+      - "registry_category:System Behavior"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_LegacyVisualRetirementPlan"
+    field: "PURPOSE"
+    value: "Define the Legacy Visual Retirement Plan contract and behavior as evidenced by main function runLegacyVisualRetirementPlanV1 within Runtime / Safety / Audit."
+    evidence: 
+      - "exported_main_function:runLegacyVisualRetirementPlanV1"
+      - "file_name:mindslice-legacy-visual-retirement-plan.pseudo"
+      - "registry_category:Runtime / Safety / Audit"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_LiteraryMovements"
+    field: "PURPOSE"
+    value: "Define the Literary Movements contract and behavior as evidenced by main function runLiteraryMovementsSystem within Art / Narrative / Shape / Color."
+    evidence: 
+      - "exported_main_function:runLiteraryMovementsSystem"
+      - "file_name:mindslice-literary-movements.pseudo"
+      - "registry_category:Art / Narrative / Shape / Color"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_MainLoop"
+    field: "PURPOSE"
+    value: "Define the Main Loop contract and behavior as evidenced by main function runIdeaSetMainLoop within Core Concept Engines."
+    evidence: 
+      - "exported_main_function:runIdeaSetMainLoop"
+      - "file_name:mindslice-main-loop.pseudo"
+      - "registry_category:Core Concept Engines"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_MasterEngine"
+    field: "PURPOSE"
+    value: "Define the Master Engine contract and behavior as evidenced by main function runMasterEngine within Core Concept Engines."
+    evidence: 
+      - "exported_main_function:runMasterEngine"
+      - "file_name:mindslice-master-engine.pseudo"
+      - "registry_category:Core Concept Engines"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_Meta"
+    field: "PURPOSE"
+    value: "Define the Meta contract and behavior as evidenced by main function runMetaSystem within Author / Identity / Memory Logic."
+    evidence: 
+      - "exported_main_function:runMetaSystem"
+      - "file_name:mindslice-meta.pseudo"
+      - "registry_category:Author / Identity / Memory Logic"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ModularGrammarEngine"
+    field: "PURPOSE"
+    value: "Define the Modular Grammar Engine contract and behavior as evidenced by main function runModularGrammarEngineV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runModularGrammarEngineV1"
+      - "file_name:mindslice-modular-grammar-engine.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ModuleLoader"
+    field: "PURPOSE"
+    value: "Define the Module Loader contract and behavior as evidenced by main function runModuleLoaderV1 within Unclassified / Needs Review."
+    evidence: 
+      - "exported_main_function:runModuleLoaderV1"
+      - "file_name:mindslice-module-loader.pseudo"
+      - "registry_category:Unclassified / Needs Review"
+      - "registry_role:orchestration"
+    confidence: "medium"
+  - 
+    module: "MindSlice_Output"
+    field: "PURPOSE"
+    value: "Define the Output contract and behavior as evidenced by module file name within Core Concept Engines."
+    evidence: 
+      - "file_name:mindslice-output.pseudo"
+      - "registry_category:Core Concept Engines"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_PaletteContractAdapter"
+    field: "PURPOSE"
+    value: "Define the Palette Contract Adapter contract and behavior as evidenced by main function runPaletteContractAdapterV1 within Runtime / Safety / Audit."
+    evidence: 
+      - "exported_main_function:runPaletteContractAdapterV1"
+      - "file_name:mindslice-palette-contract-adapter.pseudo"
+      - "registry_category:Runtime / Safety / Audit"
+      - "registry_role:adapter"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ParserEngine"
+    field: "PURPOSE"
+    value: "Define the Parser Engine contract and behavior as evidenced by main function runMultiSliceParserEngine within Visual Pipeline vNext."
+    evidence: 
+      - "exported_main_function:runMultiSliceParserEngine"
+      - "file_name:mindslice-parser-engine.pseudo"
+      - "registry_category:Visual Pipeline vNext"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_PatternEngine"
+    field: "PURPOSE"
+    value: "Define the Pattern Engine contract and behavior as evidenced by main function runPatternEngineV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runPatternEngineV1"
+      - "file_name:mindslice-pattern-engine.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_PatternSVGRenderer"
+    field: "PURPOSE"
+    value: "Define the Pattern SVG Renderer contract and behavior as evidenced by main function runPatternSvgRendererV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runPatternSvgRendererV1"
+      - "file_name:mindslice-pattern-svg-renderer.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:renderer"
+    confidence: "medium"
+  - 
+    module: "MindSlice_PhotographyTheory"
+    field: "PURPOSE"
+    value: "Define the Photography Theory contract and behavior as evidenced by main function runPhotographyTheorySystem within Art / Narrative / Shape / Color."
+    evidence: 
+      - "exported_main_function:runPhotographyTheorySystem"
+      - "file_name:mindslice-photography-theory.pseudo"
+      - "registry_category:Art / Narrative / Shape / Color"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_Process"
+    field: "PURPOSE"
+    value: "Define the Process contract and behavior as evidenced by module file name within Core Concept Engines."
+    evidence: 
+      - "file_name:mindslice-process.pseudo"
+      - "registry_category:Core Concept Engines"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_Promotion"
+    field: "PURPOSE"
+    value: "Define the Promotion contract and behavior as evidenced by module file name within System Behavior."
+    evidence: 
+      - "file_name:mindslice-promotion.pseudo"
+      - "registry_category:System Behavior"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_RetroGridPatternEngine"
+    field: "PURPOSE"
+    value: "Define the Retro Grid Pattern Engine contract and behavior as evidenced by main function runRetroGridGrammarForPatternPipelineV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runRetroGridGrammarForPatternPipelineV1"
+      - "file_name:mindslice-retro-grid-pattern-engine.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_RetroGridPatternSVGRenderer"
+    field: "PURPOSE"
+    value: "Define the Retro Grid Pattern SVG Renderer contract and behavior as evidenced by main function runRetroGridPatternSvgRendererV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runRetroGridPatternSvgRendererV1"
+      - "file_name:mindslice-retro-grid-pattern-svg-renderer.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:renderer"
+    confidence: "medium"
+  - 
+    module: "MindSlice_RuntimeBootController"
+    field: "PURPOSE"
+    value: "Define the Runtime Boot Controller contract and behavior as evidenced by main function runRuntimeBootControllerV1 within Runtime / Safety / Audit."
+    evidence: 
+      - "exported_main_function:runRuntimeBootControllerV1"
+      - "file_name:mindslice-runtime-boot-controller.pseudo"
+      - "registry_category:Runtime / Safety / Audit"
+      - "registry_role:orchestration"
+    confidence: "medium"
+  - 
+    module: "MindSlice_SafeSVGMount"
+    field: "PURPOSE"
+    value: "Define the Safe SVG Mount contract and behavior as evidenced by main function runSafeSvgMountV1 within Runtime / Safety / Audit."
+    evidence: 
+      - "exported_main_function:runSafeSvgMountV1"
+      - "file_name:mindslice-safe-svg-mount.pseudo"
+      - "registry_category:Runtime / Safety / Audit"
+      - "registry_role:safety"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ScenarioEngine"
+    field: "PURPOSE"
+    value: "Define the Scenario Engine contract and behavior as evidenced by main function runScenarioEngineV1 within Visual Pipeline vNext."
+    evidence: 
+      - "exported_main_function:runScenarioEngineV1"
+      - "file_name:mindslice-scenario-engine.pseudo"
+      - "registry_category:Visual Pipeline vNext"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_Scenario"
+    field: "PURPOSE"
+    value: "Define the Scenario contract and behavior as evidenced by module file name within Visual Pipeline vNext."
+    evidence: 
+      - "file_name:mindslice-scenario.pseudo"
+      - "registry_category:Visual Pipeline vNext"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ScoringEngine"
+    field: "PURPOSE"
+    value: "Define the Scoring Engine contract and behavior as evidenced by main function runScoringEngineV1 within Core Concept Engines."
+    evidence: 
+      - "exported_main_function:runScoringEngineV1"
+      - "file_name:mindslice-scoring-engine.pseudo"
+      - "registry_category:Core Concept Engines"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ShapeGrammar"
+    field: "PURPOSE"
+    value: "Define the Shape Grammar contract and behavior as evidenced by module file name within Background / Pattern / Grammar."
+    evidence: 
+      - "file_name:mindslice-shape-grammar.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ShapeTheory"
+    field: "PURPOSE"
+    value: "Define the Shape Theory contract and behavior as evidenced by module file name within Art / Narrative / Shape / Color."
+    evidence: 
+      - "file_name:mindslice-shape-theory.pseudo"
+      - "registry_category:Art / Narrative / Shape / Color"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_SliceRepetitionEngine"
+    field: "PURPOSE"
+    value: "Define the Slice Repetition Engine contract and behavior as evidenced by main function runSliceRepetitionEngineV1 within System Behavior."
+    evidence: 
+      - "exported_main_function:runSliceRepetitionEngineV1"
+      - "file_name:mindslice-slice-repetition-engine.pseudo"
+      - "registry_category:System Behavior"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_SlicesAPIPerformanceGuard"
+    field: "PURPOSE"
+    value: "Define the Slices API Performance Guard contract and behavior as evidenced by main function RUN within Runtime / Safety / Audit."
+    evidence: 
+      - "exported_main_function:RUN"
+      - "file_name:mindslice-slices-api-performance-guard.pseudo"
+      - "registry_category:Runtime / Safety / Audit"
+      - "registry_role:safety"
+    confidence: "medium"
+  - 
+    module: "MindSlice_SnapEngine"
+    field: "PURPOSE"
+    value: "Define the Snap Engine contract and behavior as evidenced by main function runSnapEngineV1 within Visual Pipeline vNext."
+    evidence: 
+      - "exported_main_function:runSnapEngineV1"
+      - "file_name:mindslice-snap-engine.pseudo"
+      - "registry_category:Visual Pipeline vNext"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_SnapProfile"
+    field: "PURPOSE"
+    value: "Define the Snap Profile contract and behavior as evidenced by main function runSnapProfileSystemV1 within Visual Pipeline vNext."
+    evidence: 
+      - "exported_main_function:runSnapProfileSystemV1"
+      - "file_name:mindslice-snap-profile.pseudo"
+      - "registry_category:Visual Pipeline vNext"
+      - "registry_role:SnapProfileElementRole = \"secondary\""
+    confidence: "medium"
+  - 
+    module: "MindSlice_StructureEngine"
+    field: "PURPOSE"
+    value: "Define the Structure Engine contract and behavior as evidenced by main function runStructureEngineV1 within Visual Pipeline vNext."
+    evidence: 
+      - "exported_main_function:runStructureEngineV1"
+      - "file_name:mindslice-structure-engine.pseudo"
+      - "registry_category:Visual Pipeline vNext"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_SVGObjectSerializer"
+    field: "PURPOSE"
+    value: "Define the SVG Object Serializer contract and behavior as evidenced by main function runSvgObjectSerializerV1 within Unclassified / Needs Review."
+    evidence: 
+      - "exported_main_function:runSvgObjectSerializerV1"
+      - "file_name:mindslice-svg-object-serializer.pseudo"
+      - "registry_category:Unclassified / Needs Review"
+      - "registry_role:serializer"
+    confidence: "medium"
+  - 
+    module: "MindSlice_SVGRenderer"
+    field: "PURPOSE"
+    value: "Define the SVG Renderer contract and behavior as evidenced by main function runSvgRendererV1 within Visual v1 / Legacy / Composer."
+    evidence: 
+      - "exported_main_function:runSvgRendererV1"
+      - "file_name:mindslice-svg-renderer.pseudo"
+      - "registry_category:Visual v1 / Legacy / Composer"
+      - "registry_role:renderer"
+    confidence: "medium"
+  - 
+    module: "MindSlice_TemplateLikeTextPlacementEngine"
+    field: "PURPOSE"
+    value: "Define the Template Like Text Placement Engine contract and behavior as evidenced by main function runTemplateLikeTextPlacementEngineV1 within Text / SVG Text."
+    evidence: 
+      - "exported_main_function:runTemplateLikeTextPlacementEngineV1"
+      - "file_name:mindslice-template-like-text-placement-engine.pseudo"
+      - "registry_category:Text / SVG Text"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_Termination"
+    field: "PURPOSE"
+    value: "Define the Termination contract and behavior as evidenced by module file name within Core Concept Engines."
+    evidence: 
+      - "file_name:mindslice-termination.pseudo"
+      - "registry_category:Core Concept Engines"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_TextEchoConstellationEngine"
+    field: "PURPOSE"
+    value: "Define the Text Echo Constellation Engine contract and behavior as evidenced by main function runTextEchoConstellationEngineV1 within Text / SVG Text."
+    evidence: 
+      - "exported_main_function:runTextEchoConstellationEngineV1"
+      - "file_name:mindslice-text-echo-constellation-engine.pseudo"
+      - "registry_category:Text / SVG Text"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_TextLayoutCollisionResolver"
+    field: "PURPOSE"
+    value: "Define the Text Layout Collision Resolver contract and behavior as evidenced by main function runTextLayoutCollisionResolverV1 within Text / SVG Text."
+    evidence: 
+      - "exported_main_function:runTextLayoutCollisionResolverV1"
+      - "file_name:mindslice-text-layout-collision-resolver.pseudo"
+      - "registry_category:Text / SVG Text"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_TextLayoutCollisionResolver_v2"
+    field: "PURPOSE"
+    value: "Define the Text Layout Collision Resolver contract and behavior as evidenced by main function runTextLayoutCollisionResolverV2 within Text / SVG Text."
+    evidence: 
+      - "exported_main_function:runTextLayoutCollisionResolverV2"
+      - "file_name:mindslice-text-layout-collision-resolver-v2.pseudo"
+      - "registry_category:Text / SVG Text"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_TextLayoutEngine"
+    field: "PURPOSE"
+    value: "Define the Text Layout Engine contract and behavior as evidenced by main function runTextLayoutEngineV1 within Text / SVG Text."
+    evidence: 
+      - "exported_main_function:runTextLayoutEngineV1"
+      - "file_name:mindslice-text-layout-engine.pseudo"
+      - "registry_category:Text / SVG Text"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_TextLayoutEngine_v2"
+    field: "PURPOSE"
+    value: "Define the Text Layout Engine contract and behavior as evidenced by main function runTextLayoutEngineV2 within Text / SVG Text."
+    evidence: 
+      - "exported_main_function:runTextLayoutEngineV2"
+      - "file_name:mindslice-text-layout-engine-v2.pseudo"
+      - "registry_category:Text / SVG Text"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_TextSourceParityBridge"
+    field: "PURPOSE"
+    value: "Define the Text Source Parity Bridge contract and behavior as evidenced by main function runTextSourceParityBridgeV1 within Text / SVG Text."
+    evidence: 
+      - "exported_main_function:runTextSourceParityBridgeV1"
+      - "file_name:mindslice-text-source-parity-bridge.pseudo"
+      - "registry_category:Text / SVG Text"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_TextWrappingEngine"
+    field: "PURPOSE"
+    value: "Define the Text Wrapping Engine contract and behavior as evidenced by main function runTextWrappingEngineV1 within Text / SVG Text."
+    evidence: 
+      - "exported_main_function:runTextWrappingEngineV1"
+      - "file_name:mindslice-text-wrapping-engine.pseudo"
+      - "registry_category:Text / SVG Text"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ThinkingEngine"
+    field: "PURPOSE"
+    value: "Define the Thinking Engine contract and behavior as evidenced by main function runThinkingEngine within Core Concept Engines."
+    evidence: 
+      - "exported_main_function:runThinkingEngine"
+      - "file_name:mindslice-thinking-engine.pseudo"
+      - "registry_category:Core Concept Engines"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ThresholdModel"
+    field: "PURPOSE"
+    value: "Define the Threshold Model contract and behavior as evidenced by main function runThresholdModelV2 within Core Concept Engines."
+    evidence: 
+      - "exported_main_function:runThresholdModelV2"
+      - "file_name:mindslice-threshold-model.pseudo"
+      - "registry_category:Core Concept Engines"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_Threshold"
+    field: "PURPOSE"
+    value: "Define the Threshold contract and behavior as evidenced by module file name within Core Concept Engines."
+    evidence: 
+      - "file_name:mindslice-threshold.pseudo"
+      - "registry_category:Core Concept Engines"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_TriangulationEngine"
+    field: "PURPOSE"
+    value: "Define the Triangulation Engine contract and behavior as evidenced by main function runTriangulationEngineV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runTriangulationEngineV1"
+      - "file_name:mindslice-triangulation-engine.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_TriangulationSVGRenderer"
+    field: "PURPOSE"
+    value: "Define the Triangulation SVG Renderer contract and behavior as evidenced by main function runTriangulationSvgRendererV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runTriangulationSvgRendererV1"
+      - "file_name:mindslice-triangulation-svg-renderer.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:renderer"
+    confidence: "medium"
+  - 
+    module: "MindSlice_Validation"
+    field: "PURPOSE"
+    value: "Define the Validation contract and behavior as evidenced by module file name within Core Concept Engines."
+    evidence: 
+      - "file_name:mindslice-validation.pseudo"
+      - "registry_category:Core Concept Engines"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualAuditEngine"
+    field: "PURPOSE"
+    value: "Define the Visual Audit Engine contract and behavior as evidenced by main function runVisualAuditEngineV1 within Runtime / Safety / Audit."
+    evidence: 
+      - "exported_main_function:runVisualAuditEngineV1"
+      - "file_name:mindslice-visual-audit-engine.pseudo"
+      - "registry_category:Runtime / Safety / Audit"
+      - "registry_role:audit"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualComposer"
+    field: "PURPOSE"
+    value: "Define the Visual Composer contract and behavior as evidenced by main function runVisualComposerV1 within Visual v1 / Legacy / Composer."
+    evidence: 
+      - "exported_main_function:runVisualComposerV1"
+      - "file_name:mindslice-visual-composer.pseudo"
+      - "registry_category:Visual v1 / Legacy / Composer"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualDebugMode"
+    field: "PURPOSE"
+    value: "Define the Visual Debug Mode contract and behavior as evidenced by main function runVisualDebugModeV1 within Visual v1 / Legacy / Composer."
+    evidence: 
+      - "exported_main_function:runVisualDebugModeV1"
+      - "file_name:mindslice-visual-debug-mode.pseudo"
+      - "registry_category:Visual v1 / Legacy / Composer"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualErrorBoundaryContract"
+    field: "PURPOSE"
+    value: "Define the Visual Error Boundary Contract contract and behavior as evidenced by main function runVisualErrorBoundaryContractV1 within Runtime / Safety / Audit."
+    evidence: 
+      - "exported_main_function:runVisualErrorBoundaryContractV1"
+      - "file_name:mindslice-visual-error-boundary-contract.pseudo"
+      - "registry_category:Runtime / Safety / Audit"
+      - "registry_role:safety"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualMappingRules"
+    field: "PURPOSE"
+    value: "Define the Visual Mapping Rules contract and behavior as evidenced by main function runVisualMappingRulesV1 within Visual v1 / Legacy / Composer."
+    evidence: 
+      - "exported_main_function:runVisualMappingRulesV1"
+      - "file_name:mindslice-visual-mapping-rules.pseudo"
+      - "registry_category:Visual v1 / Legacy / Composer"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualPipelineController"
+    field: "PURPOSE"
+    value: "Define the Visual Pipeline Controller contract and behavior as evidenced by main function runMindSliceVisualSystemV1 within Visual v1 / Legacy / Composer."
+    evidence: 
+      - "exported_main_function:runMindSliceVisualSystemV1"
+      - "file_name:mindslice-visual-pipeline-controller.pseudo"
+      - "registry_category:Visual v1 / Legacy / Composer"
+      - "registry_role:orchestration"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualPipelineController_vNext"
+    field: "PURPOSE"
+    value: "Define the Visual Pipeline Controller v Next contract and behavior as evidenced by main function runVisualPipelineControllerVNext within Visual v1 / Legacy / Composer."
+    evidence: 
+      - "exported_main_function:runVisualPipelineControllerVNext"
+      - "file_name:mindslice-visual-pipeline-controller-vnext.pseudo"
+      - "registry_category:Visual v1 / Legacy / Composer"
+      - "registry_role:orchestration"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualPipeline"
+    field: "PURPOSE"
+    value: "Define the Visual Pipeline contract and behavior as evidenced by main function runVisualPipelineV1 within Visual v1 / Legacy / Composer."
+    evidence: 
+      - "exported_main_function:runVisualPipelineV1"
+      - "file_name:mindslice-visual-pipeline.pseudo"
+      - "registry_category:Visual v1 / Legacy / Composer"
+      - "registry_role:concept_module"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualRenderer"
+    field: "PURPOSE"
+    value: "Define the Visual Renderer contract and behavior as evidenced by main function runVisualRendererV1 within Visual v1 / Legacy / Composer."
+    evidence: 
+      - "exported_main_function:runVisualRendererV1"
+      - "file_name:mindslice-visual-renderer.pseudo"
+      - "registry_category:Visual v1 / Legacy / Composer"
+      - "registry_role:renderer"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualRenderer_v2"
+    field: "PURPOSE"
+    value: "Define the Visual Renderer contract and behavior as evidenced by main function runVisualRendererV2 within Visual v1 / Legacy / Composer."
+    evidence: 
+      - "exported_main_function:runVisualRendererV2"
+      - "file_name:mindslice-visual-renderer-v2.pseudo"
+      - "registry_category:Visual v1 / Legacy / Composer"
+      - "registry_role:renderer"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualRuntimeSmokeTest"
+    field: "PURPOSE"
+    value: "Define the Visual Runtime Smoke Test contract and behavior as evidenced by main function runVisualRuntimeSmokeTestV1 within Runtime / Safety / Audit."
+    evidence: 
+      - "exported_main_function:runVisualRuntimeSmokeTestV1"
+      - "file_name:mindslice-visual-runtime-smoke-test.pseudo"
+      - "registry_category:Runtime / Safety / Audit"
+      - "registry_role:audit"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ZigzagGrammarEngine"
+    field: "PURPOSE"
+    value: "Define the Zigzag Grammar Engine contract and behavior as evidenced by main function runZigZagGrammarEngineV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runZigZagGrammarEngineV1"
+      - "file_name:mindslice-zigzag-grammar-engine.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ZigzagPatternEngine"
+    field: "PURPOSE"
+    value: "Define the Zigzag Pattern Engine contract and behavior as evidenced by main function runZigZagGrammarForPatternPipelineV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runZigZagGrammarForPatternPipelineV1"
+      - "file_name:mindslice-zigzag-pattern-engine.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:engine"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ZigzagPatternSVGRenderer"
+    field: "PURPOSE"
+    value: "Define the Zigzag Pattern SVG Renderer contract and behavior as evidenced by main function runZigZagPatternSvgRendererV1 within Background / Pattern / Grammar."
+    evidence: 
+      - "exported_main_function:runZigZagPatternSvgRendererV1"
+      - "file_name:mindslice-zigzag-pattern-svg-renderer.pseudo"
+      - "registry_category:Background / Pattern / Grammar"
+      - "registry_role:renderer"
+    confidence: "medium"
+fail_patch_candidates: 
+  - 
+    module: "MindSlice_ArchitectureValidator"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 402: \"FALLBACK_PATTERN_OUTPUT\","
+      - "line 220: if (!moduleDefinition.version) {"
+      - "line 228: if (!hasDeclaredContract(moduleDefinition, \"input_contract\")) {"
+      - "line 232: if (!hasDeclaredContract(moduleDefinition, \"output_contract\")) {"
+      - "line 240: if (moduleDefinition.type === \"renderer\" && !moduleDefinition.provides?.includes(\"draw\")) {"
+      - "line 336: if (!activeRuntime) {"
+      - "line 343: if (!registry) {"
+      - "line 442: if (metadataRules && !metadataRules.includes(\"Renderer does not think\")) {"
+      - "line 456: if (!serializer) {"
+      - "line 467: if (!supported) {"
+      - "line 573: if (!activeRuntime) {"
+      - "line 574: if (validationSettings.require_active_runtime === true) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_AuthorReputation"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 263: if (\"status\" in formatted) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_BackgroundLayerOrchestrator"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 63: status: \"fail\";"
+      - "line 173: status: \"fail\","
+      - "line 275: const fallbackIndex = hashString(buildSeed(parsedSlice)) % 6;"
+      - "line 277: if (fallbackIndex === 0) {"
+      - "line 278: return { kind: \"pattern\", reason: \"seed_pattern_fallback\" };"
+      - "line 281: if (fallbackIndex === 1) {"
+      - "line 282: return { kind: \"triangulation\", reason: \"seed_triangulation_fallback\" };"
+      - "line 285: if (fallbackIndex === 2) {"
+      - "line 286: return { kind: \"flat_abstract_pattern\", reason: \"seed_flat_abstract_fallback\" };"
+      - "line 289: if (fallbackIndex === 3) {"
+      - "line 290: return { kind: \"isometric_pattern\", reason: \"seed_isometric_fallback\" };"
+      - "line 293: if (fallbackIndex === 4) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_BackgroundModuleRegistry"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 69: status: \"fail\";"
+      - "line 92: status: \"fail\","
+    confidence: "medium"
+  - 
+    module: "MindSlice_BackgroundSelectionTelemetry"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 12: fallback_used: boolean;"
+      - "line 52: fallback_used: Boolean(backgroundLayerOutput?.fallback_used ?? false),"
+    confidence: "medium"
+  - 
+    module: "MindSlice_CanonEngine"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 47: status: \"fail\";"
+      - "line 75: status: \"fail\","
+      - "line 153: if (typeof scoreProfile.total !== \"number\") {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_Clock"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 326: : \"display-ul rămâne vizibil ca fallback, chiar dacă validarea nu este încă completă\";"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ColorTheoryEngine"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 199: if (!conflictPoint) {"
+      - "line 215: if (!zone) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ColorTheory"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 38: if (Number.isNaN(value)) {"
+      - "line 276: if (!next.saturationMap.some((entry) => entry.startsWith(\"field:\"))) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_Contamination"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 186: if (!hasMatchingInterference) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ExecutionEngine"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 113: status: \"fail\";"
+      - "line 308: status: \"fail\","
+      - "line 1000: cluster_id: \"cluster_fallback\","
+    confidence: "medium"
+  - 
+    module: "MindSlice_Formation"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 113: if (!clockDisplay) {"
+      - "line 136: if (!clockDisplay) {"
+      - "line 191: if (!clockDisplay) {"
+      - "line 284: if (!interference) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_GeometryEngine"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 98: status: \"fail\";"
+      - "line 495: status: \"fail\","
+    confidence: "medium"
+  - 
+    module: "MindSlice_GrammarPipelineContract"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 37: fallback_used: boolean;"
+      - "line 42: status: \"fail\";"
+      - "line 53: status: \"fail\","
+      - "line 282: export function fallbackPatternOutput("
+      - "line 351: return fallbackPatternOutput(module, canvas, palette);"
+      - "line 360: return fallbackPatternOutput(module, canvas, palette);"
+      - "line 419: const fallbackProfile = module.supported_grammar_profiles[0] ?? null;"
+      - "line 421: if (fallbackProfile) {"
+      - "line 426: fallbackProfile,"
+      - "line 432: warnings.push(`GRAMMAR_FALLBACK_PROFILE_USED:${fallbackProfile}`);"
+      - "line 442: profile: fallbackProfile ?? \"minimal\","
+      - "line 462: let fallbackUsed = false;"
+    confidence: "medium"
+  - 
+    module: "MindSlice_IdentityFormatEngine"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 33: status: \"fail\";"
+      - "line 45: status: \"fail\","
+      - "line 67: if (!identityData.first_name && !identityData.pseudonym) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_InputEngine"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 25: if (!idea || !idea.thought.trim()) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_LearningLoopEngineSlices"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 27: status: \"fail\";"
+      - "line 158: status: \"fail\","
+    confidence: "medium"
+  - 
+    module: "MindSlice_LearningLoopEngine"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 25: status: \"fail\";"
+      - "line 119: status: \"fail\","
+    confidence: "medium"
+  - 
+    module: "MindSlice_LegacyVisualRetirementPlan"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 76: if (!match) {"
+      - "line 90: if (typeof entry === \"string\") {"
+      - "line 94: if (typeof entry === \"object\" && entry !== null) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_MainLoop"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 113: const fallbackEntry = buildIdeaLoopEntry("
+      - "line 156: activeResult: fallbackEntry.process,"
+      - "line 112: if (!activeEntry) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_MasterEngine"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 97: status: \"fail\";"
+      - "line 353: status: \"fail\","
+      - "line 405: status: \"fail\","
+      - "line 426: status: \"fail\","
+      - "line 440: status: \"fail\","
+      - "line 117: if (!user) {"
+      - "line 351: if (!slice) {"
+      - "line 403: if (!moduleOutput) {"
+      - "line 421: if (!validateMasterConcept(concept)) {"
+      - "line 424: if (!refined) {"
+      - "line 438: if (!masterLaw(concept)) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_Meta"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 1532: if (!input.canon.globalCandidate && !input.canon.domainCandidates.length) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ModularGrammarEngine"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 106: if (!grammarProfile.name || grammarProfile.name === \"retro_geometric_control\") {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ModuleLoader"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 62: allow_fallbacks?: boolean;"
+      - "line 140: allow_fallbacks: boolean;"
+      - "line 253: \"FALLBACK_PATTERN_OUTPUT\","
+      - "line 643: \"fallback_unplaceable_item\","
+      - "line 685: input_contract: [\"error\", \"runtime_context\", \"fallback_settings\"],"
+      - "line 689: \"fallback_svg\","
+      - "line 695: \"build_fallback_svg\","
+      - "line 760: status: \"fail\","
+      - "line 775: allow_fallbacks: runtimeConfig.allow_fallbacks ?? true,"
+      - "line 1415: status: \"fail\","
+      - "line 899: if (!moduleRecord.version) {"
+      - "line 907: if (moduleRecord.type === \"renderer\" && !moduleRecord.provides.includes(\"draw\")) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_PaletteContractAdapter"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 38: function asColor(value: unknown, fallback: string) {"
+      - "line 39: return isColor(value) ? value : fallback;"
+      - "line 91: const fallback = defaultPalette();"
+      - "line 94: background: stops[0] ?? fallback.background,"
+      - "line 95: surface: stops[1] ?? stops[0] ?? fallback.surface,"
+      - "line 96: ink: stops[2] ?? fallback.ink,"
+      - "line 97: accent: stops[3] ?? stops[1] ?? fallback.accent,"
+      - "line 98: primary: stops[4] ?? stops[2] ?? fallback.primary,"
+      - "line 99: secondary: stops[5] ?? stops[1] ?? fallback.secondary,"
+      - "line 100: stops: stops.length > 0 ? stops : fallback.stops,"
+      - "line 105: const fallback = defaultPalette();"
+      - "line 109: background: asColor(palette.background, asColor(palette.bg, fallback.background)),"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ParserEngine"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 86: function parseBoolean(value: string | null, fallback: boolean) {"
+      - "line 88: return fallback;"
+      - "line 101: return fallback;"
+      - "line 104: function parseNumber(value: string | null, fallback: number) {"
+      - "line 106: return fallback;"
+      - "line 111: return Number.isFinite(normalized) ? normalized : fallback;"
+      - "line 87: if (value == null) {"
+      - "line 105: if (value == null) {"
+      - "line 188: if (!block) {"
+      - "line 208: if (!block) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_PatternEngine"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 143: fallback: string,"
+      - "line 145: return palette.find((entry) => entry.role === role)?.color ?? fallback;"
+    confidence: "medium"
+  - 
+    module: "MindSlice_Process"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 118: if (terminationReason !== \"none\") {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_RuntimeBootController"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 55: status: \"fallback\";"
+      - "line 61: fallback_svg: string;"
+      - "line 73: status: \"fail\";"
+      - "line 252: input_contract: [\"request_config\", \"fallback_library\", \"stale_cache\"],"
+      - "line 336: function minimalFallbackSvg(message = \"MindSlice runtime incomplete\") {"
+      - "line 347: function fallbackRuntime(errorReport: unknown): RuntimeBootResult {"
+      - "line 349: status: \"fallback\","
+      - "line 361: fallback_svg: minimalFallbackSvg(),"
+      - "line 374: status: \"fail\","
+      - "line 388: return fallbackRuntime(runtimeInit);"
+      - "line 398: return fallbackRuntime(architectureReport);"
+      - "line 297: if (loaderOutput.loader_result.status !== \"ok\" || !loaderOutput.active_runtime) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_SafeSVGMount"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 26: status: \"fail\";"
+      - "line 109: function fail(message: string, details: unknown): Extract<SafeSvgMountResult, { status: \"fail\" }> {"
+      - "line 111: status: \"fail\","
+      - "line 166: if (/<\\s*foreignobject\\b/i.test(lowered)) {"
+      - "line 248: if (validation.status === \"fail\") {"
+      - "line 266: if (validation.status === \"fail\") {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ScenarioEngine"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 93: return [...concepts, { id: \"concept_fallback\", label: \"structure\", score: 1 }];"
+    confidence: "medium"
+  - 
+    module: "MindSlice_SlicesAPIPerformanceGuard"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 2: | \"fallback_active\""
+      - "line 4: | \"timeout_using_fallback\""
+      - "line 5: | \"error_using_fallback\";"
+      - "line 14: export type SlicesFallbackLibrary<TSlice> = {"
+      - "line 57: fallbackLibrary: SlicesFallbackLibrary<TSlice>,"
+      - "line 63: engine_mode: staleCache.engine_mode ?? fallbackLibrary.engine_mode,"
+      - "line 65: hydration_status: \"fallback_active\","
+      - "line 71: active_slices: fallbackLibrary.default_slices,"
+      - "line 72: engine_mode: fallbackLibrary.engine_mode,"
+      - "line 74: hydration_status: \"fallback_active\","
+      - "line 123: warning: \"REMOTE_SLICES_ERROR_KEEPING_FALLBACK\","
+      - "line 137: warning: \"REMOTE_SLICES_ERROR_KEEPING_FALLBACK\","
+    confidence: "medium"
+  - 
+    module: "MindSlice_SnapEngine"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 165: const fallbackOffsetRange = input.offset_range ?? {"
+      - "line 200: : fallbackOffsetRange.min,"
+      - "line 204: : fallbackOffsetRange.mid,"
+      - "line 208: : fallbackOffsetRange.max,"
+    confidence: "medium"
+  - 
+    module: "MindSlice_TextEchoConstellationEngine"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 47: source_type: \"text_constellation\" | \"scenario_path\" | \"composition_focus\" | \"scenario_conflict\" | \"fallback\";"
+      - "line 332: const fallback = \"echo\";"
+      - "line 333: const terms = sourceTerms.length > 0 ? sourceTerms : [fallback];"
+      - "line 342: .sort((a, b) => a.count - b.count || a.term.localeCompare(b.term))[0]?.term ?? fallback;"
+      - "line 347: id: \"fallback_reference\","
+      - "line 350: semantic_source: \"fallback_center\","
+    confidence: "medium"
+  - 
+    module: "MindSlice_TextLayoutCollisionResolver"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 348: const fallbackResult = handleUnplaceableItem(item, settings);"
+      - "line 350: if (fallbackResult.action === \"hide\") {"
+      - "line 355: placedItems.push(fallbackResult.item);"
+      - "line 303: if (!settings.enabled) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_TextLayoutCollisionResolver_v2"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 23: allow_edge_fallback?: boolean;"
+      - "line 119: fallback_zone?: string;"
+      - "line 274: allow_edge_fallback: settings.allow_edge_fallback ?? true,"
+      - "line 865: { x: margin, y: margin, anchor: \"start\" as const, fallback_zone: \"top_left\" },"
+      - "line 866: { x: canvas.width - margin, y: margin, anchor: \"end\" as const, fallback_zone: \"top_right\" },"
+      - "line 867: { x: margin, y: canvas.height - margin, anchor: \"start\" as const, fallback_zone: \"bottom_left\" },"
+      - "line 868: { x: canvas.width - margin, y: canvas.height - margin, anchor: \"end\" as const, fallback_zone: \"bottom_right\" },"
+      - "line 870: return base.map((position) => ({ ...item, ...position, reduction_type: \"edge_fallback\" }));"
+      - "line 873: function roleSpecificFallbackCandidates(item: ExtendedTextItem, canvas: TextLayoutV2Canvas, settings: RequiredSettings) {"
+      - "line 903: function fallbackCandidates(item: ExtendedTextItem, canvas: TextLayoutV2Canvas, policy: RolePolicy[TextLayoutV2Role], settings: RequiredSettings) {"
+      - "line 905: if (settings.allow_edge_fallback) candidates.push(...roleSpecificFallbackCandidates(item, canvas, settings));"
+      - "line 926: const candidates = fallbackCandidates(item, canvas, rolePolicy[item.role], settings);"
+    confidence: "medium"
+  - 
+    module: "MindSlice_TextLayoutEngine"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 50: function parsePercent(value: string, fallback: number) {"
+      - "line 53: return Number.isFinite(parsed) ? parsed / 100 : fallback;"
+    confidence: "medium"
+  - 
+    module: "MindSlice_TextLayoutEngine_v2"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 106: fallback_zone?: string;"
+      - "line 271: id: \"fallback\","
+      - "line 310: x: 540 + seededRange(`${seed}:fallback:x`, -160, 160),"
+      - "line 311: y: 540 + seededRange(`${seed}:fallback:y`, -160, 160),"
+      - "line 308: if (!path) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_TextSourceParityBridge"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 58: priority: \"primary_template\" | \"vnext_fallback\";"
+      - "line 104: parity_level: \"template_visible_with_vnext_enrichment\" | \"vnext_fallback_only\";"
+      - "line 361: priority: hasTemplateCenter ? \"primary_template\" : \"vnext_fallback\","
+      - "line 425: const warnings = templateCount === 0 ? [\"NO_TEMPLATE_SOURCES_AVAILABLE_USING_VNEXT_FALLBACK\"] : [];"
+      - "line 432: parity_level: templateCount > 0 ? \"template_visible_with_vnext_enrichment\" : \"vnext_fallback_only\","
+    confidence: "medium"
+  - 
+    module: "MindSlice_ThresholdModel"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 111: function average(values: number[], fallback = 0.5) {"
+      - "line 115: return fallback;"
+      - "line 212: function normalizeMemoryValue(value: unknown, fallback = 0) {"
+      - "line 214: return fallback;"
+      - "line 114: if (!finiteValues.length) {"
+      - "line 213: if (typeof value !== \"number\" || !Number.isFinite(value)) {"
+      - "line 221: if (!historicalMemory.length) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_TriangulationEngine"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 87: fallback: string,"
+      - "line 89: return palette.stops?.find((entry) => entry.role === role)?.color ?? fallback;"
+    confidence: "medium"
+  - 
+    module: "MindSlice_TriangulationSVGRenderer"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 63: fallback: string,"
+      - "line 66: return palette.find((entry) => entry.role === role)?.color ?? fallback;"
+      - "line 71: return canonical[role] ?? fallback;"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualAuditEngine"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 345: suggestions.add(\"select_fallback_background_module\");"
+      - "line 143: if (!Number.isFinite(value)) {"
+      - "line 286: if (!hasLayer(svgTree, layerName)) {"
+      - "line 304: if (!VALID_SVG_NODE_TYPES.has(type)) {"
+      - "line 320: if (layer.opacity !== layer.expected_opacity) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualComposer"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 337: const fallbackPoint = seededPoint(grid, seed, index + 6);"
+      - "line 341: x: fallbackPoint.x,"
+      - "line 342: y: fallbackPoint.y,"
+      - "line 401: if (!snapped) {"
+      - "line 504: if (!forms.length) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualErrorBoundaryContract"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 13: export type VisualErrorBoundaryFallbackSettings = {"
+      - "line 29: fallback_svg: SvgSerializableNode;"
+      - "line 30: fallback_svg_string: string;"
+      - "line 33: | \"fallback_to_pattern_background\""
+      - "line 89: export function buildFallbackSvg("
+      - "line 91: fallbackSettings: VisualErrorBoundaryFallbackSettings = {},"
+      - "line 93: const width = fallbackSettings.width ?? 1080;"
+      - "line 94: const height = fallbackSettings.height ?? 1080;"
+      - "line 95: const background = fallbackSettings.background ?? \"#F6F4EF\";"
+      - "line 96: const ink = fallbackSettings.ink ?? \"#1C1C1C\";"
+      - "line 156: return \"fallback_to_pattern_background\";"
+      - "line 169: fallbackSettings: VisualErrorBoundaryFallbackSettings = {},"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualPipelineController"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 78: status: \"fail\";"
+      - "line 100: status: \"fail\";"
+      - "line 119: function fail(message: string): Extract<VisualPipelineControllerResult, { status: \"fail\" }> {"
+      - "line 121: status: \"fail\","
+      - "line 646: const fallbackPath = defaultTensionPath(structure_output);"
+      - "line 648: ...fallbackPath,"
+      - "line 652: id: fallbackPath.id,"
+      - "line 653: start: fallbackPath.start,"
+      - "line 654: end: fallbackPath.end,"
+      - "line 655: strength: fallbackPath.strength,"
+      - "line 660: const fallbackPoint = defaultConflictPoint(structure_output);"
+      - "line 661: scenario.conflict_points.push(fallbackPoint);"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualPipelineController_vNext"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 75: status: \"fail\";"
+      - "line 101: status: \"fail\","
+      - "line 310: if (suggestion === \"select_fallback_background_module\") {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualRenderer"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 242: fallback: string,"
+      - "line 244: return palette.find((entry) => entry.role === role)?.color ?? fallback;"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualRenderer_v2"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 133: fallback_used: boolean;"
+      - "line 146: function isFail<T extends { status?: string }>(value: T | unknown): value is T & { status: \"fail\"; message: string } {"
+      - "line 208: fallback: string,"
+      - "line 211: return palette.find((entry) => entry.role === role)?.color ?? fallback;"
+      - "line 216: return canonical[role] ?? fallback;"
+      - "line 284: fallback_used: true,"
+      - "line 313: fallback_used: result.fallback_used,"
+      - "line 252: if (typeof layer === \"object\" && layer !== null) {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualRuntimeSmokeTest"
+    field: "FAIL"
+    value: "confirmed_failure_or_fallback_behavior_present"
+    evidence: 
+      - "line 29: status: \"fail\","
+      - "line 187: } catch (error) {"
+      - "line 226: if (!hasPaletteContract(resultPipeline)) {"
+    confidence: "medium"
+side_effects_patch_candidates: 
+  - 
+    module: "MindSlice_FlatAbstractPatternSVGRenderer"
+    field: "SIDE_EFFECTS"
+    value: "confirmed_side_effect_or_render_artifact_evidence_present"
+    evidence: 
+      - "rendering_call_or_svg_output line 80: type: \"svg\";"
+      - "rendering_call_or_svg_output line 97: type: \"svg\","
+    confidence: "medium"
+  - 
+    module: "MindSlice_IsometricPatternSVGRenderer"
+    field: "SIDE_EFFECTS"
+    value: "confirmed_side_effect_or_render_artifact_evidence_present"
+    evidence: 
+      - "rendering_call_or_svg_output line 35: type: \"svg\";"
+      - "rendering_call_or_svg_output line 44: type: \"svg\","
+    confidence: "medium"
+  - 
+    module: "MindSlice_ModuleLoader"
+    field: "SIDE_EFFECTS"
+    value: "confirmed_side_effect_or_render_artifact_evidence_present"
+    evidence: 
+      - "rendering_call_or_svg_output line 434: \"svg_tree\","
+      - "rendering_call_or_svg_output line 454: input_contract: [\"svg_tree\"],"
+      - "rendering_call_or_svg_output line 497: input_contract: [\"svg_tree OR svg_string\", \"render_mode\"],"
+      - "rendering_call_or_svg_output line 503: \"render_svg_tree_to_react\","
+    confidence: "medium"
+  - 
+    module: "MindSlice_RetroGridPatternSVGRenderer"
+    field: "SIDE_EFFECTS"
+    value: "confirmed_side_effect_or_render_artifact_evidence_present"
+    evidence: 
+      - "rendering_call_or_svg_output line 41: type: \"svg\";"
+      - "rendering_call_or_svg_output line 50: type: \"svg\","
+    confidence: "medium"
+  - 
+    module: "MindSlice_SafeSVGMount"
+    field: "SIDE_EFFECTS"
+    value: "confirmed_side_effect_or_render_artifact_evidence_present"
+    evidence: 
+      - "rendering_call_or_svg_output line 237: return React.createElement("
+      - "rendering_call_or_svg_output line 249: return fail(\"UNSAFE_SVG_TREE\", validation);"
+    confidence: "medium"
+  - 
+    module: "MindSlice_SlicesAPIPerformanceGuard"
+    field: "SIDE_EFFECTS"
+    value: "confirmed_side_effect_or_render_artifact_evidence_present"
+    evidence: 
+      - "network_API_call line 104: const url = requestConfig.url ?? \"/api/slices\";"
+      - "timer_side_effect line 107: const timeout = window.setTimeout(() => {"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualAuditEngine"
+    field: "SIDE_EFFECTS"
+    value: "confirmed_side_effect_or_render_artifact_evidence_present"
+    evidence: 
+      - "rendering_call_or_svg_output line 373: suggestions.add(\"sanitize_svg_tree_before_serialization\");"
+      - "rendering_call_or_svg_output line 393: svg_tree: unknown;"
+      - "rendering_call_or_svg_output line 403: ...checkContrastRisk(input.svg_tree),"
+      - "rendering_call_or_svg_output line 404: ...checkDensity(input.svg_tree),"
+      - "rendering_call_or_svg_output line 405: ...checkMissingLayer(input.svg_tree),"
+      - "rendering_call_or_svg_output line 406: ...checkInvalidSvgNodes(input.svg_tree),"
+      - "rendering_call_or_svg_output line 407: ...checkIgnoredOpacity(input.svg_tree),"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualErrorBoundaryContract"
+    field: "SIDE_EFFECTS"
+    value: "confirmed_side_effect_or_render_artifact_evidence_present"
+    evidence: 
+      - "rendering_call_or_svg_output line 99: type: \"svg\","
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualPipelineController_vNext"
+    field: "SIDE_EFFECTS"
+    value: "confirmed_side_effect_or_render_artifact_evidence_present"
+    evidence: 
+      - "rendering_call_or_svg_output line 391: svg_tree: visualSvgScene.svg_tree,"
+      - "rendering_call_or_svg_output line 411: const finalSvgString = runSvgObjectSerializerV1(visualSvgScene.svg_tree);"
+    confidence: "medium"
+  - 
+    module: "MindSlice_VisualRenderer_v2"
+    field: "SIDE_EFFECTS"
+    value: "confirmed_side_effect_or_render_artifact_evidence_present"
+    evidence: 
+      - "rendering_call_or_svg_output line 45: type: \"svg\";"
+      - "rendering_call_or_svg_output line 138: svg_tree: VisualSvgRoot;"
+      - "rendering_call_or_svg_output line 152: type: \"svg\","
+      - "rendering_call_or_svg_output line 522: svg_tree: svgRoot,"
+    confidence: "medium"
+  - 
+    module: "MindSlice_ZigzagPatternSVGRenderer"
+    field: "SIDE_EFFECTS"
+    value: "confirmed_side_effect_or_render_artifact_evidence_present"
+    evidence: 
+      - "rendering_call_or_svg_output line 36: type: \"svg\";"
+      - "rendering_call_or_svg_output line 45: type: \"svg\","
+    confidence: "medium"
+still_unknown_fields: 
+  - 
+    module: "MindSlice_AnalyticEngine"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ArchitectureValidator"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ArtCompositionEngine"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ArtComposition"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ArtMovements"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_AuthorEngine"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_AuthorReputation"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_AuthorValue"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_BackgroundLayerOrchestrator"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_BackgroundModuleRegistry"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_BackgroundSelectionTelemetry"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_CanonEngine"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_CanvasAccessPolicy"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Clock"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ColorTheoryEngine"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ColorTheory"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_CompositionStructure"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ConceptualPreset"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Contamination"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_DeviationMode"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_DisplayEngine"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ExecutionEngine"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_FlatAbstractGrammarEngine"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_FlatAbstractPatternEngine"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_FlatAbstractPatternSVGRenderer"
+    unknown_fields: 
+      - "FAIL"
+  - 
+    module: "MindSlice_Formation"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_GeometryEngine"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_GrammarPipelineContract"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_IdentityFormatEngine"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_InputEngine"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Interpretation"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_IsometricGrammarEngine"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_IsometricPatternEngine"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_IsometricPatternSVGRenderer"
+    unknown_fields: 
+      - "FAIL"
+  - 
+    module: "MindSlice_Iteration"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_LearningLoopEngineSlices"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_LearningLoopEngine"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_LegacyVisualRetirementPlan"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_LiteraryMovements"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_MainLoop"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_MasterEngine"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Meta"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ModularGrammarEngine"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Output"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_PaletteContractAdapter"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ParserEngine"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_PatternEngine"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_PatternSVGRenderer"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_PhotographyTheory"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Process"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Promotion"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_RetroGridPatternEngine"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_RetroGridPatternSVGRenderer"
+    unknown_fields: 
+      - "FAIL"
+  - 
+    module: "MindSlice_RuntimeBootController"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ScenarioEngine"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Scenario"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ScoringEngine"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ShapeGrammar"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ShapeTheory"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_SliceRepetitionEngine"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_SnapEngine"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_SnapProfile"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_StructureEngine"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_SVGObjectSerializer"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_SVGRenderer"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TemplateLikeTextPlacementEngine"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Termination"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TextEchoConstellationEngine"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TextLayoutCollisionResolver"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TextLayoutCollisionResolver_v2"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TextLayoutEngine"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TextLayoutEngine_v2"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TextSourceParityBridge"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TextWrappingEngine"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ThinkingEngine"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ThresholdModel"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Threshold"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TriangulationEngine"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TriangulationSVGRenderer"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Validation"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_VisualComposer"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_VisualDebugMode"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_VisualMappingRules"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_VisualPipelineController"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_VisualPipeline"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_VisualRenderer"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_VisualRuntimeSmokeTest"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ZigzagGrammarEngine"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ZigzagPatternEngine"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ZigzagPatternSVGRenderer"
+    unknown_fields: 
+      - "FAIL"
+modules_ready_for_patch_v2: 
+  - "MindSlice_ModuleLoader"
+  - "MindSlice_SafeSVGMount"
+  - "MindSlice_SlicesAPIPerformanceGuard"
+  - "MindSlice_VisualAuditEngine"
+  - "MindSlice_VisualErrorBoundaryContract"
+  - "MindSlice_VisualPipelineController_vNext"
+  - "MindSlice_VisualRenderer_v2"
+modules_still_blocked_v2: 
+  - 
+    module: "MindSlice_AnalyticEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ArchitectureValidator"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ArtCompositionEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ArtComposition"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ArtMovements"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_AuthorEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_AuthorReputation"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_AuthorValue"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_BackgroundLayerOrchestrator"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_BackgroundModuleRegistry"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_BackgroundSelectionTelemetry"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_CanonEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_CanvasAccessPolicy"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Clock"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ColorTheoryEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ColorTheory"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_CompositionStructure"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ConceptualPreset"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Contamination"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_DeviationMode"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_DisplayEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ExecutionEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_FlatAbstractGrammarEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_FlatAbstractPatternEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_FlatAbstractPatternSVGRenderer"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+  - 
+    module: "MindSlice_Formation"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_GeometryEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_GrammarPipelineContract"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_IdentityFormatEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_InputEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Interpretation"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_IsometricGrammarEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_IsometricPatternEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_IsometricPatternSVGRenderer"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+  - 
+    module: "MindSlice_Iteration"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_LearningLoopEngineSlices"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_LearningLoopEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_LegacyVisualRetirementPlan"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_LiteraryMovements"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_MainLoop"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_MasterEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Meta"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ModularGrammarEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Output"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_PaletteContractAdapter"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ParserEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_PatternEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_PatternSVGRenderer"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_PhotographyTheory"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Process"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Promotion"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_RetroGridPatternEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_RetroGridPatternSVGRenderer"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+  - 
+    module: "MindSlice_RuntimeBootController"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ScenarioEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Scenario"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ScoringEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ShapeGrammar"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ShapeTheory"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_SliceRepetitionEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_SnapEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_SnapProfile"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_StructureEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_SVGObjectSerializer"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_SVGRenderer"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TemplateLikeTextPlacementEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Termination"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TextEchoConstellationEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TextLayoutCollisionResolver"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TextLayoutCollisionResolver_v2"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TextLayoutEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TextLayoutEngine_v2"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TextSourceParityBridge"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TextWrappingEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ThinkingEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ThresholdModel"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Threshold"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TriangulationEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_TriangulationSVGRenderer"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_Validation"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_VisualComposer"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_VisualDebugMode"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_VisualMappingRules"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_VisualPipelineController"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_VisualPipeline"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_VisualRenderer"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_VisualRuntimeSmokeTest"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ZigzagGrammarEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ZigzagPatternEngine"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"
+      - "SIDE_EFFECTS"
+  - 
+    module: "MindSlice_ZigzagPatternSVGRenderer"
+    reasons: 
+      - "UNKNOWN_FIELDS_REMAIN"
+    unknown_fields: 
+      - "FAIL"

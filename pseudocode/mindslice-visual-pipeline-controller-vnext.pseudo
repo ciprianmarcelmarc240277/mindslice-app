@@ -1,0 +1,141 @@
+MODULE MindSlice_VisualPipelineController_vNext
+
+BACKFILL_SOURCE:
+    file_name: concept-visual-pipeline-controller-vnext-system.ts
+    source_path: mindslice-app/src/lib/mindslice/concept-visual-pipeline-controller-vnext-system.ts
+    registry_origin: pseudocode_backfill_scan
+    backfill_status: generated_from_typescript_structure
+
+PURPOSE:
+    Define the Visual Pipeline Controller v Next contract and behavior as evidenced by main function runVisualPipelineControllerVNext within Visual v1 / Legacy / Composer.
+    confirmed_by:
+        - exported_main_function:runVisualPipelineControllerVNext
+        - file_name:mindslice-visual-pipeline-controller-vnext.pseudo
+        - registry_category:Visual v1 / Legacy / Composer
+
+INPUT:
+    - rawSlice: string
+    - canvasSettings: VisualPipelineVNextCanvasSettings = {}
+    - renderSettings: VisualPipelineVNextRenderSettings = {}
+    - textSettings: TextLayoutV2Settings = {}
+
+OUTPUT:
+    status: confirmed
+    confirmed_by:
+        - main_return_type: VisualPipelineVNextResult
+        - return_object_fields: final_svg_string, pipeline_result, parsed_slice, conceptual_preset, structure_output, scenario_output, color_output, composition_output, background_layer_selection, background_selection_telemetry, text_layout_output, visual_svg_scene, audit_result, canvas
+
+STATE:
+    - implemented
+    - legacy_retained
+    - Visual v1 / Legacy / Composer
+    - role:orchestration
+    - version:vNext
+    - non-rendering_if_not_renderer
+    - renderer_passive_if_renderer
+
+PIPELINE_POSITION:
+    status: declared_dependencies
+    before: UNKNOWN_NEEDS_REVIEW
+    after: UNKNOWN_NEEDS_REVIEW
+    depends_on:
+        - MindSlice_ParserEngine
+        - MindSlice_ConceptualPreset
+        - MindSlice_StructureEngine
+        - MindSlice_ScenarioEngine
+        - MindSlice_ColorTheoryEngine
+        - MindSlice_ArtCompositionEngine
+        - MindSlice_GeometryEngine
+        - MindSlice_SnapEngine
+        - MindSlice_BackgroundModuleRegistry
+        - MindSlice_BackgroundLayerOrchestrator
+        - MindSlice_TextLayoutEngine_v2
+        - MindSlice_VisualRenderer_v2
+        - MindSlice_VisualAuditEngine
+        - MindSlice_SVGObjectSerializer
+        - MindSlice_BackgroundSelectionTelemetry
+        - MindSlice_VisualRenderer
+    confirmed_by:
+        - existing pseudocode depends_on entries
+
+MODULE_CLASSIFICATION:
+    category: Visual v1 / Legacy / Composer
+    role: orchestration
+    version: vNext
+    lifecycle: legacy_retained
+    can_render: false
+    can_decide_logic: true
+    requires_manual_review: true
+
+FUNCTION RUN:
+    implementation_function: runVisualPipelineControllerVNext
+    parameters: rawSlice: string, canvasSettings: VisualPipelineVNextCanvasSettings = {}, renderSettings: VisualPipelineVNextRenderSettings = {}, textSettings: TextLayoutV2Settings = {},
+
+HELPERS:
+    exported_types:
+        - VisualPipelineVNextCanvasSettings
+        - VisualPipelineVNextRenderSettings
+        - VisualPipelineVNextFailure
+        - VisualPipelineVNextResult
+
+    exported_helper_functions:
+        - none_confirmed
+
+    exported_constants:
+        - RUN
+
+DATA_CONTRACT:
+    receives:
+        status: confirmed
+        evidence:
+            - ParsedSliceObject from @/lib/mindslice/concept-parser-engine-system
+            - runParserEngine from @/lib/mindslice/concept-parser-engine-system
+            - type ConceptualPresetName, runConceptualPresetSystemV1, from @/lib/mindslice/concept-conceptual-preset-system
+            - type StructureEngineOutput, runStructureEngineV1, from @/lib/mindslice/concept-structure-engine-system
+            - type ScenarioEngineOutput, runScenarioEngineV1, from @/lib/mindslice/concept-scenario-engine-system
+            - type ColorTheoryEngineOutput, runColorTheoryEngineV1, from @/lib/mindslice/concept-color-theory-engine-system
+            - type ArtCompositionEngineOutput, runArtCompositionEngineV1, from @/lib/mindslice/concept-art-composition-engine-system
+            - clamp_point_to_area, project_toward, safe_area, from @/lib/mindslice/concept-geometry-engine-system
+            - runSnapEngineV1 from @/lib/mindslice/concept-snap-engine-system
+            - runBackgroundModuleRegistryV1, type BackgroundModuleKind, from @/lib/mindslice/concept-background-module-registry-system
+            - runBackgroundOrchestratorV2, type BackgroundRegistryLike, from @/lib/mindslice/concept-background-layer-orchestrator-system
+            - runTextLayoutEngineV2, type TextLayoutV2Output, type TextLayoutV2Settings, from @/lib/mindslice/concept-text-layout-engine-v2-system
+            - runVisualRendererV2, type VisualRendererV2BackgroundSelection, type VisualSvgScene, from @/lib/mindslice/concept-visual-renderer-v2-system
+            - runVisualAuditEngineV1, type VisualAuditResult, from @/lib/mindslice/concept-visual-audit-engine-system
+            - runSvgObjectSerializerV1 from @/lib/mindslice/concept-svg-object-serializer-system
+            - runBackgroundSelectionTelemetryV1, type BackgroundSelectionTelemetryOutput, from @/lib/mindslice/concept-background-selection-telemetry-system
+            - VisualRendererCanvasSettings from @/lib/mindslice/concept-visual-renderer-system
+    emits:
+        status: confirmed
+        evidence:
+            - export type/interface VisualPipelineVNextCanvasSettings
+            - export type/interface VisualPipelineVNextRenderSettings
+            - export type/interface VisualPipelineVNextFailure
+            - export type/interface VisualPipelineVNextResult
+            - export const RUN
+            - export function runVisualPipelineControllerVNext
+    mutates:
+        status: none_detected
+        evidence:
+            - no external mutation patterns detected in matching TypeScript file
+    side_effects:
+        status: confirmed
+        value: confirmed_side_effect_or_render_artifact_evidence_present
+        confirmed_by:
+            - rendering_call_or_svg_output line 391: svg_tree: visualSvgScene.svg_tree,
+    contract_status: v3_contract_fields_confirmed
+
+FAIL:
+    confirmed_failure_or_fallback_behavior_present
+    confirmed_by:
+        - line 75: status: "fail";
+        - line 101: status: "fail",
+
+CONSTRAINTS:
+    - Pseudocode backfill only.
+    - Do not implement from this file without manual contract review.
+    - Do not invent missing contracts.
+    - Preserve implemented module identity.
+    - Preserve version coexistence.
+    - Renderer does not think.
+    - Renderer only draws.

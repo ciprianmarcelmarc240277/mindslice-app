@@ -1,0 +1,958 @@
+MODULE MindSlice_PseudocodeBackfillMissingContractReport_v1
+
+PURPOSE:
+    List contract fields that could not be confirmed during pseudocode backfill.
+
+SUMMARY:
+    checked_implemented_modules: 97
+    status: review_required
+
+INPUT:
+- generated_backfill_pseudocode_files
+- extracted_contract_hints
+- module_registry_index
+- required_contract_fields
+
+OUTPUT:
+- missing_contract_report
+- checked_implemented_modules
+- modules_requiring_contract_review
+- missing_contract_fields_by_module
+
+STATE:
+- report
+- read-only
+- non-rendering
+- non-executing
+- contract-audit
+- backfill-safe
+
+FUNCTION RUN:
+
+    VALIDATE input
+
+    missing_contract_report = BUILD_MISSING_CONTRACT_REPORT(
+        generated_backfill_pseudocode_files,
+        extracted_contract_hints,
+        required_contract_fields
+    )
+
+    RETURN {
+        missing_contract_report: missing_contract_report,
+        checked_implemented_modules: COUNT generated_backfill_pseudocode_files,
+        modules_requiring_contract_review: EXTRACT_MODULES_WITH_MISSING_CONTRACTS(missing_contract_report),
+        missing_contract_fields_by_module: GROUP_MISSING_FIELDS_BY_MODULE(missing_contract_report)
+    }
+
+HELPERS:
+
+FUNCTION BUILD_MISSING_CONTRACT_REPORT(files, hints, required_fields):
+    RETURN recorded MISSING_CONTRACTS entries
+
+FUNCTION EXTRACT_MODULES_WITH_MISSING_CONTRACTS(report):
+    RETURN all modules WHERE missing fields not empty
+
+FUNCTION GROUP_MISSING_FIELDS_BY_MODULE(report):
+    RETURN map module_name TO missing fields
+
+FAIL:
+IF generated_backfill_pseudocode_files is missing:
+    RETURN FAIL "Missing required input: generated_backfill_pseudocode_files"
+
+IF required_contract_fields is missing:
+    RETURN FAIL "Missing required input: required_contract_fields"
+
+IF report attempts to invent contracts:
+    RETURN FAIL "Missing contract report cannot invent contracts"
+
+IF report attempts to generate implementation code:
+    RETURN FAIL "Missing contract report cannot generate implementation code"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No implementation code
+- Report is read-only
+- Report does not execute modules
+- Report does not render
+- Missing fields remain missing until confirmed
+- Unknown fields must enter manual review
+- Existing modules are preserved
+- Renderer does not think
+- Renderer only draws
+
+MISSING_CONTRACTS:
+
+- module: MindSlice_AnalyticEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ArchitectureValidator
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ArtCompositionEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ArtComposition
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ArtMovements
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_AuthorEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_AuthorReputation
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_AuthorValue
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_BackgroundLayerOrchestrator
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_BackgroundModuleRegistry
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_BackgroundSelectionTelemetry
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_CanonEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_CanvasAccessPolicy
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_Clock
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ColorTheoryEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ColorTheory
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_CompositionStructure
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ConceptualPreset
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_Contamination
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_DeviationMode
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_DisplayEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ExecutionEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_FlatAbstractGrammarEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_FlatAbstractPatternEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_FlatAbstractPatternSVGRenderer
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_Formation
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_GeometryEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_GrammarPipelineContract
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_IdentityFormatEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_InputEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_Interpretation
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_IsometricGrammarEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_IsometricPatternEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_IsometricPatternSVGRenderer
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_Iteration
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_LearningLoopEngineSlices
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_LearningLoopEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_LegacyVisualRetirementPlan
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_LiteraryMovements
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_MainLoop
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_MasterEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_Meta
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ModularGrammarEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ModuleLoader
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_Output
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_PaletteContractAdapter
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ParserEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_PatternEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_PatternSVGRenderer
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_PhotographyTheory
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_Process
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_Promotion
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_RetroGridPatternEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_RetroGridPatternSVGRenderer
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_RuntimeBootController
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_SafeSVGMount
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ScenarioEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_Scenario
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ScoringEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ShapeGrammar
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ShapeTheory
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_SliceRepetitionEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_SlicesAPIPerformanceGuard
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_SnapEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_SnapProfile
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_StructureEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_SVGObjectSerializer
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_SVGRenderer
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_TemplateLikeTextPlacementEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_Termination
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_TextEchoConstellationEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_TextLayoutCollisionResolver
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_TextLayoutCollisionResolver_v2
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_TextLayoutEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_TextLayoutEngine_v2
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_TextSourceParityBridge
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_TextWrappingEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ThinkingEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ThresholdModel
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_Threshold
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_TriangulationEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_TriangulationSVGRenderer
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_Validation
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_VisualAuditEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_VisualComposer
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_VisualDebugMode
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_VisualErrorBoundaryContract
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_VisualMappingRules
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_VisualPipelineController
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_VisualPipelineController_vNext
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_VisualPipeline
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_VisualRenderer
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_VisualRenderer_v2
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_VisualRuntimeSmokeTest
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ZigzagGrammarEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ZigzagPatternEngine
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL
+
+- module: MindSlice_ZigzagPatternSVGRenderer
+  missing:
+    - PURPOSE
+    - OUTPUT
+    - PIPELINE_POSITION
+    - receives
+    - emits
+    - FAIL

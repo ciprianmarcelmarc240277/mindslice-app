@@ -1,0 +1,114 @@
+MODULE MindSlice_SafeSVGMount
+
+BACKFILL_SOURCE:
+    file_name: concept-safe-svg-mount-system.ts
+    source_path: mindslice-app/src/lib/mindslice/concept-safe-svg-mount-system.ts
+    registry_origin: pseudocode_backfill_scan
+    backfill_status: generated_from_typescript_structure
+
+PURPOSE:
+    Define the Safe SVG Mount contract and behavior as evidenced by main function runSafeSvgMountV1 within Runtime / Safety / Audit.
+    confirmed_by:
+        - exported_main_function:runSafeSvgMountV1
+        - file_name:mindslice-safe-svg-mount.pseudo
+        - registry_category:Runtime / Safety / Audit
+
+INPUT:
+    - svgInput: unknown
+    - renderMode: SafeSvgMountRenderMode
+
+OUTPUT:
+    status: confirmed
+    confirmed_by:
+        - main_return_type: SafeSvgMountResult
+        - return_object_fields: status, render_mode, react_svg_output
+        - return_object_fields: status, render_mode, sanitized_svg_string
+
+STATE:
+    - implemented
+    - active
+    - Runtime / Safety / Audit
+    - role:safety
+    - version:implicit_v1
+    - non-rendering_if_not_renderer
+    - renderer_passive_if_renderer
+
+PIPELINE_POSITION:
+    status: standalone_declared
+    before: []
+    after: []
+    depends_on: []
+    confirmed_by:
+        - no confirmed depends_on entries in pseudocode
+        - imports/exports do not establish required pipeline edge by themselves
+
+MODULE_CLASSIFICATION:
+    category: Runtime / Safety / Audit
+    role: safety
+    version: implicit_v1
+    lifecycle: active
+    can_render: false
+    can_decide_logic: true
+    requires_manual_review: true
+
+FUNCTION RUN:
+    implementation_function: runSafeSvgMountV1
+    parameters: svgInput: unknown, renderMode: SafeSvgMountRenderMode
+
+HELPERS:
+    exported_types:
+        - SafeSvgMountRenderMode
+        - SafeSvgMountResult
+
+    exported_helper_functions:
+        - sanitizeSvgString
+        - renderSvgTreeToReact
+
+    exported_constants:
+        - RUN
+
+    INTERNAL_FUNCTIONS:
+        - renderSvgTreeToReact(svgTree: unknown, key = "safe-svg-root")
+
+DATA_CONTRACT:
+    receives:
+        status: confirmed
+        evidence:
+            - * as React from react
+    emits:
+        status: confirmed
+        evidence:
+            - export type/interface SafeSvgMountRenderMode
+            - export type/interface SafeSvgMountResult
+            - export const RUN
+            - export function sanitizeSvgString
+            - export function renderSvgTreeToReact
+            - export function runSafeSvgMountV1
+    mutates:
+        status: confirmed
+        evidence:
+            - DOM_mutation line 235: const textContent = typeof svgTree.text === "string" ? svgTree.text : null;
+    side_effects:
+        status: confirmed
+        value: confirmed_side_effect_or_render_artifact_evidence_present
+        confirmed_by:
+            - rendering_call_or_svg_output line 237: return React.createElement(
+    contract_status: v3_contract_fields_confirmed
+
+FAIL:
+    confirmed_failure_or_fallback_behavior_present
+    confirmed_by:
+        - line 26: status: "fail";
+        - line 109: function fail(message: string, details: unknown): Extract<SafeSvgMountResult, { status: "fail" }> {
+        - line 111: status: "fail",
+        - line 166: if (/<\\s*foreignobject\\b/i.test(lowered)) {
+        - line 248: if (validation.status === "fail") {
+
+CONSTRAINTS:
+    - Pseudocode backfill only.
+    - Do not implement from this file without manual contract review.
+    - Do not invent missing contracts.
+    - Preserve implemented module identity.
+    - Preserve version coexistence.
+    - Renderer does not think.
+    - Renderer only draws.

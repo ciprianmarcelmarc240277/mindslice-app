@@ -1,0 +1,383 @@
+MODULE MindSlice_ManualReviewQueueResolver_v1
+
+PURPOSE:
+Resolve manual review items produced by MindSlice extraction, normalization, validation, dependency mapping, and health reporting.
+Convert UNKNOWN, partial, blocked, overlapping, or ambiguous module contract fields into explicit review decisions without inventing missing behavior.
+
+INPUT:
+- manual_review_queue
+- architecture_health_report
+- module_registry_index
+- normalized_contracts
+- contract_validation_results
+- pipeline_dependency_results
+- review_rules
+- reviewer_decisions
+
+OUTPUT:
+- resolved_review_queue
+- unresolved_review_queue
+- contract_patch_plan
+- registry_patch_plan
+- dependency_patch_plan
+- implementation_blockers
+- review_resolution_report
+
+STATE:
+- resolver
+- read-only-by-default
+- non-rendering
+- non-executing
+- review-driven
+- contract-aware
+- registry-aware
+- dependency-aware
+- conservative
+
+FUNCTION RUN:
+
+    VALIDATE input
+
+    resolution_report = CREATE_EMPTY_RESOLUTION_REPORT()
+
+    FOR each review_item IN manual_review_queue:
+
+        item_context = BUILD_REVIEW_ITEM_CONTEXT(
+            review_item,
+            normalized_contracts,
+            module_registry_index,
+            contract_validation_results,
+            pipeline_dependency_results
+        )
+
+        issue_type = CLASSIFY_REVIEW_ITEM(
+            review_item,
+            item_context
+        )
+
+        proposed_resolution = GENERATE_ALLOWED_RESOLUTION(
+            issue_type,
+            item_context,
+            review_rules,
+            reviewer_decisions
+        )
+
+        validation_result = VALIDATE_REVIEW_RESOLUTION(
+            proposed_resolution,
+            item_context,
+            review_rules
+        )
+
+        IF validation_result.status == "accepted":
+            ADD proposed_resolution TO resolution_report.resolved_items
+
+            UPDATE_PATCH_PLANS(
+                resolution_report,
+                proposed_resolution
+            )
+
+        ELSE:
+            ADD {
+                review_item: review_item,
+                reason: validation_result.reason,
+                required_action: validation_result.required_action
+            } TO resolution_report.unresolved_items
+
+    final_report = BUILD_REVIEW_RESOLUTION_REPORT(
+        resolution_report
+    )
+
+    RETURN {
+        resolved_review_queue: resolution_report.resolved_items,
+        unresolved_review_queue: resolution_report.unresolved_items,
+        contract_patch_plan: resolution_report.contract_patch_plan,
+        registry_patch_plan: resolution_report.registry_patch_plan,
+        dependency_patch_plan: resolution_report.dependency_patch_plan,
+        implementation_blockers: EXTRACT_IMPLEMENTATION_BLOCKERS(resolution_report),
+        review_resolution_report: final_report
+    }
+
+HELPERS:
+
+FUNCTION CREATE_EMPTY_RESOLUTION_REPORT():
+    RETURN {
+        resolver_name: "MindSlice_ManualReviewQueueResolver_v1",
+        resolved_items: [],
+        unresolved_items: [],
+        contract_patch_plan: [],
+        registry_patch_plan: [],
+        dependency_patch_plan: [],
+        implementation_blockers: [],
+        warnings: []
+    }
+
+FUNCTION BUILD_REVIEW_ITEM_CONTEXT(
+    review_item,
+    normalized_contracts,
+    registry,
+    validation_results,
+    dependency_results
+):
+    module_name = review_item.module_name
+
+    RETURN {
+        module_name: module_name,
+        review_item: review_item,
+        normalized_contract: FIND normalized_contracts BY module_name,
+        registry_entry: FIND registry.modules BY module_name,
+        validation_result: FIND validation_results BY module_name,
+        dependency_result: FIND dependency_results BY module_name,
+        related_edges: FIND dependency edges WHERE from OR to == module_name
+    }
+
+FUNCTION CLASSIFY_REVIEW_ITEM(review_item, context):
+    IF review_item references UNKNOWN field:
+        RETURN "unknown_contract_field"
+
+    IF review_item references partial field:
+        RETURN "partial_contract_field"
+
+    IF review_item references missing dependency:
+        RETURN "missing_dependency_link"
+
+    IF review_item references isolated module:
+        RETURN "isolated_module"
+
+    IF review_item references overlap:
+        RETURN "responsibility_overlap"
+
+    IF review_item references renderer boundary:
+        RETURN "renderer_engine_boundary_risk"
+
+    IF review_item references invalid pipeline position:
+        RETURN "pipeline_position_issue"
+
+    IF review_item references version conflict:
+        RETURN "version_coexistence_issue"
+
+    RETURN "unclassified_review_item"
+
+FUNCTION GENERATE_ALLOWED_RESOLUTION(
+    issue_type,
+    context,
+    rules,
+    reviewer_decisions
+):
+    reviewer_decision = FIND reviewer_decisions BY context.module_name AND issue_type
+
+    IF reviewer_decision exists:
+        RETURN BUILD_RESOLUTION_FROM_REVIEWER_DECISION(
+            reviewer_decision,
+            context
+        )
+
+    IF issue_type == "unknown_contract_field":
+        RETURN {
+            status: "unresolved",
+            reason: "Unknown contract field requires human decision",
+            allowed_actions: [
+                "confirm field value",
+                "mark intentionally_empty",
+                "mark not_applicable",
+                "defer"
+            ]
+        }
+
+    IF issue_type == "partial_contract_field":
+        RETURN {
+            status: "proposed",
+            action: "promote_to_confirmed_only_if_supported",
+            patch_target: "contract",
+            module_name: context.module_name
+        }
+
+    IF issue_type == "missing_dependency_link":
+        RETURN {
+            status: "proposed",
+            action: "add_declared_dependency_or_mark_standalone",
+            patch_target: "dependency_map",
+            module_name: context.module_name
+        }
+
+    IF issue_type == "isolated_module":
+        RETURN {
+            status: "proposed",
+            action: "classify_as_standalone_or_connect_to_pipeline",
+            patch_target: "registry_and_dependency_map",
+            module_name: context.module_name
+        }
+
+    IF issue_type == "responsibility_overlap":
+        RETURN {
+            status: "proposed",
+            action: "assign_authority_or_create_adapter",
+            patch_target: "registry",
+            module_name: context.module_name
+        }
+
+    IF issue_type == "renderer_engine_boundary_risk":
+        RETURN {
+            status: "blocked",
+            action: "separate_decision_logic_from_renderer",
+            patch_target: "architecture",
+            module_name: context.module_name
+        }
+
+    IF issue_type == "pipeline_position_issue":
+        RETURN {
+            status: "proposed",
+            action: "declare_before_after_depends_on",
+            patch_target: "pipeline_map",
+            module_name: context.module_name
+        }
+
+    IF issue_type == "version_coexistence_issue":
+        RETURN {
+            status: "blocked",
+            action: "rename_or_reclassify_without_replacing_existing_version",
+            patch_target: "registry",
+            module_name: context.module_name
+        }
+
+    RETURN {
+        status: "unresolved",
+        reason: "Unclassified review item requires manual decision"
+    }
+
+FUNCTION BUILD_RESOLUTION_FROM_REVIEWER_DECISION(decision, context):
+    IF decision attempts to invent behavior:
+        RETURN {
+            status: "rejected",
+            reason: "Reviewer decision invents unconfirmed behavior"
+        }
+
+    RETURN {
+        status: "proposed",
+        source: "reviewer_decision",
+        module_name: context.module_name,
+        action: decision.action,
+        patch_target: decision.patch_target,
+        value: decision.value
+    }
+
+FUNCTION VALIDATE_REVIEW_RESOLUTION(resolution, context, rules):
+    IF resolution.status == "blocked":
+        RETURN {
+            status: "rejected",
+            reason: "Blocked issue cannot be auto-resolved",
+            required_action: resolution.action
+        }
+
+    IF resolution.status == "unresolved":
+        RETURN {
+            status: "rejected",
+            reason: resolution.reason,
+            required_action: "manual decision required"
+        }
+
+    IF resolution.action modifies implementation code:
+        RETURN {
+            status: "rejected",
+            reason: "Resolver cannot modify implementation code",
+            required_action: "create patch plan only"
+        }
+
+    IF resolution action creates renderer decision authority:
+        RETURN {
+            status: "rejected",
+            reason: "Renderer logic leakage risk",
+            required_action: "move decision to engine"
+        }
+
+    IF resolution action replaces existing version:
+        RETURN {
+            status: "rejected",
+            reason: "Version replacement is forbidden",
+            required_action: "create parallel version or adapter"
+        }
+
+    RETURN {
+        status: "accepted",
+        reason: "Resolution can be added to patch plan"
+    }
+
+FUNCTION UPDATE_PATCH_PLANS(report, resolution):
+    IF resolution.patch_target == "contract":
+        ADD resolution TO report.contract_patch_plan
+
+    IF resolution.patch_target == "registry":
+        ADD resolution TO report.registry_patch_plan
+
+    IF resolution.patch_target == "dependency_map":
+        ADD resolution TO report.dependency_patch_plan
+
+    IF resolution.patch_target == "pipeline_map":
+        ADD resolution TO report.dependency_patch_plan
+
+    IF resolution.patch_target == "registry_and_dependency_map":
+        ADD resolution TO report.registry_patch_plan
+        ADD resolution TO report.dependency_patch_plan
+
+    IF resolution.patch_target == "architecture":
+        ADD resolution TO report.implementation_blockers
+
+FUNCTION EXTRACT_IMPLEMENTATION_BLOCKERS(report):
+    RETURN all unresolved_items + implementation_blockers WHERE issue requires architecture decision before implementation
+
+FUNCTION BUILD_REVIEW_RESOLUTION_REPORT(report):
+    RETURN {
+        total_review_items: COUNT report.resolved_items + COUNT report.unresolved_items,
+        resolved_count: COUNT report.resolved_items,
+        unresolved_count: COUNT report.unresolved_items,
+        contract_patches_needed: COUNT report.contract_patch_plan,
+        registry_patches_needed: COUNT report.registry_patch_plan,
+        dependency_patches_needed: COUNT report.dependency_patch_plan,
+        implementation_blockers_count: COUNT report.implementation_blockers,
+        ready_for_patch_application:
+            true IF report.unresolved_items empty AND report.implementation_blockers empty
+            ELSE false
+    }
+
+FAIL:
+IF manual_review_queue is missing:
+    RETURN FAIL "Missing required input: manual_review_queue"
+
+IF module_registry_index is missing:
+    RETURN FAIL "Missing required input: module_registry_index"
+
+IF normalized_contracts is missing:
+    RETURN FAIL "Missing required input: normalized_contracts"
+
+IF review_rules are missing:
+    RETURN FAIL "Missing required input: review_rules"
+
+IF resolver attempts to execute module logic:
+    RETURN FAIL "ManualReviewQueueResolver cannot execute modules"
+
+IF resolver attempts to render:
+    RETURN FAIL "ManualReviewQueueResolver cannot render"
+
+IF resolver attempts to mutate implementation files:
+    RETURN FAIL "ManualReviewQueueResolver can only create patch plans"
+
+IF resolver attempts to invent unknown behavior:
+    RETURN FAIL "Unknown behavior must remain unresolved"
+
+CONSTRAINTS:
+- No TypeScript
+- No React
+- No CSS
+- No implementation code
+- Resolver is read-only by default
+- Resolver does not execute modules
+- Resolver does not render
+- Resolver does not mutate implementation files
+- Resolver only produces patch plans
+- UNKNOWN fields require explicit reviewer decision
+- Partial fields require evidence before confirmation
+- Blocked items cannot be auto-resolved
+- Renderer boundary violations require architecture separation
+- Existing modules are preserved
+- v1, v2 and vNext coexist
+- Renderer does not think
+- Renderer only draws
