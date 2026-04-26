@@ -14,7 +14,12 @@ PURPOSE:
         - registry_category:Runtime / Safety / Audit
 
 INPUT:
-    - UNKNOWN_NEEDS_REVIEW
+    - requestConfig: SlicesApiRequestConfig
+    - fallbackLibrary: SlicesFallbackLibrary<TSlice>
+    - staleCache?: SlicesStaleCache<TSlice, TProfile> | null
+    confirmed_by:
+        - exported_main_function:runSlicesApiPerformanceGuardV1
+        - function_parameters: requestConfig, fallbackLibrary, staleCache
 
 OUTPUT:
     status: confirmed
@@ -52,8 +57,8 @@ MODULE_CLASSIFICATION:
     requires_manual_review: true
 
 FUNCTION RUN:
-    implementation_function: RUN
-    parameters: UNKNOWN_NEEDS_REVIEW
+    implementation_function: runSlicesApiPerformanceGuardV1
+    parameters: requestConfig: SlicesApiRequestConfig, fallbackLibrary: SlicesFallbackLibrary<TSlice>, staleCache?: SlicesStaleCache<TSlice, TProfile> | null
 
 HELPERS:
     exported_types:
@@ -86,14 +91,15 @@ DATA_CONTRACT:
             - export type/interface RemoteSlicesResult
             - export const RUN
     mutates:
-        status: confirmed
+        status: none_detected
         evidence:
-            - timer_side_effect line 107: const timeout = window.setTimeout(() => {
+            - no external mutation patterns detected in matching TypeScript file
     side_effects:
         status: confirmed
-        value: confirmed_side_effect_or_render_artifact_evidence_present
+        value: network_request_and_timeout_timer
         confirmed_by:
             - network_API_call line 104: const url = requestConfig.url ?? "/api/slices";
+            - timer_side_effect line 107: const timeout = window.setTimeout(() => {
     contract_status: v3_contract_fields_confirmed
 
 FAIL:

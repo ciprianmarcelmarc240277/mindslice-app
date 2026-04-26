@@ -7,9 +7,13 @@ BACKFILL_SOURCE:
     backfill_status: generated_from_typescript_structure
 
 PURPOSE:
-    UNKNOWN_NEEDS_REVIEW
-    Backfilled architecture pseudocode record for implemented MindSlice module.
-    Do not treat inferred fields as final unless manually reviewed.
+    Build the v2 MindSlice text layout from parsed slice data, visual structure, scenario, composition, and canvas.
+    Preserve template-visible text sources through the text source parity bridge.
+    Produce center text, template fragments, text constellation, echo terms, temporal particles, grammar particles, stray letters, collision report, source parity report, and template placement report.
+    confirmed_by:
+        - exported_main_function:runTextLayoutEngineV2
+        - return_type: TextLayoutV2Output
+        - imports: TextSourceParityBridge, TemplateLikeTextPlacementEngine, TextEchoConstellationEngine, TextLayoutCollisionResolver_v2
 
 INPUT:
     - parsedSlice: ParsedSliceObject
@@ -20,8 +24,11 @@ INPUT:
     - textSettings: TextLayoutV2Settings = {}
 
 OUTPUT:
-    - UNKNOWN_NEEDS_REVIEW
-    - inferred_from_implementation_return_contract_if_declared
+    status: confirmed
+    confirmed_by:
+        - main_return_type: TextLayoutV2Output
+        - return_object_fields: center_text, sentence_fragments, wandering_words, wandering_letters, peripheral_text, text_constellation, template_fragments, text_echo_constellation, temporal_particles, grammar_particles, stray_letters, all_text, collision_report, source_parity_report, template_placement_report
+        - exported_type: TextLayoutV2Output
 
 STATE:
     - implemented
@@ -33,7 +40,7 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: UNKNOWN_NEEDS_REVIEW
+    status: declared_dependencies
     before: UNKNOWN_NEEDS_REVIEW
     after: UNKNOWN_NEEDS_REVIEW
     depends_on:
@@ -77,15 +84,46 @@ HELPERS:
         - RUN
 
 DATA_CONTRACT:
-    receives: UNKNOWN_NEEDS_REVIEW
-    emits: UNKNOWN_NEEDS_REVIEW
-    mutates: UNKNOWN_NEEDS_REVIEW
-    side_effects: UNKNOWN_NEEDS_REVIEW
-    contract_status: incomplete_until_manual_review
+    receives:
+        status: confirmed
+        evidence:
+            - ParsedSliceObject from concept-parser-engine-system
+            - StructureEngineOutput from concept-structure-engine-system
+            - ScenarioEngineOutput from concept-scenario-engine-system
+            - ArtCompositionEngineOutput from concept-art-composition-engine-system
+            - Visual renderer structure/scenario/composition types
+            - runTextEchoConstellationEngineV1
+            - runTextLayoutCollisionResolverV2
+            - runTextSourceParityBridgeV1
+            - runTemplateLikeTextPlacementEngineV1
+    emits:
+        status: confirmed
+        evidence:
+            - export type TextLayoutV2Canvas
+            - export type TextLayoutV2Settings
+            - export type TextLayoutV2Role
+            - export type TextLayoutV2Item
+            - export type TextLayoutV2Data
+            - export type TextLayoutV2Output
+            - export function runTextLayoutEngineV2
+            - export const RUN
+    mutates:
+        status: none_detected
+        evidence:
+            - no external mutation patterns detected in matching TypeScript file
+    side_effects:
+        status: none_detected
+        evidence:
+            - matching TypeScript returns data only
+            - no DOM write, network call, file write, telemetry call, or rendering call detected
+    contract_status: confirmed_for_translation_queue
 
 FAIL:
-    UNKNOWN_NEEDS_REVIEW
-    If failure behavior cannot be confirmed from implementation structure, keep marked for manual review.
+    confirmed_fallback_behavior_present
+    confirmed_by:
+        - nextAvailableZone returns fallback zone when no structure zones exist
+        - selectPointNearPath returns fallback point when no scenario path exists
+        - runTextSourceParityBridgeV1 provides fallback text sources when template sources are unavailable
 
 CONSTRAINTS:
     - Pseudocode backfill only.

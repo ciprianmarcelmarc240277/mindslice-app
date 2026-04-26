@@ -85,12 +85,12 @@ DATA_CONTRACT:
             - export function renderSvgTreeToReact
             - export function runSafeSvgMountV1
     mutates:
-        status: confirmed
+        status: none_detected
         evidence:
-            - DOM_mutation line 235: const textContent = typeof svgTree.text === "string" ? svgTree.text : null;
+            - no external mutation patterns detected in matching TypeScript file
     side_effects:
         status: confirmed
-        value: confirmed_side_effect_or_render_artifact_evidence_present
+        value: react_element_output
         confirmed_by:
             - rendering_call_or_svg_output line 237: return React.createElement(
     contract_status: v3_contract_fields_confirmed

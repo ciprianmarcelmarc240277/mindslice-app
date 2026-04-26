@@ -363,7 +363,7 @@ PIPELINE_STAGE: planned_modules
 
 - mindslice-safe-svg-mount.pseudo
   MODULE: MindSlice_SafeSVGMount
-  STATUS: planned
+  STATUS: implemented_validated
 
 - mindslice-scenario.pseudo
   MODULE: MindSlice_Scenario
@@ -391,7 +391,7 @@ PIPELINE_STAGE: planned_modules
 
 - mindslice-slices-api-performance-guard.pseudo
   MODULE: MindSlice_SlicesAPIPerformanceGuard
-  STATUS: planned
+  STATUS: implemented_validated
 
 - mindslice-snap-engine.pseudo
   MODULE: MindSlice_SnapEngine
@@ -447,7 +447,7 @@ PIPELINE_STAGE: planned_modules
 
 - mindslice-text-layout-engine-v2.pseudo
   MODULE: MindSlice_TextLayoutEngine_v2
-  STATUS: planned
+  STATUS: implemented_validated
 
 - mindslice-text-source-parity-bridge.pseudo
   MODULE: MindSlice_TextSourceParityBridge
