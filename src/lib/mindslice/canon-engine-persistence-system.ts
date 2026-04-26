@@ -12,8 +12,36 @@ export type CanonPersistenceDomain =
   | "shape_grammar"
   | "meta_system";
 
+type SupabaseErrorLike = {
+  message: string;
+};
+
+type SupabaseQueryResult<Data = unknown> = {
+  data?: Data | null;
+  error?: SupabaseErrorLike | null;
+};
+
+type SupabaseFilterBuilder<Data = unknown> = {
+  select: (columns: string) => SupabaseFilterBuilder<Data>;
+  eq: (column: string, value: unknown) => SupabaseFilterBuilder<Data>;
+  single: () => Promise<SupabaseQueryResult<Data>>;
+  maybeSingle: () => Promise<SupabaseQueryResult<Data>>;
+};
+
+type SupabaseQueryBuilder<Data = unknown> = {
+  select: (columns: string) => SupabaseFilterBuilder<Data>;
+  upsert: (payload: unknown, options?: unknown) => SupabaseFilterBuilder<Data>;
+  update: (payload: unknown) => SupabaseFilterBuilder<Data>;
+};
+
 type SupabaseLike = {
-  from: (table: string) => any;
+  from: (table: string) => unknown;
+};
+
+type ExistingConceptRecord = {
+  id?: unknown;
+  promoted_at?: unknown;
+  concept_state?: unknown;
 };
 
 export type PersistCanonEngineResultInput = {
@@ -61,6 +89,26 @@ function conceptEntryId(concept: CanonConcept, canonResult: Exclude<CanonEngineR
 
 function shouldPersistCanonResult(canonResult: CanonEngineResult) {
   return !("status" in canonResult) && canonResult.canon_status !== "NON_CANON";
+}
+
+function isSupabaseQueryBuilder(value: unknown): value is SupabaseQueryBuilder {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  return (
+    typeof candidate.select === "function" &&
+    typeof candidate.upsert === "function" &&
+    typeof candidate.update === "function"
+  );
+}
+
+function queryBuilderFor(supabase: SupabaseLike, table: string) {
+  const builder = supabase.from(table);
+
+  return isSupabaseQueryBuilder(builder) ? builder : null;
 }
 
 function buildConceptStatePatch(existingState: unknown, canonResult: Exclude<CanonEngineResult, { status: "fail" }>) {
@@ -122,8 +170,16 @@ export async function persistCanonEngineResult({
     canonizedAt: new Date().toISOString(),
   };
 
-  const { error } = await supabase
-    .from("mindslice_canon_states")
+  const canonStatesQuery = queryBuilderFor(supabase, "mindslice_canon_states");
+
+  if (!canonStatesQuery) {
+    return {
+      status: "fail",
+      message: "CANON_STATE_PERSISTENCE_UNSUPPORTED",
+    };
+  }
+
+  const { error } = await canonStatesQuery
     .upsert(
       {
         user_id: userId,
@@ -167,7 +223,9 @@ export async function syncCanonicalConceptRecord({
     };
   }
 
-  if (!supabase.from("concepts").select || !supabase.from("concepts").update) {
+  const conceptsQuery = queryBuilderFor(supabase, "concepts");
+
+  if (!conceptsQuery) {
     return {
       status: "skipped",
       reason: "CONCEPT_SYNC_UNSUPPORTED",
@@ -175,8 +233,7 @@ export async function syncCanonicalConceptRecord({
   }
 
   const conceptKey = canonResult.concept_id;
-  const { data: existingConcept, error: selectError } = await supabase
-    .from("concepts")
+  const { data: selectedConcept, error: selectError } = await conceptsQuery
     .select("id, concept_key, promoted_at, concept_state")
     .eq("user_id", userId)
     .eq("concept_key", conceptKey)
@@ -189,13 +246,14 @@ export async function syncCanonicalConceptRecord({
     };
   }
 
-  if (!existingConcept) {
+  if (!selectedConcept || typeof selectedConcept !== "object") {
     return {
       status: "skipped",
       reason: "CONCEPT_NOT_FOUND",
     };
   }
 
+  const existingConcept = selectedConcept as ExistingConceptRecord;
   const canonical = canonResult.canon_status === "CANONICAL";
   const promotedAt =
     canonical
@@ -216,8 +274,7 @@ export async function syncCanonicalConceptRecord({
         updated_at: new Date().toISOString(),
       };
 
-  const { error: updateError } = await supabase
-    .from("concepts")
+  const { error: updateError } = await conceptsQuery
     .update(updatePayload)
     .eq("user_id", userId)
     .eq("concept_key", conceptKey)

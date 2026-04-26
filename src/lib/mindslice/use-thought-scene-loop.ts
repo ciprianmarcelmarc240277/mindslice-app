@@ -19,7 +19,7 @@ export function useThoughtSceneLoop({
   currentThought,
   currentDirection,
   currentIndex,
-  influenceMode,
+  influenceMode: _influenceMode,
   isActive,
   sliceCycleDuration,
   referenceImageCount,
@@ -41,9 +41,13 @@ export function useThoughtSceneLoop({
   }, [onAdvanceImage]);
 
   useEffect(() => {
-    setThoughtAnimationKey((previous) => previous + 1);
-    setAnimatedThought(currentThought);
-    setIsThoughtOverlayVisible(true);
+    const timeoutId = window.setTimeout(() => {
+      setThoughtAnimationKey((previous) => previous + 1);
+      setAnimatedThought(currentThought);
+      setIsThoughtOverlayVisible(true);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [currentDirection, currentIndex, currentThought]);
 
   useEffect(() => {

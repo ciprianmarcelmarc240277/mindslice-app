@@ -6,14 +6,47 @@ import type {
   ConceptPoolEntry,
 } from "@/lib/mindslice/mindslice-types";
 
-function buildFallbackShapeGrammar(shape: any) {
-  const seedShape = `${shape?.type ?? "hybrid"}:${shape?.mass ?? "light_mass"}:${shape?.behavior ?? "stable"}`;
+type LegacyShape = {
+  type?: unknown;
+  mass?: unknown;
+  behavior?: unknown;
+  positionTendency?: unknown;
+};
+
+type LegacyExpression = {
+  shape?: LegacyShape;
+  shapeGrammar?: LegacyShapeGrammar;
+  metaSystem?: unknown;
+};
+
+type LegacyConceptLike = {
+  expression?: LegacyExpression;
+  influence?: unknown;
+  [key: string]: unknown;
+};
+
+type LegacyValidationLike = {
+  scores?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
+type LegacyShapeGrammar = {
+  rulesApplied?: unknown[];
+  [key: string]: unknown;
+};
+
+function stringField(value: unknown, fallback: string) {
+  return typeof value === "string" && value.length > 0 ? value : fallback;
+}
+
+function buildFallbackShapeGrammar(shape: LegacyShape | undefined) {
+  const seedShape = `${stringField(shape?.type, "hybrid")}:${stringField(shape?.mass, "light_mass")}:${stringField(shape?.behavior, "stable")}`;
 
   return {
     sequence: [seedShape],
     rulesApplied: [],
     transformationMap: [],
-    structureEvolution: [shape?.positionTendency ?? "center"],
+    structureEvolution: [stringField(shape?.positionTendency, "center")],
     outputVisual: "legacy grammar unavailable",
     outputText: "Concept istoric fără ShapeGrammar explicit; a fost injectat un fallback compatibil.",
     runtime: {
@@ -66,7 +99,7 @@ function buildFallbackShapeGrammar(shape: any) {
   };
 }
 
-function buildFallbackMetaSystem(shapeGrammar: any) {
+function buildFallbackMetaSystem(shapeGrammar: LegacyShapeGrammar) {
   return {
     outputVisual: "legacy-meta-system-unavailable",
     outputText: "Concept istoric fără MetaSystem explicit; a fost injectat un fallback compatibil.",
@@ -189,7 +222,7 @@ function normalizeValidationScores(scores: Record<string, unknown> | undefined) 
   };
 }
 
-function normalizeConcept(concept: any) {
+function normalizeConcept<T extends LegacyConceptLike>(concept: T): T {
   if (!concept?.expression) {
     return concept;
   }
@@ -209,7 +242,7 @@ function normalizeConcept(concept: any) {
   };
 }
 
-function normalizeValidation(validation: any) {
+function normalizeValidation<T extends LegacyValidationLike>(validation: T): T {
   if (!validation?.scores) {
     return validation;
   }

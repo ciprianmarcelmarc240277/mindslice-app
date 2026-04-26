@@ -761,7 +761,7 @@ export function LiveSceneView(props: LiveSceneViewProps) {
     leadingLineStyles,
     focalHaloStyles,
     negativeSpaceStyles,
-    thoughtCenterAnchor,
+    thoughtCenterAnchor: _thoughtCenterAnchor,
     thoughtCenterFragment,
     interference,
     profile,
@@ -1049,15 +1049,25 @@ VISIBILITY: ${parsedSlice.control.visibility ?? "system"}
   );
 
   useEffect(() => {
-    setIsThoughtOverlayClosing(false);
-    setIsThoughtOverlayDismissed(false);
+    const timeoutId = window.setTimeout(() => {
+      setIsThoughtOverlayClosing(false);
+      setIsThoughtOverlayDismissed(false);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [currentIndex, current.direction, current.thought]);
 
   useEffect(() => {
     if (!isThoughtOverlayVisible) {
-      setIsThoughtOverlayClosing(false);
-      setIsThoughtOverlayDismissed(false);
+      const timeoutId = window.setTimeout(() => {
+        setIsThoughtOverlayClosing(false);
+        setIsThoughtOverlayDismissed(false);
+      }, 0);
+
+      return () => window.clearTimeout(timeoutId);
     }
+
+    return undefined;
   }, [isThoughtOverlayVisible]);
 
   const handleThoughtOverlayDismiss = () => {

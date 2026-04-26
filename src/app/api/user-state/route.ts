@@ -149,7 +149,7 @@ export async function GET() {
     .eq("user_id", userId)
     .maybeSingle();
 
-  const { data: existingRole } = await supabase
+  await supabase
     .from("author_roles")
     .select("role")
     .eq("user_id", userId)

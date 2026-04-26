@@ -266,7 +266,7 @@ export function processTime(input: {
   const thresholds = defaultThresholds();
   let thought = interpretTime(input.now, input.userState);
   const contaminationMode = selectTimeBehavior(input.userState);
-  let acceptedContamination = !rejectTimeDistortion(contaminationMode);
+  const acceptedContamination = !rejectTimeDistortion(contaminationMode);
   let iterationCount = 0;
   let terminated = false;
   let terminationReason: ClockRuntime["terminationReason"] = "threshold_reached";
