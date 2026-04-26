@@ -35,9 +35,21 @@ STATE:
     - renderer_passive_if_renderer
 
 PIPELINE_POSITION:
-    status: declared_dependencies
-    before: UNKNOWN_NEEDS_REVIEW
-    after: UNKNOWN_NEEDS_REVIEW
+    status: orchestrator_declared
+    before:
+        - MindSlice_SVGObjectSerializer
+        - final_svg_string_consumer
+    after:
+        - MindSlice_ParserEngine
+        - MindSlice_ConceptualPreset
+        - MindSlice_StructureEngine
+        - MindSlice_ScenarioEngine
+        - MindSlice_ColorTheoryEngine
+        - MindSlice_ArtCompositionEngine
+        - MindSlice_BackgroundLayerOrchestrator
+        - MindSlice_TextLayoutEngine_v2
+        - MindSlice_VisualRenderer_v2
+        - MindSlice_VisualAuditEngine
     depends_on:
         - MindSlice_ParserEngine
         - MindSlice_ConceptualPreset
@@ -65,7 +77,7 @@ MODULE_CLASSIFICATION:
     lifecycle: legacy_retained
     can_render: false
     can_decide_logic: true
-    requires_manual_review: true
+    requires_manual_review: false
 
 FUNCTION RUN:
     implementation_function: runVisualPipelineControllerVNext
@@ -120,9 +132,11 @@ DATA_CONTRACT:
             - no external mutation patterns detected in matching TypeScript file
     side_effects:
         status: confirmed
-        value: confirmed_side_effect_or_render_artifact_evidence_present
+        value: local_svg_string_generation_and_background_registry_runtime_setup
         confirmed_by:
+            - buildBackgroundRegistryRuntime calls runBackgroundModuleRegistryV1 with register_defaults
             - rendering_call_or_svg_output line 391: svg_tree: visualSvgScene.svg_tree,
+            - runSvgObjectSerializerV1 converts visualSvgScene.svg_tree to final_svg_string
     contract_status: v3_contract_fields_confirmed
 
 FAIL:

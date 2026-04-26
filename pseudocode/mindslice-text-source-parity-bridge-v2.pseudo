@@ -1027,6 +1027,17 @@ FUNCTION extract_letters_and_numbers(text):
 
     RETURN output
 
+IMPLEMENTATION_ALIGNMENT:
+    status: partial
+    reason:
+        - matching TypeScript file currently confirms MindSlice_TextSourceParityBridge_v1 export only
+        - v2 pseudocode contract includes upgraded source quality scoring, duplicate mapping, role mapping, and diagnostics that are not confirmed as a v2 implementation export
+    confirmed_source:
+        - concept-text-source-parity-bridge-system.ts
+        - exported RUN points to runTextSourceParityBridgeV1
+    action:
+        - keep v2 contract partial until a v2 implementation export or explicit adapter contract is confirmed
+
 FAIL:
 IF parsed_slice is missing:
     RETURN FAIL "Missing required input: parsed_slice"
